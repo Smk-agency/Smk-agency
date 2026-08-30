@@ -1375,23 +1375,26 @@ function renderRentabilidade(el){
   `;
 }
 function renderServiceRentability(){
-  const activeClientIds = new Set(state.clients.filter(c=>c.status!=='encerrado').map(c=>c.id));
+  const activeClients = state.clients.filter(c=>c.status!=='encerrado');
   const byType = {};
-  state.client_services.filter(s=>activeClientIds.has(s.client_id)).forEach(s=>{
-    byType[s.service_type] = byType[s.service_type] || {receita:0};
-    byType[s.service_type].receita += Number(s.contracted_value);
+  activeClients.forEach(c=>{
+    const receita = clientReceita(c.id);
+    const custoRatio = receita>0 ? clientCusto(c.id)/receita : 0; // % da receita desse cliente que vira custo
+    state.client_services.filter(s=>s.client_id===c.id).forEach(s=>{
+      const val = Number(s.contracted_value);
+      byType[s.service_type] = byType[s.service_type] || {receita:0, custo:0};
+      byType[s.service_type].receita += val;
+      byType[s.service_type].custo += val * custoRatio; // custo desse serviço, na mesma proporção do cliente dele
+    });
   });
-  const totalCusto = state.client_cost_allocations.filter(c=>activeClientIds.has(c.client_id)).reduce((a,c)=>a+Number(c.monthly_value),0);
-  const totalReceita = Object.values(byType).reduce((a,s)=>a+s.receita,0) || 1;
   return Object.entries(byType).map(([type,data])=>{
-    const custoEst = totalCusto * (data.receita/totalReceita);
-    const lucro = data.receita - custoEst;
+    const lucro = data.receita - data.custo;
     const margem = data.receita>0 ? (lucro/data.receita*100) : 0;
     return `<div style="padding:10px 0;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;font-size:12.5px;">
       <span>${type}</span>
       <span>Receita <b class="mono">${fmtMoney(data.receita)}</b> · Margem <b>${margem.toFixed(1)}%</b></span>
     </div>`;
-  }).join('') + '<div style="font-size:11px;color:var(--text-faint);margin-top:8px;">*Custo estimado proporcionalmente à receita — ajustável quando as alocações reais por serviço forem cadastradas.</div>';
+  }).join('') + '<div style="font-size:11px;color:var(--text-faint);margin-top:8px;">*Custo de cada serviço estimado na mesma proporção do custo total do cliente que o contratou. Fica mais preciso quanto mais detalhado for o "Custos alocados" de cada cliente.</div>';
 }
 
 /* ---------- EQUIPE ---------- */
