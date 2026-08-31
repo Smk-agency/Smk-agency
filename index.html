@@ -206,6 +206,14 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 }
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;padding:24px;margin-bottom:5vh;}
+.modal.modal-lg{max-width:760px;}
+.status-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;}
+.status-tab{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:100px;font-size:12.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);white-space:nowrap;}
+.status-tab .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
+.status-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-soft);}
+.status-tab.active .cnt{background:rgba(143,227,192,0.18);}
+.task-list-vertical{display:flex;flex-direction:column;gap:9px;}
+.img-preview{max-width:100%;border-radius:8px;border:1px solid var(--border);margin-top:8px;display:block;cursor:pointer;}
 .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
 .modal-head h3{font-size:16px;font-weight:600;}
 .modal-close{background:none;border:none;color:var(--text-faint);font-size:20px;line-height:1;}
@@ -318,8 +326,8 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 </div>
 
 <!-- ============ MODALS ============ -->
-<div class="modal-overlay" id="taskModalOverlay">
-  <div class="modal" style="max-width:640px;">
+<div class="modal-overlay" id="taskModalOverlay" style="z-index:110;">
+  <div class="modal modal-lg">
     <div class="modal-head"><h3 id="taskModalTitle">Nova demanda</h3><button class="modal-close" data-close="taskModalOverlay">×</button></div>
     <div id="taskModalBody"></div>
   </div>
@@ -364,10 +372,14 @@ const SESSION_KEY = 'smkos_session_v1';
 let db, agencyDocRef;
 
 /* ================= DATA / SEED ================= */
-const ROLE_LABEL = {dono:'Dono',estrategista:'Estrategista',social_media:'Social Media',designer:'Designer',editor:'Editor de Vídeo'};
-const ROLE_COLOR = {dono:'#1FA97C',estrategista:'#4C7EFF',social_media:'#E0A62D',designer:'#B983F0',editor:'#E0553D'};
-const STATUS_FLOW = ['backlog','briefing','aguardando_producao','em_producao','primeira_versao','em_revisao','alteracao_solicitada','aprovado','concluido'];
-const STATUS_LABEL = {backlog:'Backlog',briefing:'Briefing',aguardando_producao:'Aguard. Produção',em_producao:'Em Produção',primeira_versao:'1ª Versão',em_revisao:'Em Revisão',alteracao_solicitada:'Alteração Solic.',aprovado:'Aprovado',concluido:'Concluído',pausado:'Pausado',cancelado:'Cancelado'};
+const ROLE_LABEL = {dono:'Dono',estrategista:'Estrategista',social_media:'Social Media',designer:'Designer',editor:'Editor de Vídeo',designer_editor:'Designer e Editor'};
+const ROLE_COLOR = {dono:'#1FA97C',estrategista:'#4C7EFF',social_media:'#E0A62D',designer:'#B983F0',editor:'#E0553D',designer_editor:'#E0709A'};
+const EXECUTOR_ROLES = ['designer','editor','designer_editor'];
+const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado'];
+const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado',
+  backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',concluido:'Aprovado',
+  pausado:'Pausado',cancelado:'Cancelado'};
+const DONE_STATUSES = ['aprovado','cancelado'];
 const PRIO_COLOR = {baixa:'#5A6272',media:'#4C7EFF',alta:'#E0A62D',urgente:'#E0553D'};
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -401,6 +413,19 @@ let state = {users:[], clients:[], client_services:[], contracts:[], tasks:[], t
   settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 let currentView = 'mesa';
 
+const LEGACY_STATUS_MAP = {backlog:'a_fazer', briefing:'a_fazer', aguardando_producao:'a_fazer', em_producao:'a_fazer', primeira_versao:'a_fazer', concluido:'aprovado'};
+function migrateLegacyTasks(){
+  let changed = false;
+  (state.tasks||[]).forEach(t=>{
+    if(LEGACY_STATUS_MAP[t.status]){ t.status = LEGACY_STATUS_MAP[t.status]; changed = true; }
+    if(!t.assignee_id){
+      const legacyOwner = t.designer_id || t.editor_id || t.social_media_id || t.strategist_id || null;
+      if(legacyOwner){ t.assignee_id = legacyOwner; changed = true; }
+    }
+  });
+  return changed;
+}
+
 async function initApp(){
   if(FIREBASE_CONFIG.apiKey==='COLE_AQUI'){
     document.getElementById('loadingScreen').style.display='none';
@@ -426,11 +451,13 @@ async function initApp(){
       Object.assign(state, shared);
     } else {
       Object.assign(state, snap.data());
+      if(migrateLegacyTasks()) saveState(state);
     }
 
     agencyDocRef.onSnapshot(docSnap=>{
       if(!docSnap.exists) return;
       Object.assign(state, docSnap.data());
+      migrateLegacyTasks();
       const appVisible = document.getElementById('app').style.display !== 'none';
       if(state.currentUserId && appVisible) render();
     });
@@ -490,7 +517,7 @@ function computeAlerts(){
       alerts.push({level: days<=5?'crit':'warn', icon:'📄', text:`Contrato de ${clientById(c.client_id)?.name} vence em ${days} dia(s).`});
     }
   });
-  const overdueTasks = state.tasks.filter(t=>t.due_date && t.due_date<todayISO() && !['concluido','cancelado'].includes(t.status));
+  const overdueTasks = state.tasks.filter(t=>t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status));
   if(overdueTasks.length>0){
     alerts.push({level:'warn', icon:'⏰', text:`${overdueTasks.length} demanda(s) atrasada(s).`});
   }
@@ -609,21 +636,27 @@ function render(){
   if(currentView==='equipe') return renderEquipe(el);
 }
 
+function tasksScopedToUser(u){
+  if(EXECUTOR_ROLES.includes(u.role)) return state.tasks.filter(t=>t.assignee_id===u.id);
+  return state.tasks.filter(t=>t.created_by===u.id); // social_media / estrategista veem o que criaram
+}
+
 /* ---------- MINHA MESA ---------- */
 let mesaTab = 'mine';
 function canSeeAgencyOverview(){ return ['dono','estrategista'].includes(currentUser().role); }
 function renderMesa(el){
   const u = currentUser();
   if(!canSeeAgencyOverview()) mesaTab = 'mine';
-  const mine = state.tasks.filter(t => [t.designer_id,t.editor_id,t.social_media_id,t.strategist_id].includes(u.id));
+  const mine = tasksScopedToUser(u);
   const all = state.tasks;
   const source = mesaTab==='mine' ? mine : all;
 
-  const urgent = source.filter(t=>t.priority==='urgente' && !['concluido','cancelado'].includes(t.status));
-  const late = source.filter(t=>t.due_date && t.due_date<todayISO() && !['concluido','cancelado'].includes(t.status));
-  const doing = source.filter(t=>['em_producao','primeira_versao','alteracao_solicitada'].includes(t.status));
+  const urgent = source.filter(t=>t.priority==='urgente' && !DONE_STATUSES.includes(t.status));
+  const late = source.filter(t=>t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status));
+  const aFazer = source.filter(t=>t.status==='a_fazer');
   const review = source.filter(t=>t.status==='em_revisao');
-  const done = source.filter(t=>t.status==='concluido');
+  const changeReq = source.filter(t=>t.status==='alteracao_solicitada');
+  const done = source.filter(t=>t.status==='aprovado');
 
   el.innerHTML = `
     ${canSeeAgencyOverview()?`
@@ -638,9 +671,10 @@ function renderMesa(el){
       <div style="display:flex;gap:18px;margin-top:12px;flex-wrap:wrap;">
         <span>🔴 ${urgent.length} urgentes</span>
         <span>⏰ ${late.length} atrasadas</span>
-        <span>🟠 ${doing.length} em andamento</span>
-        <span>🟡 ${review.length} aguardando revisão</span>
-        <span>🟢 ${done.length} concluídas</span>
+        <span>🔵 ${aFazer.length} a fazer</span>
+        <span>🟡 ${review.length} em revisão</span>
+        <span>🟠 ${changeReq.length} c/ alteração</span>
+        <span>🟢 ${done.length} aprovadas</span>
       </div>
     </div>
     ${mesaTab==='agency' && late.length>0 ? `
@@ -661,9 +695,8 @@ function renderMesa(el){
 
 function agencyTaskCardHTML(t){
   const c = clientById(t.client_id);
-  const ownerId = t.designer_id || t.editor_id || t.social_media_id || t.strategist_id;
-  const owner = ownerId ? userById(ownerId) : null;
-  const isLate = t.due_date && t.due_date<todayISO() && !['concluido','cancelado'].includes(t.status);
+  const owner = t.assignee_id ? userById(t.assignee_id) : null;
+  const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
   return `<div class="task-card" data-id="${t.id}">
     <div class="tclient">${c?.name||'—'} · ${owner?owner.full_name:'sem responsável'}</div>
     <div class="ttitle">${t.title}</div>
@@ -681,13 +714,12 @@ function renderDashboard(el){
   const aReceber = state.payments.filter(p=>p.status==='pendente').reduce((a,p)=>a+Number(p.value),0);
   const atrasado = state.payments.filter(p=>p.status==='atrasado').reduce((a,p)=>a+Number(p.value),0);
   const despesas = state.expenses.reduce((a,e)=>a+Number(e.value),0);
-  const activeClientIdsForCost = new Set(state.clients.filter(c=>c.status!=='encerrado').map(c=>c.id));
-  const custosClientes = state.client_cost_allocations.filter(c=>activeClientIdsForCost.has(c.client_id)).reduce((a,c)=>a+Number(c.monthly_value),0);
-  const lucro = faturamento - despesas - custosClientes;
+  const folhaEquipe = state.team_costs.reduce((a,t)=>a+Number(t.monthly_cost),0);
+  const lucro = faturamento - despesas - folhaEquipe;
   const margem = faturamento>0 ? (lucro/faturamento*100) : 0;
   const clientesAtivos = state.clients.filter(c=>c.status==='ativo').length;
-  const abertas = state.tasks.filter(t=>!['concluido','cancelado'].includes(t.status)).length;
-  const atrasadas = state.tasks.filter(t=>t.due_date && t.due_date<todayISO() && !['concluido','cancelado'].includes(t.status)).length;
+  const abertas = state.tasks.filter(t=>!DONE_STATUSES.includes(t.status)).length;
+  const atrasadas = state.tasks.filter(t=>t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status)).length;
 
   const activeClients = state.clients.filter(c=>c.status==='ativo');
   const pulseHTML = activeClients.map(c=>{
@@ -711,7 +743,7 @@ function renderDashboard(el){
       <div class="kpi-card"><div class="kpi-label">Recebido</div><div class="kpi-value pos">${fmtMoney(recebido)}</div></div>
       <div class="kpi-card"><div class="kpi-label">A receber</div><div class="kpi-value">${fmtMoney(aReceber)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Em atraso</div><div class="kpi-value ${atrasado>0?'neg':''}">${fmtMoney(atrasado)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Despesas + custos</div><div class="kpi-value">${fmtMoney(despesas+custosClientes)}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Despesas + folha da equipe</div><div class="kpi-value">${fmtMoney(despesas+folhaEquipe)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Lucro estimado</div><div class="kpi-value ${lucro>=0?'pos':'neg'}">${fmtMoney(lucro)}</div></div>
       <div class="kpi-card"><div class="kpi-label">Margem média</div><div class="kpi-value">${margem.toFixed(1)}%</div></div>
       <div class="kpi-card"><div class="kpi-label">Clientes ativos</div><div class="kpi-value">${clientesAtivos}</div></div>
@@ -746,7 +778,7 @@ function renderClientes(el){
   }
   grid.innerHTML = list.map(c=>{
     const receita = clientReceita(c.id);
-    const openTasks = tasksForClient(c.id).filter(t=>!['concluido','cancelado'].includes(t.status)).length;
+    const openTasks = tasksForClient(c.id).filter(t=>!DONE_STATUSES.includes(t.status)).length;
     const statusBadge = {ativo:'green',prospect:'blue',pausado:'amber',encerrado:'gray'}[c.status];
     return `
     <div class="client-card" data-id="${c.id}">
@@ -896,7 +928,7 @@ function openClientDetail(id){
     })()}
     `:''}
     <div class="section-title">Demandas (${tasks.length})</div>
-    ${tasks.map(t=>`<div style="padding:8px 0;border-bottom:1px solid var(--border);font-size:12.5px;display:flex;justify-content:space-between;"><span>${t.title}</span><span class="badge gray">${STATUS_LABEL[t.status]}</span></div>`).join('') || '<div class="empty">Sem demandas ainda.</div>'}
+    ${tasks.map(t=>`<div class="task-card" data-task-id="${t.id}" style="padding:10px 12px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;"><span>${t.title}</span><span class="badge gray">${STATUS_LABEL[t.status]}</span></div>`).join('') || '<div class="empty">Sem demandas ainda.</div>'}
     <div class="modal-foot">
       ${canEditClients()?`
       ${c.status!=='encerrado' ? `<button class="btn ghost danger" id="archiveClientBtn">Excluir cliente</button>` : `<button class="btn ghost" id="reactivateClientBtn">Reativar cliente</button>`}
@@ -935,6 +967,9 @@ function openClientDetail(id){
   document.getElementById('editContractBtn')?.addEventListener('click', ()=>openContractModal(id, contract));
   document.getElementById('addCostAllocBtn')?.addEventListener('click', ()=>openCostAllocModal(id));
   document.getElementById('editPaymentScheduleBtn')?.addEventListener('click', ()=>openPaymentScheduleModal(id));
+  body.querySelectorAll('[data-task-id]').forEach(row=>{
+    row.addEventListener('click', ()=>openTaskModal(row.dataset.taskId));
+  });
   document.getElementById('genInvoiceBtn')?.addEventListener('click', ()=>{
     const monthKey = todayISO().slice(0,7);
     const lastDay = new Date(Number(monthKey.slice(0,4)), Number(monthKey.slice(5,7)), 0).getDate();
@@ -1140,10 +1175,10 @@ let demandaSelectedDay = null;
 
 function taskCardHTML(t){
   const c = clientById(t.client_id);
-  const isLate = t.due_date && t.due_date<todayISO() && !['concluido','cancelado'].includes(t.status);
+  const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div class="tclient">${c?.name||'—'}</div>
-    <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}</div>
+    <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${t.reference_image?' 🖼️':''}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
       <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
@@ -1151,18 +1186,20 @@ function taskCardHTML(t){
   </div>`;
 }
 
-function assignableUsers(){ return state.users.filter(u=>['estrategista','social_media','designer','editor'].includes(u.role)); }
+function assignableUsers(){ return state.users.filter(u=>EXECUTOR_ROLES.includes(u.role)); }
+
+let demandaStatusTab = 'todas';
 
 function filteredTasks(){
   const clientF = document.getElementById('filterClient')?.value || '';
   const ownerF = document.getElementById('filterOwner')?.value || '';
   return state.tasks.filter(t=>{
     if(clientF && t.client_id!==clientF) return false;
-    const ownerId = t.designer_id||t.editor_id||t.social_media_id||t.strategist_id;
     if(!isDono()){
-      if(ownerId!==currentUser().id) return false;
+      const scoped = tasksScopedToUser(currentUser());
+      if(!scoped.includes(t)) return false;
     } else if(ownerF){
-      if(ownerId!==ownerF) return false;
+      if(t.assignee_id!==ownerF) return false;
     }
     return true;
   });
@@ -1173,10 +1210,10 @@ function renderDemandas(el){
     <div class="filter-bar">
       <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
       ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}">${u.full_name}</option>`).join('')}</select>`:''}
-      <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Kanban</button>
+      <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Lista</button>
       <button class="btn small ${demandaView==='calendar'?'primary':''}" id="viewCalendarBtn">▦ Calendário</button>
     </div>
-    ${!isDono()?`<div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">Mostrando só as demandas atribuídas a você.</div>`:''}
+    ${!isDono()?`<div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">${EXECUTOR_ROLES.includes(currentUser().role) ? 'Mostrando só as demandas atribuídas a você.' : 'Mostrando as demandas que você criou.'}</div>`:''}
     <div id="demandaBoard"></div>
   `;
   document.getElementById('filterClient').addEventListener('change', drawDemandas);
@@ -1188,21 +1225,48 @@ function renderDemandas(el){
 
 function drawDemandas(){
   const board = document.getElementById('demandaBoard');
-  if(demandaView==='kanban') drawKanban(board);
+  if(demandaView==='kanban') drawStatusTabs(board);
   else drawCalendar(board);
 }
 
-function drawKanban(board){
+function drawStatusTabs(board){
   const tasks = filteredTasks();
-  const cols = STATUS_FLOW;
-  board.innerHTML = `<div class="kanban">` + cols.map(status=>{
-    const items = tasks.filter(t=>t.status===status).sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999'));
-    return `<div class="kanban-col">
-      <div class="kanban-col-head"><span>${STATUS_LABEL[status]}</span><span class="cnt">${items.length}</span></div>
-      <div class="kanban-cards">${items.map(taskCardHTML).join('') || ''}</div>
-    </div>`;
-  }).join('') + `</div>`;
+  const tabs = [{key:'todas', label:'Todas'}, ...STATUS_FLOW.map(s=>({key:s, label:STATUS_LABEL[s]}))];
+  const counts = {};
+  tabs.forEach(tb=>{ counts[tb.key] = tb.key==='todas' ? tasks.length : tasks.filter(t=>t.status===tb.key).length; });
+
+  const shown = (demandaStatusTab==='todas' ? tasks : tasks.filter(t=>t.status===demandaStatusTab))
+    .sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999'));
+
+  board.innerHTML = `
+    <div class="status-tabs">
+      ${tabs.map(tb=>`<button class="status-tab ${demandaStatusTab===tb.key?'active':''}" data-tab="${tb.key}">${tb.label} <span class="cnt">${counts[tb.key]}</span></button>`).join('')}
+    </div>
+    <div class="task-list-vertical" id="statusTabList">
+      ${shown.map(t=>demandaListItemHTML(t)).join('') || '<div class="empty">Nenhuma demanda aqui.</div>'}
+    </div>
+  `;
+  board.querySelectorAll('.status-tab').forEach(b=>b.addEventListener('click', ()=>{ demandaStatusTab=b.dataset.tab; drawStatusTabs(board); }));
   board.querySelectorAll('.task-card').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
+}
+
+function demandaListItemHTML(t){
+  const c = clientById(t.client_id);
+  const owner = t.assignee_id ? userById(t.assignee_id) : null;
+  const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
+  return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+      <div style="min-width:0;">
+        <div class="tclient">${c?.name||'—'}${owner?' · '+owner.full_name:''}</div>
+        <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${t.reference_image?' 🖼️':''}</div>
+      </div>
+      <span class="badge gray" style="flex-shrink:0;">${STATUS_LABEL[t.status]}</span>
+    </div>
+    <div class="tmeta">
+      <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
+      <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
+    </div>
+  </div>`;
 }
 
 function drawCalendar(board){
@@ -1222,7 +1286,7 @@ function drawCalendar(board){
   for(let d=1; d<=daysInMonth; d++){
     const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayTasks = byDay[iso] || [];
-    const hasLate = dayTasks.some(t=>iso<todayISO() && !['concluido','cancelado'].includes(t.status));
+    const hasLate = dayTasks.some(t=>iso<todayISO() && !DONE_STATUSES.includes(t.status));
     const hasUrgent = dayTasks.some(t=>t.priority==='urgente');
     const isToday = iso===todayISO();
     cells += `<div class="cal-day ${demandaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
@@ -1259,6 +1323,7 @@ function openTaskModal(id){
   document.getElementById('taskModalTitle').textContent = t ? t.title : 'Nova demanda';
   const body = document.getElementById('taskModalBody');
   const comments = t ? state.task_comments.filter(c=>c.task_id===t.id) : [];
+  const creator = t ? userById(t.created_by) : currentUser();
 
   body.innerHTML = `
     <div class="field"><label>Título</label><input type="text" id="tf_title" value="${t?.title||''}"></div>
@@ -1276,17 +1341,26 @@ function openTaskModal(id){
       </div>
       <div class="field"><label>Prazo</label><input type="date" id="tf_due" value="${t?.due_date||todayISO()}"></div>
     </div>
-    <div class="field"><label>Status</label>
-      <select id="tf_status">${STATUS_FLOW.concat(['pausado','cancelado']).map(s=>`<option value="${s}" ${t?.status===s?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}</select>
+    <div class="field-row">
+      <div class="field"><label>Status</label>
+        <select id="tf_status">${STATUS_FLOW.concat(['pausado','cancelado']).map(s=>`<option value="${s}" ${t?.status===s?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}</select>
+      </div>
+      <div class="field"><label>Responsável pela execução</label>
+        <select id="tf_owner"><option value="">— selecionar —</option>${assignableUsers().map(u=>`<option value="${u.id}" ${t?.assignee_id===u.id?'selected':''}>${u.full_name} — ${ROLE_LABEL[u.role]}</option>`).join('')}</select>
+      </div>
     </div>
-    <div class="field"><label>Responsável</label>
-      <select id="tf_owner">${state.users.filter(u=>['designer','editor','social_media'].includes(u.role)).map(u=>`<option value="${u.id}">${u.full_name} — ${ROLE_LABEL[u.role]}</option>`).join('')}</select>
-    </div>
-    <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="3">${t?.briefing?.objetivo||''}</textarea></div>
+    <div style="font-size:11px;color:var(--text-faint);margin:-10px 0 14px;">Criado por: <b style="color:var(--text-muted);">${creator?.full_name||'—'}</b>${t?.created_by?'':' (você, ao salvar)'}</div>
+    <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="6" style="min-height:130px;">${t?.briefing?.objetivo||''}</textarea></div>
     <div class="field">
-      <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer...</span></label>
+      <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer... (recomendado pra vídeo/arquivo pesado)</span></label>
       <input type="text" id="tf_delivery" value="${t?.delivery_link||''}" placeholder="https://...">
       ${t?.delivery_link?`<div style="margin-top:6px;"><a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12px;">↗ Abrir entrega</a></div>`:''}
+    </div>
+    <div class="field">
+      <label>Imagem anexa <span style="color:var(--text-faint);font-weight:400;">— referência ou insert (imagens leves; pra vídeo use o link acima)</span></label>
+      <input type="file" id="tf_image" accept="image/*">
+      <div id="imagePreviewWrap">${t?.reference_image?`<img src="${t.reference_image}" class="img-preview" id="imagePreview" onclick="window.open(this.src)">`:''}</div>
+      ${t?.reference_image?`<button class="btn ghost small" id="removeImageBtn" style="margin-top:6px;">Remover imagem</button>`:''}
     </div>
     ${t?`
     <div class="section-title" style="margin-top:20px;">Comentários & pedidos de alteração</div>
@@ -1304,8 +1378,24 @@ function openTaskModal(id){
     </div>
   `;
 
+  let pendingImage = t?.reference_image || null;
+  let imageRemoved = false;
+  document.getElementById('tf_image').addEventListener('change', (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    compressImageToDataURL(file, 900, 0.72).then(dataUrl=>{
+      pendingImage = dataUrl;
+      imageRemoved = false;
+      document.getElementById('imagePreviewWrap').innerHTML = `<img src="${dataUrl}" class="img-preview" onclick="window.open(this.src)">`;
+    }).catch(()=>alert('Não consegui processar essa imagem. Tenta outra.'));
+  });
+  document.getElementById('removeImageBtn')?.addEventListener('click', ()=>{
+    pendingImage = null;
+    imageRemoved = true;
+    document.getElementById('imagePreviewWrap').innerHTML = '';
+  });
+
   if(t){
-    document.getElementById('tf_owner').value = t.designer_id||t.editor_id||t.social_media_id||'';
     document.getElementById('addCommentBtn')?.addEventListener('click', ()=>{
       const val = document.getElementById('newComment').value.trim();
       if(!val) return;
@@ -1332,26 +1422,52 @@ function openTaskModal(id){
   document.getElementById('saveTaskBtn').addEventListener('click', ()=>{
     const title = document.getElementById('tf_title').value.trim();
     if(!title) return;
-    const ownerId = document.getElementById('tf_owner').value;
-    const owner = userById(ownerId);
+    const ownerId = document.getElementById('tf_owner').value || null;
     const data = {
       title, client_id:document.getElementById('tf_client').value, task_type:document.getElementById('tf_type').value,
       priority:document.getElementById('tf_prio').value, due_date:document.getElementById('tf_due').value,
       status:document.getElementById('tf_status').value, briefing:{objetivo:document.getElementById('tf_brief').value},
-      delivery_link:document.getElementById('tf_delivery').value.trim()
+      delivery_link:document.getElementById('tf_delivery').value.trim(),
+      assignee_id: ownerId
     };
-    if(owner?.role==='designer') data.designer_id=ownerId;
-    if(owner?.role==='editor') data.editor_id=ownerId;
-    if(owner?.role==='social_media') data.social_media_id=ownerId;
+    if(imageRemoved) data.reference_image = null;
+    else if(pendingImage) data.reference_image = pendingImage;
 
-    if(t){ Object.assign(t,data); }
-    else { state.tasks.push({id:uid(), created_by:currentUser().id, ...data}); }
+    if(t){
+      // limpa campos antigos de responsável (legado) pra não conviver com assignee_id
+      t.designer_id = null; t.editor_id = null; t.social_media_id = null; t.strategist_id = null;
+      Object.assign(t,data);
+    } else {
+      state.tasks.push({id:uid(), created_by:currentUser().id, ...data});
+    }
     saveState(state);
     closeModal('taskModalOverlay');
     render();
   });
 
   openModal('taskModalOverlay');
+}
+
+function compressImageToDataURL(file, maxWidth, quality){
+  return new Promise((resolve, reject)=>{
+    const reader = new FileReader();
+    reader.onerror = reject;
+    reader.onload = (e)=>{
+      const img = new Image();
+      img.onerror = reject;
+      img.onload = ()=>{
+        const scale = Math.min(1, maxWidth/img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width*scale;
+        canvas.height = img.height*scale;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /* ---------- FINANCEIRO ---------- */
@@ -1620,7 +1736,7 @@ function openUserModal(existing){
     <div class="field"><label>Nome completo</label><input type="text" id="uf_name" placeholder="Ex: João Pedro" value="${existing?.full_name||''}"></div>
     <div class="field"><label>Função</label>
       <select id="uf_role">
-        ${[['estrategista','Estrategista'],['social_media','Social Media'],['designer','Designer'],['editor','Editor de Vídeo'],['dono','Dono']]
+        ${[['estrategista','Estrategista'],['social_media','Social Media'],['designer','Designer'],['editor','Editor de Vídeo'],['designer_editor','Designer e Editor'],['dono','Dono']]
           .map(([v,l])=>`<option value="${v}" ${existing?.role===v?'selected':''}>${l}</option>`).join('')}
       </select>
     </div>
