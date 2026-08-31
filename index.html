@@ -858,15 +858,12 @@ function openClientDetail(id){
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;">Ex: diária de captação, horas de edição, ferramenta usada só nesse cliente — qualquer coisa que custa pra agência atender ele.</div>
     `:''}
 
-    <div class="section-title">Contrato ${isDono()?`<button class="btn small" id="editContractBtn">${contract?'Editar':'+ Adicionar'}</button>`:''}</div>
-    ${contract ? `
-      <div class="card">
-        ${isDono()?`<div class="crow"><span class="l">Valor <span style="color:var(--text-faint)">(soma dos serviços)</span></span><span class="v mono">${fmtMoney(contract.value)}</span></div>`:''}
-        <div class="crow"><span class="l">Periodicidade</span><span class="v">${contract.periodicity||'—'}</span></div>
-        <div class="crow"><span class="l">Vencimento</span><span class="v">${fmtDate(contract.end_date)}</span></div>
-        <div class="crow"><span class="l">Status</span><span class="badge blue">${contract.status}</span></div>
-      </div>
-    ` : `<div class="empty">Nenhum contrato cadastrado.</div>`}
+    <div class="section-title">Forma de pagamento ${isDono()?`<button class="btn small" id="editPaymentScheduleBtn">${(c.payment_days&&c.payment_days.length)?'Editar':'Configurar'}</button>`:''}</div>
+    <div class="card">
+      ${(c.payment_days && c.payment_days.length) ?
+        c.payment_days.map(p=>`<div class="crow"><span class="l">Todo dia ${p.day}</span><span class="v mono">${p.percent}%</span></div>`).join('')
+        : `<div style="font-size:12.5px;color:var(--text-muted);">Pagamento único, no vencimento do contrato.</div>`}
+    </div>
 
     ${isDono()?`
     <div class="section-title">Rentabilidade</div>
@@ -876,19 +873,26 @@ function openClientDetail(id){
       <div class="kpi-card"><div class="kpi-label">Lucro</div><div class="kpi-value ${clientLucro(id)>=0?'pos':'neg'}">${fmtMoney(clientLucro(id))}</div></div>
     </div>
 
-    <div class="section-title">Cobrança deste mês</div>
+    <div class="section-title">Cobranças deste mês</div>
     ${(()=>{
       const monthKey = todayISO().slice(0,7);
-      const monthPayment = state.payments.find(p=>p.client_id===id && p.due_date && p.due_date.startsWith(monthKey));
-      if(monthPayment){
-        return `<div class="card"><div class="crow"><span class="l">Valor</span><span class="v mono">${fmtMoney(monthPayment.value)}</span></div>
-          <div class="crow"><span class="l">Status</span><span class="badge ${{pago:'green',pendente:'blue',atrasado:'red',cancelado:'gray'}[monthPayment.status]}">${monthPayment.status}</span></div>
-          <div style="font-size:11px;color:var(--text-faint);margin-top:8px;">Gerencia o status em Financeiro → Receitas.</div></div>`;
-      }
+      const monthPayments = state.payments.filter(p=>p.client_id===id && p.due_date && p.due_date.startsWith(monthKey));
       const receita = clientReceita(id);
       if(receita<=0) return `<div class="empty">Cadastre um serviço com valor primeiro.</div>`;
-      return `<button class="btn primary small" id="genInvoiceBtn">Gerar cobrança deste mês — ${fmtMoney(receita)}</button>
-        <div style="font-size:11px;color:var(--text-faint);margin-top:8px;">Isso cria uma Receita pendente em Financeiro, que é o que aparece no Dashboard.</div>`;
+      const schedule = (c.payment_days && c.payment_days.length) ? c.payment_days : [{day:null, percent:100}];
+      const missing = schedule.length - monthPayments.length;
+      let html = '';
+      if(monthPayments.length){
+        html += monthPayments.map(p=>`<div class="card" style="margin-bottom:8px;"><div class="crow"><span class="l">${fmtDate(p.due_date)}</span><span class="v mono">${fmtMoney(p.value)}</span></div>
+          <div class="crow"><span class="l">Status</span><span class="badge ${{pago:'green',pendente:'blue',atrasado:'red',cancelado:'gray'}[p.status]}">${p.status}</span></div></div>`).join('');
+      }
+      if(missing>0){
+        html += `<button class="btn primary small" id="genInvoiceBtn">${monthPayments.length?'Gerar cobrança(s) restante(s)':'Gerar cobrança(s) deste mês'} — ${fmtMoney(receita)}${schedule.length>1?` em ${schedule.length}x`:''}</button>
+        <div style="font-size:11px;color:var(--text-faint);margin-top:8px;">Isso cria Receita(s) pendente(s) em Financeiro, que é o que aparece no Dashboard.</div>`;
+      } else if(!monthPayments.length){
+        html += `<div class="empty">Nada gerado ainda esse mês.</div>`;
+      }
+      return html;
     })()}
     `:''}
     <div class="section-title">Demandas (${tasks.length})</div>
@@ -930,10 +934,19 @@ function openClientDetail(id){
   document.getElementById('addServiceBtn')?.addEventListener('click', ()=>openServiceModal(id));
   document.getElementById('editContractBtn')?.addEventListener('click', ()=>openContractModal(id, contract));
   document.getElementById('addCostAllocBtn')?.addEventListener('click', ()=>openCostAllocModal(id));
+  document.getElementById('editPaymentScheduleBtn')?.addEventListener('click', ()=>openPaymentScheduleModal(id));
   document.getElementById('genInvoiceBtn')?.addEventListener('click', ()=>{
     const monthKey = todayISO().slice(0,7);
     const lastDay = new Date(Number(monthKey.slice(0,4)), Number(monthKey.slice(5,7)), 0).getDate();
-    state.payments.push({id:uid(), client_id:id, value:clientReceita(id), due_date:`${monthKey}-${String(lastDay).padStart(2,'0')}`, paid_at:null, status:'pendente'});
+    const receita = clientReceita(id);
+    const schedule = (c.payment_days && c.payment_days.length) ? c.payment_days : [{day:null, percent:100}];
+    const already = new Set(state.payments.filter(p=>p.client_id===id && p.due_date && p.due_date.startsWith(monthKey)).map(p=>p.due_date));
+    schedule.forEach(item=>{
+      const day = item.day ? Math.min(item.day, lastDay) : lastDay;
+      const dueDate = `${monthKey}-${String(day).padStart(2,'0')}`;
+      if(already.has(dueDate)) return; // já gerada essa data, não duplica
+      state.payments.push({id:uid(), client_id:id, value: receita * (item.percent/100), due_date:dueDate, paid_at:null, status:'pendente'});
+    });
     saveState(state);
     openClientDetail(id);
   });
@@ -1036,6 +1049,54 @@ function openCostAllocModal(clientId, existing){
   openModal('itemModalOverlay');
 }
 
+function openPaymentScheduleModal(clientId){
+  const c = clientById(clientId);
+  let rows = c.payment_days && c.payment_days.length ? JSON.parse(JSON.stringify(c.payment_days)) : [];
+
+  function renderRows(){
+    const wrap = document.getElementById('psRows');
+    if(rows.length===0){
+      wrap.innerHTML = `<div style="font-size:12px;color:var(--text-faint);margin-bottom:12px;">Sem divisão — o cliente paga tudo de uma vez, no vencimento do contrato.</div>`;
+      return;
+    }
+    const total = rows.reduce((a,r)=>a+Number(r.percent||0),0);
+    wrap.innerHTML = rows.map((r,i)=>`
+      <div class="field-row" style="align-items:flex-end;margin-bottom:8px;">
+        <div class="field" style="margin-bottom:0;"><label>Dia do mês</label><input type="number" min="1" max="31" value="${r.day}" data-ps-day="${i}"></div>
+        <div class="field" style="margin-bottom:0;"><label>% do valor</label><input type="number" min="1" max="100" value="${r.percent}" data-ps-percent="${i}"></div>
+        <button class="btn ghost small danger" data-ps-remove="${i}" style="margin-bottom:2px;">remover</button>
+      </div>
+    `).join('') + `<div style="font-size:11px;color:${total===100?'var(--text-faint)':'var(--amber)'};margin-top:4px;">Total: ${total}% ${total!==100?'— o ideal é somar 100%':''}</div>`;
+
+    wrap.querySelectorAll('[data-ps-day]').forEach(inp=>inp.addEventListener('input', ()=>{ rows[inp.dataset.psDay].day = Number(inp.value); }));
+    wrap.querySelectorAll('[data-ps-percent]').forEach(inp=>inp.addEventListener('input', ()=>{ rows[inp.dataset.psPercent].percent = Number(inp.value); renderRows(); }));
+    wrap.querySelectorAll('[data-ps-remove]').forEach(btn=>btn.addEventListener('click', ()=>{ rows.splice(Number(btn.dataset.psRemove),1); renderRows(); }));
+  }
+
+  document.getElementById('itemModalTitle').textContent = 'Forma de pagamento';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Ex: cliente paga metade todo dia 1 e metade todo dia 15 — configure as datas e o % de cada parte.</div>
+    <div id="psRows"></div>
+    <button class="btn ghost small" id="psAddRow" style="margin-bottom:16px;">+ Adicionar data</button>
+    <div class="modal-foot">
+      <button class="btn ghost" data-close="itemModalOverlay">Cancelar</button>
+      <button class="btn primary" id="savePaymentScheduleBtn">Salvar</button>
+    </div>
+  `;
+  renderRows();
+  document.getElementById('psAddRow').addEventListener('click', ()=>{
+    rows.push({day:1, percent: rows.length===0?100:0});
+    renderRows();
+  });
+  document.getElementById('savePaymentScheduleBtn').addEventListener('click', ()=>{
+    c.payment_days = rows.filter(r=>r.day>=1 && r.day<=31 && r.percent>0);
+    saveState(state);
+    closeModal('itemModalOverlay');
+    openClientDetail(clientId);
+  });
+  openModal('itemModalOverlay');
+}
+
 function openContractModal(clientId, existing){
   document.getElementById('itemModalTitle').textContent = existing ? 'Editar contrato' : 'Novo contrato';
   document.getElementById('itemModalBody').innerHTML = `
@@ -1082,7 +1143,7 @@ function taskCardHTML(t){
   const isLate = t.due_date && t.due_date<todayISO() && !['concluido','cancelado'].includes(t.status);
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div class="tclient">${c?.name||'—'}</div>
-    <div class="ttitle">${t.title}</div>
+    <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
       <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
@@ -1222,11 +1283,19 @@ function openTaskModal(id){
       <select id="tf_owner">${state.users.filter(u=>['designer','editor','social_media'].includes(u.role)).map(u=>`<option value="${u.id}">${u.full_name} — ${ROLE_LABEL[u.role]}</option>`).join('')}</select>
     </div>
     <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="3">${t?.briefing?.objetivo||''}</textarea></div>
+    <div class="field">
+      <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer...</span></label>
+      <input type="text" id="tf_delivery" value="${t?.delivery_link||''}" placeholder="https://...">
+      ${t?.delivery_link?`<div style="margin-top:6px;"><a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12px;">↗ Abrir entrega</a></div>`:''}
+    </div>
     ${t?`
-    <div class="section-title" style="margin-top:20px;">Comentários</div>
+    <div class="section-title" style="margin-top:20px;">Comentários & pedidos de alteração</div>
     <div id="commentList">${comments.map(c=>`<div class="comment-item"><div class="cauthor">${userById(c.user_id)?.full_name||'—'}<span>${new Date(c.created_at).toLocaleString('pt-BR')}</span></div>${c.content}</div>`).join('') || '<div class="empty">Nenhum comentário ainda.</div>'}</div>
-    <div class="field" style="margin-top:10px;"><input type="text" id="newComment" placeholder="Escreva um comentário..."></div>
-    <button class="btn small" id="addCommentBtn">Comentar</button>
+    <div class="field" style="margin-top:10px;"><textarea id="newComment" rows="2" placeholder="Escreva um comentário ou o que precisa mudar..."></textarea></div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn small" id="addCommentBtn">Comentar</button>
+      <button class="btn small" id="requestChangeBtn" style="color:var(--amber);">Solicitar alteração</button>
+    </div>
     `:''}
     <div class="modal-foot">
       <button class="btn ghost" data-close="taskModalOverlay">Cancelar</button>
@@ -1241,6 +1310,14 @@ function openTaskModal(id){
       const val = document.getElementById('newComment').value.trim();
       if(!val) return;
       state.task_comments.push({id:uid(), task_id:t.id, user_id:currentUser().id, content:val, created_at:Date.now()});
+      saveState(state);
+      openTaskModal(id);
+    });
+    document.getElementById('requestChangeBtn')?.addEventListener('click', ()=>{
+      const val = document.getElementById('newComment').value.trim();
+      if(!val){ document.getElementById('newComment').focus(); return; }
+      state.task_comments.push({id:uid(), task_id:t.id, user_id:currentUser().id, content:val, created_at:Date.now()});
+      t.status = 'alteracao_solicitada';
       saveState(state);
       openTaskModal(id);
     });
@@ -1260,7 +1337,8 @@ function openTaskModal(id){
     const data = {
       title, client_id:document.getElementById('tf_client').value, task_type:document.getElementById('tf_type').value,
       priority:document.getElementById('tf_prio').value, due_date:document.getElementById('tf_due').value,
-      status:document.getElementById('tf_status').value, briefing:{objetivo:document.getElementById('tf_brief').value}
+      status:document.getElementById('tf_status').value, briefing:{objetivo:document.getElementById('tf_brief').value},
+      delivery_link:document.getElementById('tf_delivery').value.trim()
     };
     if(owner?.role==='designer') data.designer_id=ownerId;
     if(owner?.role==='editor') data.editor_id=ownerId;
@@ -1278,17 +1356,26 @@ function openTaskModal(id){
 
 /* ---------- FINANCEIRO ---------- */
 function renderFinanceiro(el){
+  const sortedPayments = [...state.payments].sort((a,b)=>{
+    const rank = s=> s==='atrasado'?0 : s==='pendente'?1 : s==='pago'?2 : 3;
+    if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
+    return (a.due_date||'').localeCompare(b.due_date||'');
+  });
   el.innerHTML = `
     <div class="section-title" style="margin-top:0;">Receitas <button class="btn small primary" id="addPaymentBtn">+ Receita</button></div>
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
-        <tr><th>Cliente</th><th>Valor</th><th>Vencimento</th><th>Status</th></tr>
-        ${state.payments.map(p=>`<tr>
+        <tr><th>Cliente</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr>
+        ${sortedPayments.map(p=>`<tr>
           <td>${clientById(p.client_id)?.name||'—'}</td>
           <td class="mono">${fmtMoney(p.value)}</td>
           <td>${fmtDate(p.due_date)}</td>
           <td><span class="badge ${{pago:'green',pendente:'blue',atrasado:'red',cancelado:'gray'}[p.status]}">${p.status}</span></td>
-        </tr>`).join('')}
+          <td style="text-align:right;white-space:nowrap;">
+            ${p.status!=='pago'?`<button class="btn small primary" data-mark-paid="${p.id}">Marcar como pago</button>`:''}
+            <button class="btn ghost small" data-edit-payment="${p.id}">editar</button>
+          </td>
+        </tr>`).join('') || `<tr><td colspan="5" style="color:var(--text-faint)">Nenhuma receita lançada ainda.</td></tr>`}
       </table></div>
     </div>
 
@@ -1302,22 +1389,52 @@ function renderFinanceiro(el){
   `;
   document.getElementById('addPaymentBtn').addEventListener('click', ()=>openPaymentModal());
   document.getElementById('addExpenseBtn').addEventListener('click', ()=>openExpenseModal());
+  el.querySelectorAll('[data-mark-paid]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = state.payments.find(x=>x.id===btn.dataset.markPaid);
+      p.status = 'pago';
+      p.paid_at = todayISO();
+      saveState(state);
+      render();
+    });
+  });
+  el.querySelectorAll('[data-edit-payment]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      openPaymentModal(state.payments.find(x=>x.id===btn.dataset.editPayment));
+    });
+  });
 }
 
-function openPaymentModal(){
-  document.getElementById('genericModalTitle').textContent = 'Nova receita';
+function openPaymentModal(existing){
+  document.getElementById('genericModalTitle').textContent = existing ? 'Editar receita' : 'Nova receita';
   document.getElementById('genericModalBody').innerHTML = `
-    <div class="field"><label>Cliente</label><select id="pf_client">${state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Cliente</label><select id="pf_client">${state.clients.map(c=>`<option value="${c.id}" ${existing?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
     <div class="field-row">
-      <div class="field"><label>Valor</label><input type="number" id="pf_value" value="0"></div>
-      <div class="field"><label>Vencimento</label><input type="date" id="pf_due" value="${todayISO()}"></div>
+      <div class="field"><label>Valor</label><input type="number" id="pf_value" value="${existing?.value||0}"></div>
+      <div class="field"><label>Vencimento</label><input type="date" id="pf_due" value="${existing?.due_date||todayISO()}"></div>
     </div>
-    <div class="field"><label>Status</label><select id="pf_status">${['pendente','pago','atrasado','cancelado'].map(s=>`<option value="${s}">${s}</option>`).join('')}</select></div>
-    <div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Cancelar</button><button class="btn primary" id="savePaymentBtn">Salvar</button></div>
+    <div class="field"><label>Status</label><select id="pf_status">${['pendente','pago','atrasado','cancelado'].map(s=>`<option value="${s}" ${existing?.status===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="modal-foot">
+      ${existing?`<button class="btn ghost danger" id="deletePaymentBtn" style="margin-right:auto;">Excluir</button>`:''}
+      <button class="btn ghost" data-close="genericModalOverlay">Cancelar</button>
+      <button class="btn primary" id="savePaymentBtn">Salvar</button>
+    </div>
   `;
+  document.getElementById('deletePaymentBtn')?.addEventListener('click', ()=>{
+    state.payments = state.payments.filter(p=>p.id!==existing.id);
+    saveState(state); closeModal('genericModalOverlay'); render();
+  });
   document.getElementById('savePaymentBtn').addEventListener('click', ()=>{
-    state.payments.push({id:uid(), client_id:document.getElementById('pf_client').value, value:Number(document.getElementById('pf_value').value),
-      due_date:document.getElementById('pf_due').value, status:document.getElementById('pf_status').value});
+    const status = document.getElementById('pf_status').value;
+    const data = {client_id:document.getElementById('pf_client').value, value:Number(document.getElementById('pf_value').value),
+      due_date:document.getElementById('pf_due').value, status};
+    if(existing){
+      Object.assign(existing, data);
+      if(status==='pago' && !existing.paid_at) existing.paid_at = todayISO();
+      if(status!=='pago') existing.paid_at = null;
+    } else {
+      state.payments.push({id:uid(), ...data, paid_at: status==='pago'?todayISO():null});
+    }
     saveState(state); closeModal('genericModalOverlay'); render();
   });
   openModal('genericModalOverlay');
