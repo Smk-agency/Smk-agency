@@ -402,6 +402,13 @@ function linkify(text){
   const escaped = escapeHTML(text);
   return escaped.replace(/(https?:\/\/[^\s<]+)/g, url=>`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-soft);word-break:break-all;">${url}</a>`).replace(/\n/g,'<br>');
 }
+// só os links do texto, clicáveis — usado debaixo de um textarea editável, pra não repetir o texto inteiro
+function extractLinksHTML(text){
+  if(!text) return '';
+  const urls = text.match(/https?:\/\/[^\s<]+/g);
+  if(!urls || !urls.length) return '';
+  return urls.map(url=>`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-soft);word-break:break-all;">↗ ${url}</a>`).join('<br>');
+}
 // cresce o textarea pra caber o conteúdo, em vez de cortar com barra de rolagem
 function autoResizeTextarea(el){
   el.style.height = 'auto';
@@ -412,7 +419,7 @@ function linkableFieldHTML(id, label, value, rows){
   return `<div class="field">
     <label>${label}</label>
     <textarea id="${id}" rows="${rows||3}">${value||''}</textarea>
-    <div class="link-preview" id="${id}_preview" style="${value&&/https?:\/\//.test(value)?'':'display:none;'}">${linkify(value)}</div>
+    <div class="link-preview" id="${id}_preview" style="${value&&/https?:\/\//.test(value)?'':'display:none;'}">${extractLinksHTML(value)}</div>
   </div>`;
 }
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
@@ -1584,7 +1591,7 @@ function openTaskModal(id){
       const prev = document.getElementById(fid+'_preview');
       const hasLink = /https?:\/\//.test(val);
       prev.style.display = hasLink ? 'block' : 'none';
-      prev.innerHTML = hasLink ? linkify(val) : '';
+      prev.innerHTML = hasLink ? extractLinksHTML(val) : '';
     });
   });
 
