@@ -387,6 +387,7 @@ let db, agencyDocRef;
 const ROLE_LABEL = {dono:'Dono',estrategista:'Estrategista',social_media:'Social Media',designer:'Designer',editor:'Editor de Vídeo',designer_editor:'Designer e Editor'};
 const ROLE_COLOR = {dono:'#1FA97C',estrategista:'#4C7EFF',social_media:'#E0A62D',designer:'#B983F0',editor:'#E0553D',designer_editor:'#E0709A'};
 const EXECUTOR_ROLES = ['designer','editor','designer_editor'];
+const TASK_TYPES = ['Arte','Story','Carrossel','Post','Reels','Vídeo','Thumbnail','Fotografia','Copy','Estratégia','Outro'];
 const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado','concluido'];
 const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado', concluido:'Concluído',
   backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',
@@ -1373,8 +1374,10 @@ let demandaStatusTab = 'todas';
 function filteredTasks(){
   const clientF = document.getElementById('filterClient')?.value || '';
   const ownerF = document.getElementById('filterOwner')?.value || '';
+  const typeF = document.getElementById('filterType')?.value || '';
   return state.tasks.filter(t=>{
     if(clientF && t.client_id!==clientF) return false;
+    if(typeF && t.task_type!==typeF) return false;
     if(!isDono()){
       const scoped = tasksScopedToUser(currentUser());
       if(!scoped.includes(t)) return false;
@@ -1389,6 +1392,7 @@ function renderDemandas(el){
   el.innerHTML = `
     <div class="filter-bar">
       <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
+      <select id="filterType"><option value="">Todos os tipos</option>${TASK_TYPES.map(ty=>`<option value="${ty}">${ty}</option>`).join('')}</select>
       ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}">${u.full_name}</option>`).join('')}</select>`:''}
       <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Lista</button>
       <button class="btn small ${demandaView==='calendar'?'primary':''}" id="viewCalendarBtn">▦ Calendário</button>
@@ -1397,6 +1401,7 @@ function renderDemandas(el){
     <div id="demandaBoard"></div>
   `;
   document.getElementById('filterClient').addEventListener('change', drawDemandas);
+  document.getElementById('filterType').addEventListener('change', drawDemandas);
   document.getElementById('filterOwner')?.addEventListener('change', drawDemandas);
   document.getElementById('viewKanbanBtn').addEventListener('click', ()=>{ demandaView='kanban'; render(); });
   document.getElementById('viewCalendarBtn').addEventListener('click', ()=>{ demandaView='calendar'; render(); });
@@ -1539,7 +1544,7 @@ function openTaskModal(id){
         <select id="tf_client">${state.clients.map(c=>`<option value="${c.id}" ${t?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
       </div>
       <div class="field"><label>Tipo</label>
-        <select id="tf_type">${['Arte','Story','Carrossel','Post','Reels','Vídeo','Thumbnail','Fotografia','Copy','Estratégia','Outro'].map(ty=>`<option ${t?.task_type===ty?'selected':''}>${ty}</option>`).join('')}</select>
+        <select id="tf_type">${TASK_TYPES.map(ty=>`<option ${t?.task_type===ty?'selected':''}>${ty}</option>`).join('')}</select>
       </div>
     </div>
     <div class="field-row">
