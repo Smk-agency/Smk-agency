@@ -192,7 +192,7 @@ tr:last-child td{border-bottom:none;}
 .filter-bar{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
 select,input[type=text],input[type=number],input[type=date],textarea{
   background:var(--surface-2);border:1px solid var(--border);color:var(--text);border-radius:7px;
-  padding:8px 10px;font-size:12.5px;font-family:inherit;
+  padding:8px 10px;font-size:12.5px;font-family:inherit;width:100%;box-sizing:border-box;
 }
 select:focus,input:focus,textarea:focus{outline:none;border-color:var(--accent);}
 label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;font-weight:500;}
@@ -213,16 +213,18 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .status-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-soft);}
 .status-tab.active .cnt{background:rgba(143,227,192,0.18);}
 .task-list-vertical{display:flex;flex-direction:column;gap:9px;}
-.img-preview{max-width:260px;max-height:220px;border-radius:8px;border:1px solid var(--border);display:block;cursor:pointer;object-fit:cover;}
+.img-preview{max-width:130px;max-height:110px;border-radius:8px;border:1px solid var(--border);display:block;cursor:pointer;object-fit:cover;}
 .feed-item-image{margin-top:4px;}
 .feed-item-image .cap{font-size:12px;color:var(--text-muted);margin-bottom:6px;}
 .system-log{font-size:11.5px;color:var(--text-faint);padding:4px 2px;display:flex;align-items:center;gap:6px;}
+.feed-delete-btn{position:absolute;top:8px;right:8px;background:none;border:none;color:var(--text-faint);font-size:15px;line-height:1;padding:2px 5px;border-radius:5px;cursor:pointer;}
+.feed-delete-btn:hover{color:var(--red);background:var(--red-dim);}
 .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
 .modal-head h3{font-size:16px;font-weight:600;}
 .modal-close{background:none;border:none;color:var(--text-faint);font-size:20px;line-height:1;}
 .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
 
-.comment-item{padding:10px;background:var(--surface-2);border-radius:8px;margin-bottom:7px;font-size:12.5px;}
+.comment-item{position:relative;padding:10px 30px 10px 10px;background:var(--surface-2);border-radius:8px;margin-bottom:7px;font-size:12.5px;}
 .comment-item .cauthor{font-weight:600;font-size:11.5px;margin-bottom:3px;}
 .comment-item .cauthor span{color:var(--text-faint);font-weight:400;margin-left:6px;}
 
@@ -1363,11 +1365,14 @@ document.getElementById('newTaskBtn').addEventListener('click', ()=>openTaskModa
 function feedItemHTML(c){
   const author = userById(c.user_id)?.full_name || '—';
   const when = new Date(c.created_at).toLocaleString('pt-BR');
+  const canDelete = isDono() || c.user_id===currentUser().id;
+  const delBtn = canDelete ? `<button class="feed-delete-btn" data-del-comment="${c.id}" title="Excluir">×</button>` : '';
   if(c.type==='system'){
     return `<div class="system-log">🕓 ${c.content} <span style="color:var(--text-faint);">— ${when}</span></div>`;
   }
   if(c.type==='image'){
     return `<div class="comment-item">
+      ${delBtn}
       <div class="cauthor">${author} anexou uma imagem<span>${when}</span></div>
       <div class="feed-item-image">
         ${c.content?`<div class="cap">${c.content}</div>`:''}
@@ -1375,7 +1380,7 @@ function feedItemHTML(c){
       </div>
     </div>`;
   }
-  return `<div class="comment-item"><div class="cauthor">${author}<span>${when}</span></div>${c.content}</div>`;
+  return `<div class="comment-item">${delBtn}<div class="cauthor">${author}<span>${when}</span></div>${c.content}</div>`;
 }
 
 function openTaskModal(id){
@@ -1410,7 +1415,7 @@ function openTaskModal(id){
       </div>
     </div>
     <div style="font-size:11px;color:var(--text-faint);margin:-10px 0 14px;">Criado por: <b style="color:var(--text-muted);">${creator?.full_name||'—'}</b>${t?.created_by?'':' (você, ao salvar)'}</div>
-    <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="10" style="min-height:220px;">${t?.briefing?.objetivo||''}</textarea></div>
+    <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="5" style="min-height:110px;">${t?.briefing?.objetivo||''}</textarea></div>
     <div class="field">
       <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer... (recomendado pra vídeo/arquivo pesado)</span></label>
       <input type="text" id="tf_delivery" value="${t?.delivery_link||''}" placeholder="https://...">
@@ -1456,6 +1461,13 @@ function openTaskModal(id){
       openTaskModal(id);
     });
     document.getElementById('attachImageBtn')?.addEventListener('click', ()=>document.getElementById('tf_image').click());
+    document.getElementById('commentList')?.addEventListener('click', (e)=>{
+      const btn = e.target.closest('[data-del-comment]');
+      if(!btn) return;
+      state.task_comments = state.task_comments.filter(c=>c.id!==btn.dataset.delComment);
+      saveState(state);
+      openTaskModal(id);
+    });
     document.getElementById('tf_image')?.addEventListener('change', (e)=>{
       const file = e.target.files[0];
       if(!file) return;
