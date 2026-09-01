@@ -1575,7 +1575,9 @@ function openTaskModal(id){
 
   ['tf_brief','tf_head','tf_sub','tf_ref','tf_legenda'].forEach(fid=>{
     const el = document.getElementById(fid);
-    autoResizeTextarea(el);
+    // o modal ainda tá com display:none aqui (só fica visível no openModal() lá embaixo),
+    // e nesse estado scrollHeight vem errado — por isso o resize inicial espera o modal abrir.
+    setTimeout(()=>autoResizeTextarea(el), 0);
     el.addEventListener('input', ()=>{
       autoResizeTextarea(el);
       const val = el.value;
