@@ -402,6 +402,11 @@ function linkify(text){
   const escaped = escapeHTML(text);
   return escaped.replace(/(https?:\/\/[^\s<]+)/g, url=>`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-soft);word-break:break-all;">${url}</a>`).replace(/\n/g,'<br>');
 }
+// cresce o textarea pra caber o conteúdo, em vez de cortar com barra de rolagem
+function autoResizeTextarea(el){
+  el.style.height = 'auto';
+  el.style.height = el.scrollHeight + 'px';
+}
 // campo de texto com preview de link clicável logo abaixo (pra colar referência/briefing com URL)
 function linkableFieldHTML(id, label, value, rows){
   return `<div class="field">
@@ -1569,8 +1574,11 @@ function openTaskModal(id){
   `;
 
   ['tf_brief','tf_head','tf_sub','tf_ref','tf_legenda'].forEach(fid=>{
-    document.getElementById(fid).addEventListener('input', ()=>{
-      const val = document.getElementById(fid).value;
+    const el = document.getElementById(fid);
+    autoResizeTextarea(el);
+    el.addEventListener('input', ()=>{
+      autoResizeTextarea(el);
+      const val = el.value;
       const prev = document.getElementById(fid+'_preview');
       const hasLink = /https?:\/\//.test(val);
       prev.style.display = hasLink ? 'block' : 'none';
