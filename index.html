@@ -499,8 +499,13 @@ function generateMonthlyInvoices(){
   state.clients.filter(c=>c.status!=='encerrado').forEach(c=>{
     const receita = clientReceita(c.id);
     if(receita<=0) return;
-    const schedule = (c.payment_days && c.payment_days.length) ? c.payment_days : [{day:null, percent:100}];
-    const existingDates = new Set(state.payments.filter(p=>p.client_id===c.id && p.due_date && p.due_date.startsWith(monthKey)).map(p=>p.due_date));
+    const hasSchedule = c.payment_days && c.payment_days.length;
+    const schedule = hasSchedule ? c.payment_days : [{day:null, percent:100}];
+    const paymentsThisMonth = state.payments.filter(p=>p.client_id===c.id && p.due_date && p.due_date.startsWith(monthKey));
+    // sem forma de pagamento configurada: se já existe QUALQUER cobrança do cliente esse mês (manual, por exemplo),
+    // não cria outra — só cai no padrão "cobra tudo no fim do mês" quando o cliente ainda não foi cobrado.
+    if(!hasSchedule && paymentsThisMonth.length>0) return;
+    const existingDates = new Set(paymentsThisMonth.map(p=>p.due_date));
     schedule.forEach(item=>{
       const day = item.day ? Math.min(item.day, lastDay) : lastDay;
       const dueDate = `${monthKey}-${String(day).padStart(2,'0')}`;
