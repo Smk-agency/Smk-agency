@@ -206,14 +206,17 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 }
 .modal-overlay.open{display:flex;}
 .modal{background:var(--surface);border:1px solid var(--border);border-radius:14px;width:100%;max-width:560px;padding:24px;margin-bottom:5vh;}
-.modal.modal-lg{max-width:760px;}
+.modal.modal-lg{max-width:880px;}
 .status-tabs{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px;margin-bottom:16px;}
 .status-tab{flex-shrink:0;display:flex;align-items:center;gap:7px;padding:8px 14px;border-radius:100px;font-size:12.5px;font-weight:600;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);white-space:nowrap;}
 .status-tab .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
 .status-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-soft);}
 .status-tab.active .cnt{background:rgba(143,227,192,0.18);}
 .task-list-vertical{display:flex;flex-direction:column;gap:9px;}
-.img-preview{max-width:100%;border-radius:8px;border:1px solid var(--border);margin-top:8px;display:block;cursor:pointer;}
+.img-preview{max-width:260px;max-height:220px;border-radius:8px;border:1px solid var(--border);display:block;cursor:pointer;object-fit:cover;}
+.feed-item-image{margin-top:4px;}
+.feed-item-image .cap{font-size:12px;color:var(--text-muted);margin-bottom:6px;}
+.system-log{font-size:11.5px;color:var(--text-faint);padding:4px 2px;display:flex;align-items:center;gap:6px;}
 .modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;}
 .modal-head h3{font-size:16px;font-weight:600;}
 .modal-close{background:none;border:none;color:var(--text-faint);font-size:20px;line-height:1;}
@@ -305,6 +308,7 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
         <button class="nav-item" data-view="financeiro" data-owner="1"><span class="ic">$</span> Financeiro</button>
         <button class="nav-item" data-view="rentabilidade" data-owner="1"><span class="ic">◈</span> Rentabilidade</button>
         <button class="nav-item" data-view="equipe" data-owner="1"><span class="ic">◐</span> Equipe</button>
+        <button class="nav-item" data-view="arquivadas" data-owner="1"><span class="ic">🗄</span> Arquivadas</button>
       </div>
       <div class="sidebar-user">
         <div class="profile-avatar" id="sbAvatar"></div>
@@ -375,11 +379,12 @@ let db, agencyDocRef;
 const ROLE_LABEL = {dono:'Dono',estrategista:'Estrategista',social_media:'Social Media',designer:'Designer',editor:'Editor de Vídeo',designer_editor:'Designer e Editor'};
 const ROLE_COLOR = {dono:'#1FA97C',estrategista:'#4C7EFF',social_media:'#E0A62D',designer:'#B983F0',editor:'#E0553D',designer_editor:'#E0709A'};
 const EXECUTOR_ROLES = ['designer','editor','designer_editor'];
-const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado'];
-const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado',
-  backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',concluido:'Aprovado',
+const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado','concluido'];
+const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado', concluido:'Concluído',
+  backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',
   pausado:'Pausado',cancelado:'Cancelado'};
-const DONE_STATUSES = ['aprovado','cancelado'];
+const STATUS_COLOR = {a_fazer:'#4C7EFF', em_revisao:'#E0A62D', alteracao_solicitada:'#F2794A', aprovado:'#1FA97C', concluido:'#14B8A6', pausado:'#8C93A3', cancelado:'#E0553D'};
+const DONE_STATUSES = ['aprovado','concluido','cancelado'];
 const PRIO_COLOR = {baixa:'#5A6272',media:'#4C7EFF',alta:'#E0A62D',urgente:'#E0553D'};
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -388,13 +393,17 @@ function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toIS
 function fmtMoney(v){ return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; }
 function initials(name){ return name.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase(); }
+function statusBadgeHTML(status){
+  const color = STATUS_COLOR[status] || '#8C93A3';
+  return `<span class="badge" style="background:${color}22;color:${color};">${STATUS_LABEL[status]}</span>`;
+}
 
 function seed(){
   const users = [
     {id:'u_dono', full_name:'Smurk', username:'smurk', role:'dono', access_code:'1000'},
   ];
   return {users, clients:[], client_services:[], contracts:[], tasks:[], task_comments:[], task_versions:[],
-    payments:[], expenses:[], team_costs:[], client_cost_allocations:[],
+    payments:[], expenses:[], team_costs:[], client_cost_allocations:[], archived_tasks:{},
     settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 }
 
@@ -409,11 +418,11 @@ function saveState(s){
 }
 
 let state = {users:[], clients:[], client_services:[], contracts:[], tasks:[], task_comments:[], task_versions:[],
-  payments:[], expenses:[], team_costs:[], client_cost_allocations:[],
+  payments:[], expenses:[], team_costs:[], client_cost_allocations:[], archived_tasks:{},
   settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 let currentView = 'mesa';
 
-const LEGACY_STATUS_MAP = {backlog:'a_fazer', briefing:'a_fazer', aguardando_producao:'a_fazer', em_producao:'a_fazer', primeira_versao:'a_fazer', concluido:'aprovado'};
+const LEGACY_STATUS_MAP = {backlog:'a_fazer', briefing:'a_fazer', aguardando_producao:'a_fazer', em_producao:'a_fazer', primeira_versao:'a_fazer'};
 function migrateLegacyTasks(){
   let changed = false;
   (state.tasks||[]).forEach(t=>{
@@ -423,6 +432,26 @@ function migrateLegacyTasks(){
       if(legacyOwner){ t.assignee_id = legacyOwner; changed = true; }
     }
   });
+  return changed;
+}
+
+// Demandas "concluído" de meses anteriores saem da lista ativa e vão pra Arquivadas (só o Dono vê),
+// organizadas por mês (AAAA-MM). Roda toda vez que o app abre.
+function archiveOldCompletedTasks(){
+  const currentMonth = todayISO().slice(0,7);
+  if(!state.archived_tasks) state.archived_tasks = {};
+  let changed = false;
+  const stillActive = [];
+  (state.tasks||[]).forEach(t=>{
+    if(t.status==='concluido' && t.completed_month && t.completed_month!==currentMonth){
+      state.archived_tasks[t.completed_month] = state.archived_tasks[t.completed_month] || [];
+      state.archived_tasks[t.completed_month].push(t);
+      changed = true;
+    } else {
+      stillActive.push(t);
+    }
+  });
+  if(changed) state.tasks = stillActive;
   return changed;
 }
 
@@ -451,13 +480,18 @@ async function initApp(){
       Object.assign(state, shared);
     } else {
       Object.assign(state, snap.data());
-      if(migrateLegacyTasks()) saveState(state);
+      if(!state.archived_tasks) state.archived_tasks = {};
+      const m1 = migrateLegacyTasks();
+      const m2 = archiveOldCompletedTasks();
+      if(m1 || m2) saveState(state);
     }
 
     agencyDocRef.onSnapshot(docSnap=>{
       if(!docSnap.exists) return;
       Object.assign(state, docSnap.data());
+      if(!state.archived_tasks) state.archived_tasks = {};
       migrateLegacyTasks();
+      archiveOldCompletedTasks();
       const appVisible = document.getElementById('app').style.display !== 'none';
       if(state.currentUserId && appVisible) render();
     });
@@ -614,8 +648,9 @@ const TITLES = {
   financeiro:['Financeiro','Receitas e despesas — visível só ao Dono'],
   rentabilidade:['Rentabilidade','Lucro e margem por cliente e serviço'],
   equipe:['Equipe','Usuários e custo mensal'],
+  arquivadas:['Arquivadas','Demandas concluídas em meses anteriores — visível só ao Dono'],
 };
-function guardedViews(){ return ['dashboard','financeiro','rentabilidade','equipe']; }
+function guardedViews(){ return ['dashboard','financeiro','rentabilidade','equipe','arquivadas']; }
 
 function render(){
   const [title,sub] = TITLES[currentView];
@@ -634,6 +669,7 @@ function render(){
   if(currentView==='financeiro') return renderFinanceiro(el);
   if(currentView==='rentabilidade') return renderRentabilidade(el);
   if(currentView==='equipe') return renderEquipe(el);
+  if(currentView==='arquivadas') return renderArquivadas(el);
 }
 
 function tasksScopedToUser(u){
@@ -928,7 +964,7 @@ function openClientDetail(id){
     })()}
     `:''}
     <div class="section-title">Demandas (${tasks.length})</div>
-    ${tasks.map(t=>`<div class="task-card" data-task-id="${t.id}" style="padding:10px 12px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;"><span>${t.title}</span><span class="badge gray">${STATUS_LABEL[t.status]}</span></div>`).join('') || '<div class="empty">Sem demandas ainda.</div>'}
+    ${tasks.map(t=>`<div class="task-card" data-task-id="${t.id}" style="padding:10px 12px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;"><span>${t.title}</span>${statusBadgeHTML(t.status)}</div>`).join('') || '<div class="empty">Sem demandas ainda.</div>'}
     <div class="modal-foot">
       ${canEditClients()?`
       ${c.status!=='encerrado' ? `<button class="btn ghost danger" id="archiveClientBtn">Excluir cliente</button>` : `<button class="btn ghost" id="reactivateClientBtn">Reativar cliente</button>`}
@@ -1178,7 +1214,7 @@ function taskCardHTML(t){
   const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div class="tclient">${c?.name||'—'}</div>
-    <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${t.reference_image?' 🖼️':''}</div>
+    <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
       <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
@@ -1240,7 +1276,11 @@ function drawStatusTabs(board){
 
   board.innerHTML = `
     <div class="status-tabs">
-      ${tabs.map(tb=>`<button class="status-tab ${demandaStatusTab===tb.key?'active':''}" data-tab="${tb.key}">${tb.label} <span class="cnt">${counts[tb.key]}</span></button>`).join('')}
+      ${tabs.map(tb=>{
+        const color = STATUS_COLOR[tb.key];
+        const cntStyle = color ? `background:${color}33;color:${color};` : '';
+        return `<button class="status-tab ${demandaStatusTab===tb.key?'active':''}" data-tab="${tb.key}">${tb.label} <span class="cnt" style="${cntStyle}">${counts[tb.key]}</span></button>`;
+      }).join('')}
     </div>
     <div class="task-list-vertical" id="statusTabList">
       ${shown.map(t=>demandaListItemHTML(t)).join('') || '<div class="empty">Nenhuma demanda aqui.</div>'}
@@ -1250,6 +1290,8 @@ function drawStatusTabs(board){
   board.querySelectorAll('.task-card').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
 }
 
+function taskHasImage(t){ return state.task_comments.some(c=>c.task_id===t.id && c.type==='image'); }
+
 function demandaListItemHTML(t){
   const c = clientById(t.client_id);
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
@@ -1258,9 +1300,9 @@ function demandaListItemHTML(t){
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
       <div style="min-width:0;">
         <div class="tclient">${c?.name||'—'}${owner?' · '+owner.full_name:''}</div>
-        <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${t.reference_image?' 🖼️':''}</div>
+        <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
       </div>
-      <span class="badge gray" style="flex-shrink:0;">${STATUS_LABEL[t.status]}</span>
+      <span style="flex-shrink:0;">${statusBadgeHTML(t.status)}</span>
     </div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
@@ -1318,11 +1360,29 @@ function drawCalendar(board){
 
 document.getElementById('newTaskBtn').addEventListener('click', ()=>openTaskModal(null));
 
+function feedItemHTML(c){
+  const author = userById(c.user_id)?.full_name || '—';
+  const when = new Date(c.created_at).toLocaleString('pt-BR');
+  if(c.type==='system'){
+    return `<div class="system-log">🕓 ${c.content} <span style="color:var(--text-faint);">— ${when}</span></div>`;
+  }
+  if(c.type==='image'){
+    return `<div class="comment-item">
+      <div class="cauthor">${author} anexou uma imagem<span>${when}</span></div>
+      <div class="feed-item-image">
+        ${c.content?`<div class="cap">${c.content}</div>`:''}
+        <img src="${c.image_url}" class="img-preview" onclick="window.open(this.src)">
+      </div>
+    </div>`;
+  }
+  return `<div class="comment-item"><div class="cauthor">${author}<span>${when}</span></div>${c.content}</div>`;
+}
+
 function openTaskModal(id){
   const t = id ? state.tasks.find(x=>x.id===id) : null;
   document.getElementById('taskModalTitle').textContent = t ? t.title : 'Nova demanda';
   const body = document.getElementById('taskModalBody');
-  const comments = t ? state.task_comments.filter(c=>c.task_id===t.id) : [];
+  const feed = t ? state.task_comments.filter(c=>c.task_id===t.id).sort((a,b)=>a.created_at-b.created_at) : [];
   const creator = t ? userById(t.created_by) : currentUser();
 
   body.innerHTML = `
@@ -1350,27 +1410,23 @@ function openTaskModal(id){
       </div>
     </div>
     <div style="font-size:11px;color:var(--text-faint);margin:-10px 0 14px;">Criado por: <b style="color:var(--text-muted);">${creator?.full_name||'—'}</b>${t?.created_by?'':' (você, ao salvar)'}</div>
-    <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="6" style="min-height:130px;">${t?.briefing?.objetivo||''}</textarea></div>
+    <div class="field"><label>Briefing / objetivo</label><textarea id="tf_brief" rows="10" style="min-height:220px;">${t?.briefing?.objetivo||''}</textarea></div>
     <div class="field">
       <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer... (recomendado pra vídeo/arquivo pesado)</span></label>
       <input type="text" id="tf_delivery" value="${t?.delivery_link||''}" placeholder="https://...">
       ${t?.delivery_link?`<div style="margin-top:6px;"><a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12px;">↗ Abrir entrega</a></div>`:''}
     </div>
-    <div class="field">
-      <label>Imagem anexa <span style="color:var(--text-faint);font-weight:400;">— referência ou insert (imagens leves; pra vídeo use o link acima)</span></label>
-      <input type="file" id="tf_image" accept="image/*">
-      <div id="imagePreviewWrap">${t?.reference_image?`<img src="${t.reference_image}" class="img-preview" id="imagePreview" onclick="window.open(this.src)">`:''}</div>
-      ${t?.reference_image?`<button class="btn ghost small" id="removeImageBtn" style="margin-top:6px;">Remover imagem</button>`:''}
-    </div>
     ${t?`
-    <div class="section-title" style="margin-top:20px;">Comentários & pedidos de alteração</div>
-    <div id="commentList">${comments.map(c=>`<div class="comment-item"><div class="cauthor">${userById(c.user_id)?.full_name||'—'}<span>${new Date(c.created_at).toLocaleString('pt-BR')}</span></div>${c.content}</div>`).join('') || '<div class="empty">Nenhum comentário ainda.</div>'}</div>
-    <div class="field" style="margin-top:10px;"><textarea id="newComment" rows="2" placeholder="Escreva um comentário ou o que precisa mudar..."></textarea></div>
-    <div style="display:flex;gap:8px;">
+    <div class="section-title" style="margin-top:20px;">Atividade & comentários</div>
+    <div id="commentList">${feed.map(feedItemHTML).join('') || '<div class="empty">Nada por aqui ainda.</div>'}</div>
+    <div class="field" style="margin-top:10px;"><textarea id="newComment" rows="2" placeholder="Escreva um comentário, o que precisa mudar, ou uma legenda pra imagem que for anexar..."></textarea></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;">
       <button class="btn small" id="addCommentBtn">Comentar</button>
       <button class="btn small" id="requestChangeBtn" style="color:var(--amber);">Solicitar alteração</button>
+      <button class="btn small ghost" id="attachImageBtn">📎 Anexar imagem</button>
+      <input type="file" id="tf_image" accept="image/*" style="display:none;">
     </div>
-    `:''}
+    `:`<div style="font-size:11.5px;color:var(--text-faint);margin-top:-6px;">Comentários e anexos ficam disponíveis depois de salvar a demanda.</div>`}
     <div class="modal-foot">
       <button class="btn ghost" data-close="taskModalOverlay">Cancelar</button>
       ${t?`<button class="btn danger" id="deleteTaskBtn">Excluir</button>`:''}
@@ -1378,38 +1434,38 @@ function openTaskModal(id){
     </div>
   `;
 
-  let pendingImage = t?.reference_image || null;
-  let imageRemoved = false;
-  document.getElementById('tf_image').addEventListener('change', (e)=>{
-    const file = e.target.files[0];
-    if(!file) return;
-    compressImageToDataURL(file, 900, 0.72).then(dataUrl=>{
-      pendingImage = dataUrl;
-      imageRemoved = false;
-      document.getElementById('imagePreviewWrap').innerHTML = `<img src="${dataUrl}" class="img-preview" onclick="window.open(this.src)">`;
-    }).catch(()=>alert('Não consegui processar essa imagem. Tenta outra.'));
-  });
-  document.getElementById('removeImageBtn')?.addEventListener('click', ()=>{
-    pendingImage = null;
-    imageRemoved = true;
-    document.getElementById('imagePreviewWrap').innerHTML = '';
-  });
-
   if(t){
     document.getElementById('addCommentBtn')?.addEventListener('click', ()=>{
       const val = document.getElementById('newComment').value.trim();
       if(!val) return;
-      state.task_comments.push({id:uid(), task_id:t.id, user_id:currentUser().id, content:val, created_at:Date.now()});
+      state.task_comments.push({id:uid(), task_id:t.id, type:'comment', user_id:currentUser().id, content:val, created_at:Date.now()});
       saveState(state);
       openTaskModal(id);
     });
     document.getElementById('requestChangeBtn')?.addEventListener('click', ()=>{
       const val = document.getElementById('newComment').value.trim();
       if(!val){ document.getElementById('newComment').focus(); return; }
-      state.task_comments.push({id:uid(), task_id:t.id, user_id:currentUser().id, content:val, created_at:Date.now()});
+      state.task_comments.push({id:uid(), task_id:t.id, type:'comment', user_id:currentUser().id, content:val, created_at:Date.now()});
+      const oldStatus = t.status;
       t.status = 'alteracao_solicitada';
+      if(oldStatus!==t.status){
+        state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:currentUser().id,
+          content:`moveu de "${STATUS_LABEL[oldStatus]}" para "${STATUS_LABEL[t.status]}"`, created_at:Date.now()+1});
+      }
       saveState(state);
       openTaskModal(id);
+    });
+    document.getElementById('attachImageBtn')?.addEventListener('click', ()=>document.getElementById('tf_image').click());
+    document.getElementById('tf_image')?.addEventListener('change', (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      compressImageToDataURL(file, 700, 0.72).then(dataUrl=>{
+        const caption = document.getElementById('newComment').value.trim();
+        state.task_comments.push({id:uid(), task_id:t.id, type:'image', user_id:currentUser().id, content:caption, image_url:dataUrl, created_at:Date.now()});
+        document.getElementById('newComment').value = '';
+        saveState(state);
+        openTaskModal(id);
+      }).catch(()=>alert('Não consegui processar essa imagem. Tenta outra.'));
     });
     document.getElementById('deleteTaskBtn').addEventListener('click', ()=>{
       state.tasks = state.tasks.filter(x=>x.id!==t.id);
@@ -1423,20 +1479,31 @@ function openTaskModal(id){
     const title = document.getElementById('tf_title').value.trim();
     if(!title) return;
     const ownerId = document.getElementById('tf_owner').value || null;
+    const newStatus = document.getElementById('tf_status').value;
+    const newDue = document.getElementById('tf_due').value;
     const data = {
       title, client_id:document.getElementById('tf_client').value, task_type:document.getElementById('tf_type').value,
-      priority:document.getElementById('tf_prio').value, due_date:document.getElementById('tf_due').value,
-      status:document.getElementById('tf_status').value, briefing:{objetivo:document.getElementById('tf_brief').value},
+      priority:document.getElementById('tf_prio').value, due_date:newDue,
+      status:newStatus, briefing:{objetivo:document.getElementById('tf_brief').value},
       delivery_link:document.getElementById('tf_delivery').value.trim(),
       assignee_id: ownerId
     };
-    if(imageRemoved) data.reference_image = null;
-    else if(pendingImage) data.reference_image = pendingImage;
 
     if(t){
+      const oldStatus = t.status, oldDue = t.due_date, me = currentUser().id;
       // limpa campos antigos de responsável (legado) pra não conviver com assignee_id
       t.designer_id = null; t.editor_id = null; t.social_media_id = null; t.strategist_id = null;
       Object.assign(t,data);
+      if(newStatus==='concluido' && oldStatus!=='concluido' && !t.completed_month) t.completed_month = todayISO().slice(0,7);
+      if(newStatus!=='concluido') t.completed_month = null;
+      if(oldStatus!==newStatus){
+        state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:me,
+          content:`moveu de "${STATUS_LABEL[oldStatus]}" para "${STATUS_LABEL[newStatus]}"`, created_at:Date.now()});
+      }
+      if(oldDue!==newDue){
+        state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:me,
+          content:`definiu o prazo para ${fmtDate(newDue)}`, created_at:Date.now()+1});
+      }
     } else {
       state.tasks.push({id:uid(), created_by:currentUser().id, ...data});
     }
@@ -1631,6 +1698,75 @@ function renderServiceRentability(){
 }
 
 /* ---------- EQUIPE ---------- */
+/* ---------- ARQUIVADAS ---------- */
+let arquivadasMonth = null;
+const MONTH_NAMES = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+function monthLabel(key){ const [y,m] = key.split('-'); return `${MONTH_NAMES[Number(m)-1]} de ${y}`; }
+
+function renderArquivadas(el){
+  const archive = state.archived_tasks || {};
+  const months = Object.keys(archive).sort().reverse();
+
+  if(!arquivadasMonth){
+    el.innerHTML = months.length ? `
+      <div class="client-grid">
+        ${months.map(m=>`<div class="client-card" data-month="${m}">
+          <div class="cname">${monthLabel(m)}</div>
+          <div class="crow"><span class="l">Demandas concluídas</span><span class="v">${archive[m].length}</span></div>
+        </div>`).join('')}
+      </div>
+    ` : `<div class="empty">Nenhuma demanda arquivada ainda. Demandas concluídas em meses passados aparecem aqui automaticamente.</div>`;
+    el.querySelectorAll('[data-month]').forEach(c=>c.addEventListener('click', ()=>{ arquivadasMonth = c.dataset.month; render(); }));
+    return;
+  }
+
+  const list = (archive[arquivadasMonth]||[]).slice().sort((a,b)=>(a.due_date||'').localeCompare(b.due_date||''));
+  el.innerHTML = `
+    <button class="btn ghost small" id="backToMonthsBtn" style="margin-bottom:14px;">← Voltar pros meses</button>
+    <div class="section-title" style="margin-top:0;">${monthLabel(arquivadasMonth)} <span class="hint">${list.length} demanda(s)</span></div>
+    <div class="task-list-vertical">
+      ${list.map(t=>{
+        const c = clientById(t.client_id);
+        const owner = t.assignee_id ? userById(t.assignee_id) : null;
+        return `<div class="task-card" data-archived-id="${t.id}">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+            <div><div class="tclient">${c?.name||'—'}${owner?' · '+owner.full_name:''}</div><div class="ttitle">${t.title}</div></div>
+            ${statusBadgeHTML(t.status)}
+          </div>
+        </div>`;
+      }).join('') || '<div class="empty">Nada nesse mês.</div>'}
+    </div>
+  `;
+  document.getElementById('backToMonthsBtn').addEventListener('click', ()=>{ arquivadasMonth = null; render(); });
+  el.querySelectorAll('[data-archived-id]').forEach(card=>{
+    card.addEventListener('click', ()=>{
+      const t = list.find(x=>x.id===card.dataset.archivedId);
+      openArchivedTaskView(t);
+    });
+  });
+}
+
+function openArchivedTaskView(t){
+  const c = clientById(t.client_id);
+  const owner = t.assignee_id ? userById(t.assignee_id) : null;
+  const creator = userById(t.created_by);
+  document.getElementById('genericModalTitle').textContent = t.title;
+  document.getElementById('genericModalBody').innerHTML = `
+    <div style="font-size:11px;color:var(--text-faint);margin-bottom:14px;">Demanda arquivada — somente leitura</div>
+    <div class="kpi-grid" style="margin-bottom:16px;">
+      <div class="kpi-card"><div class="kpi-label">Cliente</div><div class="kpi-value" style="font-size:14px;">${c?.name||'—'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Responsável</div><div class="kpi-value" style="font-size:14px;">${owner?.full_name||'—'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Tipo</div><div class="kpi-value" style="font-size:14px;">${t.task_type||'—'}</div></div>
+      <div class="kpi-card"><div class="kpi-label">Prazo</div><div class="kpi-value" style="font-size:14px;">${fmtDate(t.due_date)}</div></div>
+    </div>
+    <div style="font-size:11.5px;color:var(--text-faint);margin-bottom:10px;">Criado por ${creator?.full_name||'—'}</div>
+    ${t.briefing?.objetivo?`<div class="field"><label>Briefing / objetivo</label><div class="card" style="font-size:12.5px;">${t.briefing.objetivo}</div></div>`:''}
+    ${t.delivery_link?`<div style="margin-top:10px;"><a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12.5px;">↗ Abrir entrega</a></div>`:''}
+    <div class="modal-foot"><button class="btn primary" data-close="genericModalOverlay">Fechar</button></div>
+  `;
+  openModal('genericModalOverlay');
+}
+
 function renderEquipe(el){
   el.innerHTML = `
     <div class="section-title" style="margin-top:0;">Usuários <button class="btn small primary" id="addUserBtn">+ Novo usuário</button></div>
