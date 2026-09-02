@@ -171,9 +171,9 @@ tr:last-child td{border-bottom:none;}
 .client-card:hover{border-color:var(--accent);}
 .client-card .cname{font-weight:600;font-size:14px;margin-bottom:3px;}
 .client-card .ccompany{font-size:11.5px;color:var(--text-faint);margin-bottom:12px;}
-.client-card .crow{display:flex;justify-content:space-between;font-size:12px;margin-top:6px;}
-.client-card .crow .l{color:var(--text-muted);}
-.client-card .crow .v{font-family:var(--font-mono);font-weight:600;}
+.crow{display:flex;justify-content:space-between;font-size:12px;margin-top:6px;}
+.crow .l{color:var(--text-muted);}
+.crow .v{font-family:var(--font-mono);font-weight:600;}
 
 /* kanban */
 .kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
@@ -1110,18 +1110,24 @@ function openClientDetail(id){
     <div class="section-title">Cobranças deste mês</div>
     ${(()=>{
       const monthKey = todayISO().slice(0,7);
+      const lastDay = new Date(Number(monthKey.slice(0,4)), Number(monthKey.slice(5,7)), 0).getDate();
       const monthPayments = state.payments.filter(p=>p.client_id===id && p.due_date && p.due_date.startsWith(monthKey));
       const receita = clientReceita(id);
       if(receita<=0) return `<div class="empty">Cadastre um serviço com valor primeiro.</div>`;
       const schedule = (c.payment_days && c.payment_days.length) ? c.payment_days : [{day:null, percent:100}];
-      const missing = schedule.length - monthPayments.length;
+      const existingDates = new Set(monthPayments.map(p=>p.due_date));
+      const missingItems = schedule.filter(item=>{
+        const day = item.day ? Math.min(item.day, lastDay) : lastDay;
+        return !existingDates.has(`${monthKey}-${String(day).padStart(2,'0')}`);
+      });
+      const missingTotal = receita * (missingItems.reduce((a,i)=>a+Number(i.percent),0)/100);
       let html = '';
       if(monthPayments.length){
         html += monthPayments.map(p=>`<div class="card" style="margin-bottom:8px;"><div class="crow"><span class="l">${fmtDate(p.due_date)}</span><span class="v mono">${fmtMoney(p.value)}</span></div>
           <div class="crow"><span class="l">Status</span><span class="badge ${{pago:'green',pendente:'blue',atrasado:'red',cancelado:'gray'}[p.status]}">${p.status}</span></div></div>`).join('');
       }
-      if(missing>0){
-        html += `<button class="btn primary small" id="genInvoiceBtn">${monthPayments.length?'Gerar cobrança(s) restante(s)':'Gerar cobrança(s) deste mês'} — ${fmtMoney(receita)}${schedule.length>1?` em ${schedule.length}x`:''}</button>
+      if(missingItems.length>0){
+        html += `<button class="btn primary small" id="genInvoiceBtn">${monthPayments.length?'Gerar cobrança(s) restante(s)':'Gerar cobrança(s) deste mês'} — ${fmtMoney(missingTotal)}${missingItems.length>1?` em ${missingItems.length}x`:''}</button>
         <div style="font-size:11px;color:var(--text-faint);margin-top:8px;">Isso cria Receita(s) pendente(s) em Financeiro, que é o que aparece no Dashboard.</div>`;
       } else if(!monthPayments.length){
         html += `<div class="empty">Nada gerado ainda esse mês.</div>`;
