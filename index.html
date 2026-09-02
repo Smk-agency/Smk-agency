@@ -401,6 +401,27 @@ function todayISO(){ return new Date().toISOString().slice(0,10); }
 function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function fmtMoney(v){ return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; }
+
+// link do WhatsApp com mensagem pronta — o Dono só confere e manda (não envia sozinho)
+function greetingByHour(){ const h = new Date().getHours(); return h<12 ? 'Bom dia' : h<18 ? 'Boa tarde' : 'Boa noite'; }
+function overdueReminderMessage(clientName){
+  const firstName = (clientName||'').trim().split(' ')[0];
+  return `Oii, ${greetingByHour()}, ${firstName}! Tudo bem? Passando só para lembrar do pagamento acordado referente ao serviço de marketing. Deve ter passado batido com a correria do dia a dia. Qualquer coisa que precisar do meu lado (nota, comprovante, chave Pix), é só falar 🙂`;
+}
+function waLink(phone, text){
+  let digits = (phone||'').replace(/\D/g,'');
+  if(!digits) return null;
+  if(digits.length<=11) digits = '55'+digits; // sem DDI no cadastro, assume Brasil
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+function cobrarButtonHTML(p){
+  if(p.status!=='atrasado') return '';
+  const c = clientById(p.client_id);
+  const link = waLink(c?.whatsapp, overdueReminderMessage(c?.name||''));
+  return link
+    ? `<a class="btn small" href="${link}" target="_blank" rel="noopener" style="margin-right:6px;">Cobrar</a>`
+    : `<span style="color:var(--text-faint);font-size:11px;margin-right:6px;" title="Cadastre o WhatsApp do cliente pra habilitar">sem WhatsApp</span>`;
+}
 function escapeHTML(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 function linkify(text){
   if(!text) return '';
@@ -1740,6 +1761,7 @@ function renderFinanceiro(el){
           <td>${fmtDate(p.due_date)}</td>
           <td><span class="badge ${{pago:'green',pendente:'blue',atrasado:'red',cancelado:'gray'}[p.status]}">${p.status}</span></td>
           <td style="text-align:right;white-space:nowrap;">
+            ${cobrarButtonHTML(p)}
             ${p.status!=='pago'?`<button class="btn small primary" data-mark-paid="${p.id}">Marcar como pago</button>`:''}
             <button class="btn ghost small" data-edit-payment="${p.id}">editar</button>
           </td>
