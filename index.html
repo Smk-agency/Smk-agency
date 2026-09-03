@@ -669,6 +669,26 @@ function currentUser(){ return state.users.find(u=>u.id===state.currentUserId); 
 function isDono(){ const u=currentUser(); return u && u.role==='dono'; }
 function canEditClients(){ return ['dono','estrategista'].includes(currentUser().role); }
 function clientById(id){ return state.clients.find(c=>c.id===id); }
+// cor por cliente, pra diferenciar visualmente nas listas de demanda — usa a cor escolhida
+// no cadastro (c.color) ou, se não tiver, gera uma automática só a partir do id (sempre a mesma)
+function hslToHex(h,s,l){
+  s/=100; l/=100;
+  const k = n => (n + h/30) % 12;
+  const a = s * Math.min(l, 1-l);
+  const f = n => l - a*Math.max(-1, Math.min(k(n)-3, Math.min(9-k(n),1)));
+  const toHex = x => Math.round(255*x).toString(16).padStart(2,'0');
+  return `#${toHex(f(0))}${toHex(f(8))}${toHex(f(4))}`;
+}
+function autoClientColor(clientId){
+  if(!clientId) return '#4C7EFF';
+  let hash = 0;
+  for(let i=0;i<clientId.length;i++){ hash = (hash*31 + clientId.charCodeAt(i)) >>> 0; }
+  return hslToHex(hash%360, 65, 68);
+}
+function clientColor(clientId){
+  if(!clientId) return null;
+  return clientById(clientId)?.color || autoClientColor(clientId);
+}
 function userById(id){ return state.users.find(u=>u.id===id); }
 function tasksForClient(cid){ return state.tasks.filter(t=>t.client_id===cid); }
 
@@ -897,7 +917,7 @@ function agencyTaskCardHTML(t){
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
   const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
   return `<div class="task-card" data-id="${t.id}">
-    <div class="tclient">${c?.name||'—'} · ${owner?owner.full_name:'sem responsável'}</div>
+    <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span> · ${owner?owner.full_name:'sem responsável'}</div>
     <div class="ttitle">${t.title}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${STATUS_LABEL[t.status]}</span>
@@ -1007,10 +1027,15 @@ function openClientModal(existing){
       <div class="field"><label>WhatsApp</label><input type="text" id="cf_wa" value="${existing?.whatsapp||''}"></div>
       <div class="field"><label>Instagram</label><input type="text" id="cf_ig" value="${existing?.instagram||''}"></div>
     </div>
-    <div class="field"><label>Status</label>
-      <select id="cf_status">
-        ${['prospect','ativo','pausado','encerrado'].map(s=>`<option value="${s}" ${existing?.status===s?'selected':''}>${s}</option>`).join('')}
-      </select>
+    <div class="field-row">
+      <div class="field"><label>Status</label>
+        <select id="cf_status">
+          ${['prospect','ativo','pausado','encerrado'].map(s=>`<option value="${s}" ${existing?.status===s?'selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Cor <span class="hint">nas listas de demanda</span></label>
+        <input type="color" id="cf_color" value="${existing?.color || autoClientColor(existing?.id)}" style="height:37px;padding:4px;">
+      </div>
     </div>
     ${!isEdit && isDono()?`
     <div class="section-title" style="margin:20px 0 10px;">Primeiro serviço contratado <span class="hint">opcional — dá pra adicionar mais depois</span></div>
@@ -1036,13 +1061,13 @@ function openClientModal(existing){
       Object.assign(existing, {
         name, company_name:document.getElementById('cf_company').value,
         whatsapp:document.getElementById('cf_wa').value, instagram:document.getElementById('cf_ig').value,
-        status:document.getElementById('cf_status').value
+        status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value
       });
     } else {
       const newClientId = uid();
       state.clients.push({id:newClientId, name, company_name:document.getElementById('cf_company').value,
         whatsapp:document.getElementById('cf_wa').value, instagram:document.getElementById('cf_ig').value,
-        status:document.getElementById('cf_status').value});
+        status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value});
 
       const serviceName = document.getElementById('cf_service_name')?.value.trim();
       const serviceValue = Number(document.getElementById('cf_service_value')?.value || 0);
@@ -1385,7 +1410,7 @@ function taskCardHTML(t){
   const c = clientById(t.client_id);
   const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
-    <div class="tclient">${c?.name||'—'}</div>
+    <div class="tclient" style="color:${clientColor(t.client_id)}">${c?.name||'—'}</div>
     <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
@@ -1475,7 +1500,7 @@ function demandaListItemHTML(t){
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
       <div style="min-width:0;">
-        <div class="tclient">${c?.name||'—'}${owner?' · '+owner.full_name:''}</div>
+        <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span>${owner?' · '+owner.full_name:''}</div>
         <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
       </div>
       <span style="flex-shrink:0;">${statusBadgeHTML(t.status)}</span>
