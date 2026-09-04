@@ -926,7 +926,7 @@ function renderMesa(el){
   const list = document.getElementById('mesaList');
   if(source.length===0){ list.innerHTML = `<div class="empty">${mesaTab==='mine' ? 'Nenhuma demanda atribuída a você ainda.' : 'Nenhuma demanda cadastrada ainda.'}</div>`; return; }
   list.innerHTML = source.map(t=> mesaTab==='mine' ? taskCardHTML(t) : agencyTaskCardHTML(t)).join('');
-  list.querySelectorAll('.task-card').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
+  el.querySelectorAll('.task-card').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
 }
 
 function agencyTaskCardHTML(t){
