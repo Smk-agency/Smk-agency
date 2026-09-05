@@ -394,6 +394,9 @@ const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_sol
   pausado:'Pausado',cancelado:'Cancelado'};
 const STATUS_COLOR = {a_fazer:'#4C7EFF', em_revisao:'#E0A62D', alteracao_solicitada:'#F2794A', aprovado:'#1FA97C', concluido:'#14B8A6', pausado:'#8C93A3', cancelado:'#E0553D'};
 const DONE_STATUSES = ['aprovado','concluido','cancelado'];
+// só conta como atrasada quem nem começou a ser feita ainda — assim que entra em revisão
+// (ou qualquer status depois disso), some o alerta de atraso mesmo se passou do prazo original
+function isTaskLate(t){ return t.status==='a_fazer' && !!t.due_date && t.due_date<todayISO(); }
 const PRIO_COLOR = {baixa:'#5A6272',media:'#4C7EFF',alta:'#E0A62D',urgente:'#E0553D'};
 
 function uid(){ return Math.random().toString(36).slice(2,10); }
@@ -742,7 +745,7 @@ function computeAlerts(){
       alerts.push({level: days<=5?'crit':'warn', icon:'📄', text:`Contrato de ${clientById(c.client_id)?.name} vence em ${days} dia(s).`, action:{type:'client', id:c.client_id}});
     }
   });
-  const overdueTasks = state.tasks.filter(t=>t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status));
+  const overdueTasks = state.tasks.filter(isTaskLate);
   if(overdueTasks.length===1){
     alerts.push({level:'warn', icon:'⏰', text:`1 demanda atrasada.`, action:{type:'task', id:overdueTasks[0].id}});
   } else if(overdueTasks.length>1){
@@ -888,7 +891,7 @@ function renderMesa(el){
   const source = mesaTab==='mine' ? mine : all;
 
   const urgent = source.filter(t=>t.priority==='urgente' && !DONE_STATUSES.includes(t.status));
-  const late = source.filter(t=>t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status));
+  const late = source.filter(isTaskLate);
   const aFazer = source.filter(t=>t.status==='a_fazer');
   const review = source.filter(t=>t.status==='em_revisao');
   const changeReq = source.filter(t=>t.status==='alteracao_solicitada');
@@ -932,7 +935,7 @@ function renderMesa(el){
 function agencyTaskCardHTML(t){
   const c = clientById(t.client_id);
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
-  const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
+  const isLate = isTaskLate(t);
   return `<div class="task-card" data-id="${t.id}">
     <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span> · ${owner?owner.full_name:'sem responsável'}</div>
     <div class="ttitle">${t.title}</div>
@@ -955,7 +958,7 @@ function renderDashboard(el){
   const margem = faturamento>0 ? (lucro/faturamento*100) : 0;
   const clientesAtivos = state.clients.filter(c=>c.status==='ativo').length;
   const abertas = state.tasks.filter(t=>!DONE_STATUSES.includes(t.status)).length;
-  const atrasadas = state.tasks.filter(t=>t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status)).length;
+  const atrasadas = state.tasks.filter(isTaskLate).length;
 
   const activeClients = state.clients.filter(c=>c.status==='ativo');
   const pulseHTML = activeClients.map(c=>{
@@ -1428,7 +1431,7 @@ let demandaSelectedDay = null;
 
 function taskCardHTML(t){
   const c = clientById(t.client_id);
-  const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
+  const isLate = isTaskLate(t);
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div class="tclient" style="color:${clientColor(t.client_id)}">${c?.name||'—'}</div>
     <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
@@ -1516,7 +1519,7 @@ function taskHasImage(t){ return state.task_comments.some(c=>c.task_id===t.id &&
 function demandaListItemHTML(t){
   const c = clientById(t.client_id);
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
-  const isLate = t.due_date && t.due_date<todayISO() && !DONE_STATUSES.includes(t.status);
+  const isLate = isTaskLate(t);
   return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
       <div style="min-width:0;">
@@ -1549,7 +1552,7 @@ function drawCalendar(board){
   for(let d=1; d<=daysInMonth; d++){
     const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
     const dayTasks = byDay[iso] || [];
-    const hasLate = dayTasks.some(t=>iso<todayISO() && !DONE_STATUSES.includes(t.status));
+    const hasLate = dayTasks.some(isTaskLate);
     const hasUrgent = dayTasks.some(t=>t.priority==='urgente');
     const isToday = iso===todayISO();
     cells += `<div class="cal-day ${demandaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
