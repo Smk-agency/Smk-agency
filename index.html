@@ -367,6 +367,10 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
   </div>
 </div>
 
+<div class="modal-overlay" id="imgViewerOverlay" style="z-index:200;align-items:center;padding:20px;">
+  <img id="imgViewerImg" src="" style="max-width:100%;max-height:90vh;border-radius:10px;display:block;">
+</div>
+
 <script>
 /* ================= FIREBASE ================= */
 // 1. Crie um projeto em https://console.firebase.google.com
@@ -1666,8 +1670,8 @@ function drawAgendaCalendar(board){
           <div class="tclient"><span style="color:${clientColor(t.client_id)}">${clientById(t.client_id)?.name||'—'}</span> · ${t.assignee_id?(userById(t.assignee_id)?.full_name||'—'):'sem responsável'}</div>
           <div class="ttitle">${t.title}</div>
         </div>`).join('')
-      : items.map(c=>`<div class="task-card" ${isDono()?`data-commitment-id="${c.id}" style="margin-bottom:6px;cursor:pointer;"`:`style="margin-bottom:6px;"`}>
-          <div class="tclient">${userById(c.user_id)?.full_name||'—'}</div>
+      : [...items].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99')).map(c=>`<div class="task-card" ${isDono()?`data-commitment-id="${c.id}" style="margin-bottom:6px;cursor:pointer;"`:`style="margin-bottom:6px;"`}>
+          <div class="tclient">${c.time?`${c.time} · `:''}${userById(c.user_id)?.full_name||'—'}</div>
           <div class="ttitle">${c.title}</div>
           ${c.notes?`<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">${c.notes}</div>`:''}
         </div>`).join('');
@@ -1710,9 +1714,10 @@ function openCommitmentModal(existing, prefillDate){
     <div class="field"><label>Título</label><input type="text" id="cm_title" value="${existing?.title||''}" placeholder="Ex: Gravação institucional Cliente X"></div>
     <div class="field-row">
       <div class="field"><label>Data</label><input type="date" id="cm_date" value="${existing?.date || prefillDate || todayISO()}"></div>
-      <div class="field"><label>Pessoa</label>
-        <select id="cm_user">${state.users.filter(u=>u.status!=='disabled').map(u=>`<option value="${u.id}" ${existing?.user_id===u.id?'selected':''}>${u.full_name}</option>`).join('')}</select>
-      </div>
+      <div class="field"><label>Horário <span class="hint">opcional</span></label><input type="time" id="cm_time" value="${existing?.time||''}"></div>
+    </div>
+    <div class="field"><label>Pessoa</label>
+      <select id="cm_user">${state.users.filter(u=>u.status!=='disabled').map(u=>`<option value="${u.id}" ${existing?.user_id===u.id?'selected':''}>${u.full_name}</option>`).join('')}</select>
     </div>
     <div class="field"><label>Observações <span class="hint">opcional</span></label><textarea id="cm_notes" rows="3">${existing?.notes||''}</textarea></div>
     <div class="modal-foot">
@@ -1728,6 +1733,7 @@ function openCommitmentModal(existing, prefillDate){
       type: document.getElementById('cm_type').value,
       title,
       date: document.getElementById('cm_date').value,
+      time: document.getElementById('cm_time').value,
       user_id: document.getElementById('cm_user').value,
       notes: document.getElementById('cm_notes').value.trim(),
     };
@@ -1763,7 +1769,7 @@ function feedItemHTML(c){
       <div class="cauthor">${author} anexou uma imagem<span>${when}</span></div>
       <div class="feed-item-image">
         ${c.content?`<div class="cap">${c.content}</div>`:''}
-        <img src="${c.image_url}" class="img-preview" onclick="window.open(this.src)">
+        <img src="${c.image_url}" class="img-preview" onclick="openImageViewer(this.src)">
       </div>
     </div>`;
   }
@@ -2470,6 +2476,7 @@ function openTeamCostModal(existing){
 }
 
 /* ---------- MODAL UTIL ---------- */
+function openImageViewer(url){ document.getElementById('imgViewerImg').src = url; openModal('imgViewerOverlay'); }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
 document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
