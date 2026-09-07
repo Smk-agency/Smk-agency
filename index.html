@@ -440,6 +440,18 @@ function waLink(phone, text){
   if(digits.length<=11) digits = '55'+digits; // sem DDI no cadastro, assume Brasil
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
+function mapsLink(address){
+  if(!address) return null;
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
+}
+function gravacaoClientMessage(c, clientName){
+  const firstName = (clientName||'').trim().split(' ')[0];
+  let msg = `Oi, ${firstName}! Passando pra confirmar os detalhes da gravação:\n\n📅 Data: ${fmtDate(c.date)}`;
+  if(c.time) msg += `\n🕐 Horário: ${c.time}`;
+  if(c.location) msg += `\n📍 Local: ${c.location}`;
+  msg += `\n\nQualquer dúvida, é só chamar!`;
+  return msg;
+}
 function cobrarButtonHTML(p){
   if(p.status!=='atrasado') return '';
   const c = clientById(p.client_id);
@@ -1770,11 +1782,18 @@ function drawAgendaCalendar(board){
           <div class="tclient"><span style="color:${clientColor(t.client_id)}">${clientById(t.client_id)?.name||'—'}</span> · ${t.assignee_id?(userById(t.assignee_id)?.full_name||'—'):'sem responsável'}</div>
           <div class="ttitle">${t.title}</div>
         </div>`).join('')
-      : [...items].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99')).map(c=>`<div class="task-card" ${isDono()?`data-commitment-id="${c.id}" style="margin-bottom:6px;cursor:pointer;"`:`style="margin-bottom:6px;"`}>
+      : [...items].sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99')).map(c=>{
+          const client = c.client_id ? clientById(c.client_id) : null;
+          const mapsUrl = mapsLink(c.location);
+          const waUrl = client ? waLink(client.whatsapp, gravacaoClientMessage(c, client.name)) : null;
+          return `<div class="task-card" ${isDono()?`data-commitment-id="${c.id}" style="margin-bottom:6px;cursor:pointer;"`:`style="margin-bottom:6px;"`}>
           <div class="tclient">${c.time?`${c.time} · `:''}${(c.user_ids||[]).map(id=>userById(id)?.full_name).filter(Boolean).join(', ')||'—'}</div>
-          <div class="ttitle">${c.title}</div>
+          <div class="ttitle">${c.title}${client?` · ${client.name}`:''}</div>
+          ${c.location?`<div style="font-size:11.5px;margin-top:4px;"><a href="${mapsUrl}" target="_blank" rel="noopener" class="cm-inner-link" style="color:var(--accent-soft);">📍 ${c.location}</a></div>`:''}
           ${c.notes?`<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">${c.notes}</div>`:''}
-        </div>`).join('');
+          ${waUrl?`<a href="${waUrl}" target="_blank" rel="noopener" class="btn small cm-inner-link" style="margin-top:8px;display:inline-block;">Enviar detalhes pro cliente</a>`:''}
+        </div>`;
+        }).join('');
     return `<div class="section-title" style="margin-top:16px;">${label} <span class="hint">${items.length}</span></div>${rows}`;
   }
 
@@ -1800,6 +1819,7 @@ function drawAgendaCalendar(board){
     d.addEventListener('click', ()=>{ agendaSelectedDay = d.dataset.day; drawAgendaCalendar(board); });
   });
   board.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
+  board.querySelectorAll('.cm-inner-link').forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
   if(isDono()){
     board.querySelectorAll('.task-card[data-commitment-id]').forEach(c=>c.addEventListener('click',()=>openCommitmentModal(state.commitments.find(x=>x.id===c.dataset.commitmentId))));
   }
@@ -1815,6 +1835,11 @@ function openCommitmentModal(existing, prefillDate){
     <div class="field-row">
       <div class="field"><label>Data</label><input type="date" id="cm_date" value="${existing?.date || prefillDate || todayISO()}"></div>
       <div class="field"><label>Horário <span class="hint">opcional</span></label><input type="time" id="cm_time" value="${existing?.time||''}"></div>
+    </div>
+    <div class="field"><label>Local <span class="hint">opcional — endereço ou nome do lugar</span></label><input type="text" id="cm_location" value="${existing?.location||''}" placeholder="Ex: Rua Exemplo, 123 — Bairro, Cidade"></div>
+    <div class="field" id="cm_clientField" style="${(existing?.type||'gravacao')==='gravacao'?'':'display:none;'}">
+      <label>Cliente <span class="hint">pra poder enviar os detalhes por WhatsApp</span></label>
+      <select id="cm_client"><option value="">— nenhum —</option>${state.clients.filter(c=>c.status!=='encerrado').map(c=>`<option value="${c.id}" ${existing?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
     </div>
     <div class="field"><label>Pessoas <span class="hint">pode marcar mais de uma</span></label>
       <div style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;">
@@ -1834,6 +1859,9 @@ function openCommitmentModal(existing, prefillDate){
       <button class="btn primary" id="saveCommitmentBtn">Salvar</button>
     </div>
   `;
+  document.getElementById('cm_type').addEventListener('change', (e)=>{
+    document.getElementById('cm_clientField').style.display = e.target.value==='gravacao' ? '' : 'none';
+  });
   document.getElementById('saveCommitmentBtn').addEventListener('click', ()=>{
     const title = document.getElementById('cm_title').value.trim();
     if(!title) return;
@@ -1842,11 +1870,14 @@ function openCommitmentModal(existing, prefillDate){
       document.getElementById('cm_userErr').style.display = 'block';
       return;
     }
+    const type = document.getElementById('cm_type').value;
     const data = {
-      type: document.getElementById('cm_type').value,
+      type,
       title,
       date: document.getElementById('cm_date').value,
       time: document.getElementById('cm_time').value,
+      location: document.getElementById('cm_location').value.trim(),
+      client_id: type==='gravacao' ? (document.getElementById('cm_client').value || null) : null,
       user_ids,
       notes: document.getElementById('cm_notes').value.trim(),
     };
