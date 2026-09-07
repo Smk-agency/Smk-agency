@@ -470,6 +470,11 @@ function gravacaoClientMessage(c, clientName){
   msg += `\n\nQualquer dúvida, é só chamar!`;
   return msg;
 }
+function contractUpdateMessage(clientName, newTotal, effectiveMonth){
+  const firstName = (clientName||'').trim().split(' ')[0];
+  const [y,m] = effectiveMonth.split('-');
+  return `Oi, ${firstName}! Passando pra te avisar sobre uma atualização no seu contrato: a partir de ${m}/${y}, o valor mensal passa a ser ${fmtMoney(newTotal)}. Qualquer dúvida sobre o que mudou, é só chamar!`;
+}
 function cobrarButtonHTML(p){
   if(p.status!=='atrasado') return '';
   const c = clientById(p.client_id);
@@ -755,8 +760,15 @@ function userById(id){ return state.users.find(u=>u.id===id); }
 function taskById(id){ return state.tasks.find(t=>t.id===id); }
 function tasksForClient(cid){ return state.tasks.filter(t=>t.client_id===cid); }
 
+// serviços com vigência (effective_from/effective_until) só contam nos meses em que estão dentro do período —
+// assim uma atualização de contrato "a partir de outubro" não mexe na cobrança dos meses anteriores
+function activeServicesInMonth(cid, monthKey){
+  return state.client_services.filter(s=>s.client_id===cid
+    && (!s.effective_from || s.effective_from<=monthKey)
+    && (!s.effective_until || s.effective_until>monthKey));
+}
 function clientReceita(cid){
-  return state.client_services.filter(s=>s.client_id===cid).reduce((a,s)=>a+Number(s.contracted_value||0),0);
+  return activeServicesInMonth(cid, todayISO().slice(0,7)).reduce((a,s)=>a+Number(s.contracted_value||0),0);
 }
 function clientCusto(cid){
   return state.client_cost_allocations.filter(a=>a.client_id===cid).reduce((a,c)=>a+Number(c.monthly_value||0),0);
@@ -1255,7 +1267,12 @@ function openClientModal(existing){
 function openClientDetail(id){
   const c = clientById(id);
   document.getElementById('genericModalTitle').textContent = c.name;
-  const services = state.client_services.filter(s=>s.client_id===id);
+  const currentMonth = todayISO().slice(0,7);
+  const allServices = state.client_services.filter(s=>s.client_id===id);
+  const services = activeServicesInMonth(id, currentMonth);
+  const startingSoon = allServices.filter(s=>s.effective_from && s.effective_from>currentMonth);
+  const replacedIds = new Set(startingSoon.filter(s=>s.replaces_service_id).map(s=>s.replaces_service_id));
+  const endingSoon = services.filter(s=>s.effective_until && s.effective_until>currentMonth && !replacedIds.has(s.id));
   const contract = state.contracts.find(ct=>ct.client_id===id);
   const costAllocs = state.client_cost_allocations.filter(a=>a.client_id===id);
   const tasks = tasksForClient(id);
@@ -1263,12 +1280,19 @@ function openClientDetail(id){
   body.innerHTML = `
     <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;">${c.company_name||''} · ${c.whatsapp||''} · ${c.instagram||''}${c.birthday?` · 🎂 ${c.birthday.slice(8,10)}/${c.birthday.slice(5,7)}`:''}</div>
 
-    <div class="section-title" style="margin-top:0;">Serviços contratados ${isDono()?`<button class="btn small" id="addServiceBtn">+ Serviço</button>`:''}</div>
+    <div class="section-title" style="margin-top:0;">Serviços contratados ${isDono()?`<button class="btn small" id="addServiceBtn">+ Serviço</button> <button class="btn small ghost" id="updateContractBtn">Atualizar contrato</button>`:''}</div>
     <div class="table-wrap"><table>
       <tr><th>Serviço</th>${isDono()?'<th>Valor</th>':''}<th>Frequência</th>${isDono()?'<th></th>':''}</tr>
       ${services.map(s=>`<tr><td>${s.service_type}</td>${isDono()?`<td class="mono">${fmtMoney(s.contracted_value)}</td>`:''}<td>${s.frequency}</td>
         ${isDono()?`<td style="white-space:nowrap;text-align:right;"><button class="btn ghost small" data-edit-service="${s.id}">editar</button><button class="btn ghost small danger" data-remove-service="${s.id}">remover</button></td>`:''}</tr>`).join('') || `<tr><td colspan="4" style="color:var(--text-faint)">Nenhum serviço cadastrado</td></tr>`}
     </table></div>
+    ${isDono() && (startingSoon.length || endingSoon.length)?`
+    <div class="section-title">Mudanças agendadas</div>
+    <div class="card">
+      ${startingSoon.map(s=>`<div class="crow"><span class="l">A partir de ${s.effective_from.slice(5,7)}/${s.effective_from.slice(0,4)}: ${s.service_type}${s.replaces_service_id?'':' (novo)'}</span><span class="v mono">${fmtMoney(s.contracted_value)} <button class="btn ghost small danger" data-cancel-scheduled="${s.id}" data-cancel-kind="start" style="margin-left:8px;">cancelar</button></span></div>`).join('')}
+      ${endingSoon.map(s=>`<div class="crow"><span class="l">A partir de ${s.effective_until.slice(5,7)}/${s.effective_until.slice(0,4)}: ${s.service_type} será removido</span><span class="v"><button class="btn ghost small danger" data-cancel-scheduled="${s.id}" data-cancel-kind="end">cancelar</button></span></div>`).join('')}
+    </div>
+    `:''}
 
     ${isDono()?`
     <div class="section-title">Custos alocados a este cliente ${`<button class="btn small" id="addCostAllocBtn">+ Custo</button>`}</div>
@@ -1361,6 +1385,26 @@ function openClientDetail(id){
     render();
   });
   document.getElementById('addServiceBtn')?.addEventListener('click', ()=>openServiceModal(id));
+  document.getElementById('updateContractBtn')?.addEventListener('click', ()=>openContractUpdateModal(id));
+  body.querySelectorAll('[data-cancel-scheduled]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const s = state.client_services.find(x=>x.id===btn.dataset.cancelScheduled);
+      if(!s) return;
+      if(btn.dataset.cancelKind==='end'){
+        // era só uma remoção futura desse serviço mesmo — volta a valer indefinidamente
+        delete s.effective_until;
+      } else {
+        // era um valor novo (aumento/diminuição ou serviço novo) — descarta e restaura o que ele substituía
+        if(s.replaces_service_id){
+          const old = state.client_services.find(x=>x.id===s.replaces_service_id);
+          if(old) delete old.effective_until;
+        }
+        state.client_services = state.client_services.filter(x=>x.id!==s.id);
+      }
+      saveState(state);
+      openClientDetail(id);
+    });
+  });
   document.getElementById('editContractBtn')?.addEventListener('click', ()=>openContractModal(id, contract));
   document.getElementById('addCostAllocBtn')?.addEventListener('click', ()=>openCostAllocModal(id));
   document.getElementById('editPaymentScheduleBtn')?.addEventListener('click', ()=>openPaymentScheduleModal(id));
@@ -1451,6 +1495,97 @@ function openServiceModal(clientId, existing){
     closeModal('itemModalOverlay');
     openClientDetail(clientId);
   });
+  openModal('itemModalOverlay');
+}
+
+// atualiza o contrato mantendo o valor atual até um mês escolhido e já deixando o novo valor
+// programado pra entrar em vigor sozinho a partir dali — sem precisar lembrar de mudar de novo depois
+function openContractUpdateModal(clientId){
+  const currentMonth = todayISO().slice(0,7);
+  const nd = new Date(); nd.setMonth(nd.getMonth()+1);
+  const nextMonth = `${nd.getFullYear()}-${String(nd.getMonth()+1).padStart(2,'0')}`;
+  const active = activeServicesInMonth(clientId, currentMonth);
+
+  document.getElementById('itemModalTitle').textContent = 'Atualizar contrato';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">O valor atual continua valendo até o mês escolhido; a partir dele, o novo valor passa a ser cobrado sozinho, sem precisar mexer de novo.</div>
+    <div class="field"><label>A partir de</label><input type="month" id="cu_month" value="${nextMonth}" min="${currentMonth}"></div>
+    <div id="cu_rows">
+      ${active.map(s=>`
+        <div class="field-row" style="align-items:flex-end;margin-bottom:8px;">
+          <div class="field" style="margin-bottom:0;"><label>${s.service_type}</label><input type="number" class="cu_value" data-service-id="${s.id}" value="${s.contracted_value}"></div>
+          <label style="display:flex;align-items:center;gap:6px;font-size:11.5px;margin-bottom:9px;white-space:nowrap;"><input type="checkbox" class="cu_remove" data-service-id="${s.id}"> remover</label>
+        </div>
+      `).join('') || '<div class="empty">Nenhum serviço ativo.</div>'}
+    </div>
+    <button class="btn ghost small" id="cu_addNewBtn" style="margin-bottom:14px;">+ Adicionar serviço novo</button>
+    <div id="cu_newRows"></div>
+    <div class="modal-foot">
+      <button class="btn ghost" data-close="itemModalOverlay">Cancelar</button>
+      <button class="btn primary" id="cu_saveBtn">Salvar atualização</button>
+    </div>
+  `;
+
+  document.getElementById('cu_addNewBtn').addEventListener('click', ()=>{
+    const div = document.createElement('div');
+    div.className = 'field-row';
+    div.style.cssText = 'align-items:flex-end;margin-bottom:8px;';
+    div.innerHTML = `
+      <div class="field" style="margin-bottom:0;"><label>Novo serviço</label><input type="text" class="cu_new_name" placeholder="Ex: Gestão de tráfego"></div>
+      <div class="field" style="margin-bottom:0;"><label>Valor (R$)</label><input type="number" class="cu_new_value" value="0"></div>
+    `;
+    document.getElementById('cu_newRows').appendChild(div);
+  });
+
+  document.getElementById('cu_saveBtn').addEventListener('click', ()=>{
+    const chosenMonth = document.getElementById('cu_month').value;
+    if(!chosenMonth) return;
+
+    let changed = false;
+    active.forEach(s=>{
+      const input = document.querySelector(`.cu_value[data-service-id="${s.id}"]`);
+      const removeCb = document.querySelector(`.cu_remove[data-service-id="${s.id}"]`);
+      const newValue = Number(input.value);
+      if(removeCb.checked){
+        s.effective_until = chosenMonth;
+        changed = true;
+      } else if(newValue !== Number(s.contracted_value)){
+        s.effective_until = chosenMonth;
+        state.client_services.push({id:uid(), client_id:clientId, service_type:s.service_type,
+          contracted_value:newValue, frequency:s.frequency, status:'ativo',
+          effective_from:chosenMonth, replaces_service_id:s.id});
+        changed = true;
+      }
+    });
+    document.querySelectorAll('.cu_new_name').forEach((nameInput, i)=>{
+      const name = nameInput.value.trim();
+      const value = Number(document.querySelectorAll('.cu_new_value')[i].value);
+      if(name && value>0){
+        state.client_services.push({id:uid(), client_id:clientId, service_type:name, contracted_value:value,
+          frequency:'mensal', status:'ativo', effective_from:chosenMonth});
+        changed = true;
+      }
+    });
+
+    if(!changed){ closeModal('itemModalOverlay'); return; }
+
+    syncContractValue(clientId);
+    saveState(state);
+
+    const newTotal = activeServicesInMonth(clientId, chosenMonth).reduce((a,s)=>a+Number(s.contracted_value||0),0);
+    const client = clientById(clientId);
+    const waUrl = waLink(client.whatsapp, contractUpdateMessage(client.name, newTotal, chosenMonth));
+    document.getElementById('itemModalBody').innerHTML = `
+      <div style="font-size:13px;margin-bottom:16px;">Contrato atualizado! A partir de ${chosenMonth.slice(5,7)}/${chosenMonth.slice(0,4)}, o valor mensal passa a ser <b>${fmtMoney(newTotal)}</b>.</div>
+      ${waUrl?`<a href="${waUrl}" target="_blank" rel="noopener" class="btn primary" style="display:inline-block;">Enviar aviso pro cliente</a>`:`<div style="font-size:12px;color:var(--text-faint);">Cliente sem WhatsApp cadastrado — não dá pra montar o aviso automático.</div>`}
+      <div class="modal-foot"><button class="btn" id="cu_closeBtn">Fechar</button></div>
+    `;
+    document.getElementById('cu_closeBtn').addEventListener('click', ()=>{
+      closeModal('itemModalOverlay');
+      openClientDetail(clientId);
+    });
+  });
+
   openModal('itemModalOverlay');
 }
 
@@ -2660,7 +2795,12 @@ function openTeamCostModal(existing){
 function openImageViewer(url){ document.getElementById('imgViewerImg').src = url; openModal('imgViewerOverlay'); }
 function openModal(id){ document.getElementById(id).classList.add('open'); }
 function closeModal(id){ document.getElementById(id).classList.remove('open'); }
-document.querySelectorAll('[data-close]').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
+// delegado (não um forEach fixo) porque o conteúdo dos modais é recriado toda hora via innerHTML —
+// um listener preso direto no botão não sobrevive a isso
+document.addEventListener('click', (e)=>{
+  const btn = e.target.closest('[data-close]');
+  if(btn) closeModal(btn.dataset.close);
+});
 document.querySelectorAll('.modal-overlay').forEach(ov=>ov.addEventListener('click',(e)=>{ if(e.target===ov) closeModal(ov.id); }));
 
 /* ================= INIT ================= */
