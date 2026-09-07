@@ -266,6 +266,24 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .cal-dot{width:6px;height:6px;border-radius:50%;margin:0 auto 2px;}
 .cal-count{font-size:9.5px;color:var(--text-faint);}
 
+/* calendário da Agenda — células maiores com as faixinhas dos compromissos, estilo Google Agenda */
+.agcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
+.agcal-weekdays{margin-bottom:6px;}
+.agcal-weekdays div{text-align:center;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;padding:4px 0;}
+.agcal-day{min-height:96px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:.15s;overflow:hidden;align-items:stretch;}
+.agcal-day:hover{border-color:var(--accent);}
+.agcal-day.sel{border-color:var(--accent);background:var(--accent-dim);}
+.agcal-day.today .agcal-daynum{color:var(--accent-soft);font-weight:700;}
+.agcal-daynum{font-size:12px;font-weight:600;color:var(--text-muted);}
+.agcal-chip{font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#12151a;font-weight:600;cursor:pointer;}
+.agcal-chip:hover{filter:brightness(1.12);}
+.agcal-more{font-size:10px;color:var(--text-faint);padding:0 6px;}
+@media(max-width:860px){
+  .agcal-day{min-height:64px;padding:4px;gap:2px;}
+  .agcal-daynum{font-size:11px;}
+  .agcal-chip{font-size:9px;padding:1px 4px;}
+}
+
 @media(max-width:860px){
   .sidebar{position:fixed;left:0;top:0;bottom:0;transform:translateX(-100%);transition:.2s;z-index:50;box-shadow:0 0 40px rgba(0,0,0,.5);}
   .sidebar.open{transform:translateX(0);}
@@ -1758,16 +1776,26 @@ function drawAgendaCalendar(board){
   const daysInMonth = new Date(year, month+1, 0).getDate();
   const monthLabel = agendaCalCursor.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
 
+  const MAX_CHIPS = 3;
   let cells = '';
-  for(let i=0;i<startOffset;i++) cells += `<div></div>`;
+  for(let i=0;i<startOffset;i++) cells += `<div style="visibility:hidden;"></div>`;
   for(let d=1; d<=daysInMonth; d++){
     const iso = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const dayItems = dayMap[iso];
-    const total = dayItems ? Object.values(dayItems).reduce((a,arr)=>a+arr.length,0) : 0;
+    const dayItems = dayMap[iso] || {demandas:[], gravacao:[], reuniao:[], folga:[], compromisso:[]};
     const isToday = iso===todayISO();
-    cells += `<div class="cal-day ${agendaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
-      <div class="cal-daynum">${d}</div>
-      ${total ? `<div class="cal-dot" style="background:var(--accent)"></div><div class="cal-count">${total}</div>` : ''}
+
+    const chips = [];
+    dayItems.demandas.forEach(t=>chips.push({color:clientColor(t.client_id)||'var(--accent)', text:t.title, kind:'task', id:t.id}));
+    ['gravacao','reuniao','folga','compromisso'].forEach(key=>{
+      dayItems[key].forEach(c=>chips.push({color:COMMITMENT_COLOR[key], text:c.title, kind:'commitment', id:c.id}));
+    });
+    const visibleChips = chips.slice(0, MAX_CHIPS);
+    const extra = chips.length - visibleChips.length;
+
+    cells += `<div class="agcal-day ${agendaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
+      <div class="agcal-daynum">${d}</div>
+      ${visibleChips.map(ch=>`<div class="agcal-chip" style="background:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}">${ch.text}</div>`).join('')}
+      ${extra>0?`<div class="agcal-more">+${extra} mais</div>`:''}
     </div>`;
   }
 
@@ -1803,9 +1831,9 @@ function drawAgendaCalendar(board){
       <div style="font-weight:600;font-size:13.5px;text-transform:capitalize;">${monthLabel}</div>
       <button class="btn ghost small" id="agCalNext">›</button>
     </div>
-    <div class="cal-grid cal-weekdays"><div>D</div><div>S</div><div>T</div><div>Q</div><div>Q</div><div>S</div><div>S</div></div>
-    <div class="cal-grid">${cells}</div>
-    <div class="section-title" style="margin-top:0;text-transform:capitalize;">${fmtDate(agendaSelectedDay)}</div>
+    <div class="agcal-grid agcal-weekdays"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
+    <div class="agcal-grid">${cells}</div>
+    <div class="section-title" style="margin-top:16px;text-transform:capitalize;">${fmtDate(agendaSelectedDay)}</div>
     ${sectionHTML('demandas','Demandas')}
     ${sectionHTML('gravacao', COMMITMENT_TYPES.gravacao)}
     ${sectionHTML('reuniao', COMMITMENT_TYPES.reuniao)}
@@ -1815,8 +1843,17 @@ function drawAgendaCalendar(board){
   `;
   document.getElementById('agCalPrev').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()-1); drawAgendaCalendar(board); });
   document.getElementById('agCalNext').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()+1); drawAgendaCalendar(board); });
-  board.querySelectorAll('.cal-day[data-day]').forEach(d=>{
+  board.querySelectorAll('.agcal-day[data-day]').forEach(d=>{
     d.addEventListener('click', ()=>{ agendaSelectedDay = d.dataset.day; drawAgendaCalendar(board); });
+  });
+  board.querySelectorAll('.agcal-chip').forEach(chip=>{
+    chip.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      agendaSelectedDay = chip.closest('.agcal-day').dataset.day;
+      if(chip.dataset.chipKind==='task') openTaskModal(chip.dataset.chipId);
+      else if(isDono()) openCommitmentModal(state.commitments.find(x=>x.id===chip.dataset.chipId));
+      else drawAgendaCalendar(board);
+    });
   });
   board.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
   board.querySelectorAll('.cm-inner-link').forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
