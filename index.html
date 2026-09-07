@@ -470,10 +470,15 @@ function gravacaoClientMessage(c, clientName){
   msg += `\n\nQualquer dúvida, é só chamar!`;
   return msg;
 }
-function contractUpdateMessage(clientName, newTotal, effectiveMonth){
+function contractUpdateMessage(clientName, changes, oldTotal, newTotal, effectiveMonth){
   const firstName = (clientName||'').trim().split(' ')[0];
   const [y,m] = effectiveMonth.split('-');
-  return `Oi, ${firstName}! Passando pra te avisar sobre uma atualização no seu contrato: a partir de ${m}/${y}, o valor mensal passa a ser ${fmtMoney(newTotal)}. Qualquer dúvida sobre o que mudou, é só chamar!`;
+  const lines = changes.map(c=>{
+    if(c.oldValue==null) return `+ ${c.name}: novo serviço, ${fmtMoney(c.newValue)}`;
+    if(c.newValue==null) return `- ${c.name}: removido (era ${fmtMoney(c.oldValue)})`;
+    return `• ${c.name}: ${fmtMoney(c.oldValue)} → ${fmtMoney(c.newValue)}`;
+  });
+  return `Oi, ${firstName}! Passando pra te avisar sobre uma atualização no seu contrato, a partir de ${m}/${y}:\n\n${lines.join('\n')}\n\nValor mensal: ${fmtMoney(oldTotal)} → ${fmtMoney(newTotal)}\n\nQualquer dúvida sobre o que mudou, é só chamar!`;
 }
 function cobrarButtonHTML(p){
   if(p.status!=='atrasado') return '';
@@ -1542,18 +1547,21 @@ function openContractUpdateModal(clientId){
     if(!chosenMonth) return;
 
     let changed = false;
+    const changesList = [];
     active.forEach(s=>{
       const input = document.querySelector(`.cu_value[data-service-id="${s.id}"]`);
       const removeCb = document.querySelector(`.cu_remove[data-service-id="${s.id}"]`);
       const newValue = Number(input.value);
       if(removeCb.checked){
         s.effective_until = chosenMonth;
+        changesList.push({name:s.service_type, oldValue:Number(s.contracted_value), newValue:null});
         changed = true;
       } else if(newValue !== Number(s.contracted_value)){
         s.effective_until = chosenMonth;
         state.client_services.push({id:uid(), client_id:clientId, service_type:s.service_type,
           contracted_value:newValue, frequency:s.frequency, status:'ativo',
           effective_from:chosenMonth, replaces_service_id:s.id});
+        changesList.push({name:s.service_type, oldValue:Number(s.contracted_value), newValue});
         changed = true;
       }
     });
@@ -1563,6 +1571,7 @@ function openContractUpdateModal(clientId){
       if(name && value>0){
         state.client_services.push({id:uid(), client_id:clientId, service_type:name, contracted_value:value,
           frequency:'mensal', status:'ativo', effective_from:chosenMonth});
+        changesList.push({name, oldValue:null, newValue:value});
         changed = true;
       }
     });
@@ -1572,9 +1581,10 @@ function openContractUpdateModal(clientId){
     syncContractValue(clientId);
     saveState(state);
 
+    const oldTotal = clientReceita(clientId);
     const newTotal = activeServicesInMonth(clientId, chosenMonth).reduce((a,s)=>a+Number(s.contracted_value||0),0);
     const client = clientById(clientId);
-    const waUrl = waLink(client.whatsapp, contractUpdateMessage(client.name, newTotal, chosenMonth));
+    const waUrl = waLink(client.whatsapp, contractUpdateMessage(client.name, changesList, oldTotal, newTotal, chosenMonth));
     document.getElementById('itemModalBody').innerHTML = `
       <div style="font-size:13px;margin-bottom:16px;">Contrato atualizado! A partir de ${chosenMonth.slice(5,7)}/${chosenMonth.slice(0,4)}, o valor mensal passa a ser <b>${fmtMoney(newTotal)}</b>.</div>
       ${waUrl?`<a href="${waUrl}" target="_blank" rel="noopener" class="btn primary" style="display:inline-block;">Enviar aviso pro cliente</a>`:`<div style="font-size:12px;color:var(--text-faint);">Cliente sem WhatsApp cadastrado — não dá pra montar o aviso automático.</div>`}
