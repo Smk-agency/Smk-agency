@@ -1932,7 +1932,7 @@ function drawAgendaCalendar(board){
     const chips = [];
     dayItems.demandas.forEach(t=>chips.push({color:clientColor(t.client_id)||'var(--accent)', text:t.title, kind:'task', id:t.id}));
     ['gravacao','reuniao','folga','compromisso'].forEach(key=>{
-      dayItems[key].forEach(c=>chips.push({color:COMMITMENT_COLOR[key], text:c.title, kind:'commitment', id:c.id}));
+      dayItems[key].forEach(c=>chips.push({color: c.client_id ? clientColor(c.client_id) : COMMITMENT_COLOR[key], text:c.title, kind:'commitment', id:c.id}));
     });
     const visibleChips = chips.slice(0, MAX_CHIPS);
     const extra = chips.length - visibleChips.length;
