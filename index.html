@@ -442,11 +442,14 @@ function isTaskLate(t){ return t.status==='a_fazer' && !!t.due_date && t.due_dat
 // (concluído só existe depois de passar por aprovado); tarefas concluídas de meses
 // anteriores já saem de state.tasks (vão pro arquivo), então isso naturalmente fica só com o mês corrente
 const VIDEO_TASK_TYPES = ['Vídeo', 'Reels'];
-function videosApprovedThisMonth(userId){
+function videosApprovedListThisMonth(userId){
   const currentMonth = todayISO().slice(0,7);
   return state.tasks.filter(t=>t.assignee_id===userId && VIDEO_TASK_TYPES.includes(t.task_type)
     && (t.status==='aprovado' || (t.status==='concluido' && t.completed_month===currentMonth))
-  ).length;
+  );
+}
+function videosApprovedThisMonth(userId){
+  return videosApprovedListThisMonth(userId).length;
 }
 const PRIO_COLOR = {baixa:'#5A6272',media:'#4C7EFF',alta:'#E0A62D',urgente:'#E0553D'};
 
@@ -2616,7 +2619,7 @@ function renderEquipe(el){
           const disabled = u.status==='disabled';
           const isVideoEditor = ['editor','designer_editor'].includes(u.role);
           return `<tr style="${disabled?'opacity:.45':''}">
-          <td>${u.full_name}${isVideoEditor?` <span style="color:var(--text-faint);font-size:11px;">· ${videosApprovedThisMonth(u.id)} vídeo(s) aprovado(s) este mês</span>`:''}</td>
+          <td>${u.full_name}${isVideoEditor?` <span class="link-soft" data-show-videos="${u.id}" style="color:var(--accent-soft);font-size:11px;cursor:pointer;text-decoration:underline;">· ${videosApprovedThisMonth(u.id)} vídeo(s) aprovado(s) este mês</span>`:''}</td>
           <td><span class="badge gray">${ROLE_LABEL[u.role]}</span></td>
           <td class="mono">${u.access_code}</td>
           <td><span class="badge ${disabled?'gray':'green'}">${disabled?'desativado':'ativo'}</span></td>
@@ -2649,6 +2652,9 @@ function renderEquipe(el){
   `;
   document.getElementById('addTeamCostBtn').addEventListener('click', ()=>openTeamCostModal());
   document.getElementById('addUserBtn').addEventListener('click', ()=>openUserModal());
+  el.querySelectorAll('[data-show-videos]').forEach(el2=>{
+    el2.addEventListener('click', ()=>openApprovedVideosModal(el2.dataset.showVideos));
+  });
   el.querySelectorAll('[data-edit-cost]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const tc = state.team_costs.find(t=>t.id===btn.dataset.editCost);
@@ -2697,6 +2703,24 @@ function renderEquipe(el){
       openModal('itemModalOverlay');
     });
   });
+}
+
+function openApprovedVideosModal(userId){
+  const user = userById(userId);
+  const videos = videosApprovedListThisMonth(userId);
+  document.getElementById('itemModalTitle').textContent = `Vídeos aprovados — ${user.full_name}`;
+  document.getElementById('itemModalBody').innerHTML = `
+    ${videos.map(t=>`<div class="task-card" data-id="${t.id}" style="margin-bottom:8px;cursor:pointer;">
+      <div class="tclient"><span style="color:${clientColor(t.client_id)}">${clientById(t.client_id)?.name||'—'}</span> · ${t.task_type}</div>
+      <div class="ttitle">${t.title}</div>
+      ${statusBadgeHTML(t.status)}
+    </div>`).join('') || '<div class="empty">Nenhum vídeo aprovado este mês.</div>'}
+    <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Fechar</button></div>
+  `;
+  document.querySelectorAll('#itemModalBody [data-id]').forEach(row=>{
+    row.addEventListener('click', ()=>{ closeModal('itemModalOverlay'); openTaskModal(row.dataset.id); });
+  });
+  openModal('itemModalOverlay');
 }
 
 function genCode(){
