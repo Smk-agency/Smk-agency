@@ -507,12 +507,33 @@ function linkify(text){
   const escaped = escapeHTML(text);
   return escaped.replace(/(https?:\/\/[^\s<]+)/g, url=>`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-soft);word-break:break-all;">${url}</a>`).replace(/\n/g,'<br>');
 }
-// só os links do texto, clicáveis — usado debaixo de um textarea editável, pra não repetir o texto inteiro
+// tenta identificar do que se trata um link, pelo domínio, quando não tem um "(rótulo)" escrito do lado
+function guessLinkLabel(url){
+  let host;
+  try{ host = new URL(url).hostname.replace(/^www\./,''); }catch(e){ return null; }
+  if(host.includes('docs.google.com')) return 'Google Docs';
+  if(host.includes('sheets.google.com')) return 'Google Planilhas';
+  if(host.includes('slides.google.com')) return 'Google Slides';
+  if(host.includes('drive.google.com')) return 'Google Drive';
+  if(host.includes('figma.com')) return 'Figma';
+  if(host.includes('canva.com')) return 'Canva';
+  if(host.includes('wetransfer.com')) return 'WeTransfer';
+  if(host.includes('instagram.com')) return 'Instagram';
+  if(host.includes('youtube.com') || host.includes('youtu.be')) return 'YouTube';
+  if(host.includes('tiktok.com')) return 'TikTok';
+  return host;
+}
+// só os links do texto, clicáveis — usado debaixo de um textarea editável, pra não repetir o texto inteiro.
+// se tiver um "(rótulo)" logo depois do link (do jeito que já é escrito nos briefings), usa ele; senão tenta
+// adivinhar pelo domínio.
 function extractLinksHTML(text){
   if(!text) return '';
-  const urls = text.match(/https?:\/\/[^\s<]+/g);
-  if(!urls || !urls.length) return '';
-  return urls.map(url=>`<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-soft);word-break:break-all;">↗ ${url}</a>`).join('<br>');
+  const matches = [...text.matchAll(/(https?:\/\/[^\s<)]+)(?:\s*\(([^)]+)\))?/g)];
+  if(!matches.length) return '';
+  return matches.map(([, url, label])=>{
+    const shown = (label && label.trim()) || guessLinkLabel(url) || url;
+    return `<a href="${url}" target="_blank" rel="noopener" style="color:var(--accent-soft);word-break:break-all;">↗ ${escapeHTML(shown)}</a>`;
+  }).join('<br>');
 }
 // cresce o textarea pra caber o conteúdo, em vez de cortar com barra de rolagem
 function autoResizeTextarea(el){
