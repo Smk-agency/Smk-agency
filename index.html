@@ -295,6 +295,14 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .mobile-menu-btn{display:none;background:var(--surface-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;align-items:center;justify-content:center;font-size:14px;}
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;}
 .sidebar-backdrop.open{display:block;}
+
+/* imprime só o orçamento (sem o resto do app) quando a pessoa manda imprimir/salvar em PDF —
+   e força o navegador a manter as cores de fundo (por padrão ele tira pra economizar tinta) */
+@media print {
+  body * { visibility: hidden; }
+  #quotePaper, #quotePaper * { visibility: visible; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #quotePaper { position: absolute; top:0; left:0; width:100%; }
+}
 </style>
 </head>
 <body>
@@ -343,6 +351,7 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
         <button class="nav-item" data-view="mesa"><span class="ic">◧</span> Minha Mesa</button>
         <button class="nav-item" data-view="dashboard" data-owner="1"><span class="ic">▦</span> Dashboard</button>
         <button class="nav-item" data-view="clientes"><span class="ic">◎</span> Clientes</button>
+        <button class="nav-item" data-view="orcamentos"><span class="ic">🧾</span> Orçamentos</button>
         <button class="nav-item" data-view="demandas"><span class="ic">☰</span> Demandas</button>
         <button class="nav-item" data-view="agenda"><span class="ic">📅</span> Agenda</button>
       </div>
@@ -429,6 +438,8 @@ const EXECUTOR_ROLES = ['designer','editor','designer_editor'];
 const TASK_TYPES = ['Arte','Story','Carrossel','Post','Reels','Vídeo','Thumbnail','Fotografia','Copy','Estratégia','Outro'];
 const COMMITMENT_TYPES = {gravacao:'Gravação', reuniao:'Reunião', folga:'Folga', compromisso:'Compromisso'};
 const COMMITMENT_COLOR = {gravacao:'#B983F0', reuniao:'#4C7EFF', folga:'#8C93A3', compromisso:'#E0A62D'};
+const QUOTE_STATUS_LABEL = {aberto:'Aberto', aceito:'Aceito', recusado:'Recusado'};
+const QUOTE_STATUS_COLOR = {aberto:'blue', aceito:'green', recusado:'red'};
 const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado','concluido'];
 const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado', concluido:'Concluído',
   backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',
@@ -560,7 +571,7 @@ function seed(){
     {id:'u_dono', full_name:'Smurk', username:'smurk', role:'dono', access_code:'1000'},
   ];
   return {users, clients:[], client_services:[], contracts:[], tasks:[], task_comments:[], task_versions:[],
-    payments:[], expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], archived_tasks:{}, archived_financeiro:{},
+    payments:[], expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], quotes:[], archived_tasks:{}, archived_financeiro:{},
     notification_reads:{},
     settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 }
@@ -576,7 +587,7 @@ function saveState(s){
 }
 
 let state = {users:[], clients:[], client_services:[], contracts:[], tasks:[], task_comments:[], task_versions:[],
-  payments:[], expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], archived_tasks:{}, archived_financeiro:{},
+  payments:[], expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], quotes:[], archived_tasks:{}, archived_financeiro:{},
   notification_reads:{},
   settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 let currentView = 'mesa';
@@ -733,6 +744,7 @@ async function initApp(){
       if(!state.archived_tasks) state.archived_tasks = {};
       if(!state.archived_financeiro) state.archived_financeiro = {};
       if(!state.commitments) state.commitments = [];
+      if(!state.quotes) state.quotes = [];
       if(!state.notification_reads) state.notification_reads = {};
       const m1 = migrateLegacyTasks();
       const m2 = archiveOldCompletedTasks();
@@ -748,6 +760,7 @@ async function initApp(){
       if(!state.archived_tasks) state.archived_tasks = {};
       if(!state.archived_financeiro) state.archived_financeiro = {};
       if(!state.commitments) state.commitments = [];
+      if(!state.quotes) state.quotes = [];
       if(!state.notification_reads) state.notification_reads = {};
       migrateLegacyTasks();
       archiveOldCompletedTasks();
@@ -1037,7 +1050,8 @@ document.getElementById('sidebarBackdrop').addEventListener('click', ()=>{
 /* ================= ROUTER / RENDER ================= */
 const TITLES = {
   mesa:['Minha Mesa',''], dashboard:['Dashboard','Visão executiva da agência'],
-  clientes:['Clientes','Cadastro e serviços contratados'], demandas:['Demandas','Fluxo de produção'],
+  clientes:['Clientes','Cadastro e serviços contratados'], orcamentos:['Orçamentos','Propostas comerciais pra prospects'],
+  demandas:['Demandas','Fluxo de produção'],
   agenda:['Agenda','Gravações, reuniões, folgas e compromissos da equipe'],
   financeiro:['Financeiro','Receitas e despesas — visível só ao Dono'],
   rentabilidade:['Rentabilidade','Lucro e margem por cliente e serviço'],
@@ -1059,6 +1073,7 @@ function render(){
   if(currentView==='mesa') return renderMesa(el);
   if(currentView==='dashboard') return renderDashboard(el);
   if(currentView==='clientes') return renderClientes(el);
+  if(currentView==='orcamentos') return renderOrcamentos(el);
   if(currentView==='demandas') return renderDemandas(el);
   if(currentView==='agenda') return renderAgenda(el);
   if(currentView==='financeiro') return renderFinanceiro(el);
@@ -1193,6 +1208,230 @@ function renderDashboard(el){
 
 /* ---------- CLIENTES ---------- */
 let showArchivedClients = false;
+function quoteOptionTotal(opt){
+  const subtotal = (opt.items||[]).reduce((a,i)=>a+Number(i.value||0),0);
+  return Math.max(0, subtotal - Number(opt.discount||0));
+}
+function quoteMinTotal(q){
+  const totals = (q.options||[]).map(quoteOptionTotal);
+  return totals.length ? Math.min(...totals) : 0;
+}
+
+function renderOrcamentos(el){
+  el.innerHTML = `
+    <div class="filter-bar">
+      ${canEditClients()?`<button class="btn primary small" id="addQuoteBtn">+ Novo orçamento</button>`:''}
+    </div>
+    <div class="client-grid" id="quoteGrid"></div>
+  `;
+  document.getElementById('addQuoteBtn')?.addEventListener('click', ()=>openQuoteModal());
+
+  const grid = document.getElementById('quoteGrid');
+  const list = [...state.quotes].sort((a,b)=>b.created_at-a.created_at);
+  if(list.length===0){
+    grid.innerHTML = `<div class="empty">Nenhum orçamento criado ainda.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(q=>{
+    const multiOption = (q.options||[]).length > 1;
+    return `
+    <div class="client-card" data-id="${q.id}">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <div><div class="cname">${q.name}</div><div class="ccompany">${q.company||''}</div></div>
+        <span class="badge ${QUOTE_STATUS_COLOR[q.status]}">${QUOTE_STATUS_LABEL[q.status]}</span>
+      </div>
+      <div class="crow"><span class="l">${multiOption?'A partir de':'Valor'}</span><span class="v mono">${fmtMoney(quoteMinTotal(q))}</span></div>
+      <div class="crow"><span class="l">Criado em</span><span class="v">${fmtDate(new Date(q.created_at).toISOString().slice(0,10))}</span></div>
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.client-card').forEach(c=>c.addEventListener('click',()=>openQuoteDetail(c.dataset.id)));
+}
+
+function openQuoteModal(existing){
+  document.getElementById('itemModalTitle').textContent = existing ? 'Editar orçamento' : 'Novo orçamento';
+  const body = document.getElementById('itemModalBody');
+  let options = existing?.options ? JSON.parse(JSON.stringify(existing.options)) : [{title:'', description:'', recurring:false, discount:0, items:[{description:'', value:0}]}];
+
+  function renderItems(oi){
+    const itemsWrap = document.querySelector(`.qo_items[data-oi="${oi}"]`);
+    const opt = options[oi];
+    itemsWrap.innerHTML = opt.items.map((it,ii)=>`
+      <div class="field-row" style="align-items:flex-end;margin-bottom:6px;">
+        <div class="field" style="margin-bottom:0;"><input type="text" class="qi_desc" data-oi="${oi}" data-ii="${ii}" value="${it.description||''}" placeholder="Ex: Social Media"></div>
+        <div class="field" style="margin-bottom:0;max-width:120px;"><input type="number" class="qi_value" data-oi="${oi}" data-ii="${ii}" value="${it.value||0}"></div>
+        <button class="btn ghost small danger qi_remove" data-oi="${oi}" data-ii="${ii}" style="margin-bottom:2px;">×</button>
+      </div>
+    `).join('');
+    itemsWrap.querySelectorAll('.qi_desc').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].description = inp.value; }));
+    itemsWrap.querySelectorAll('.qi_value').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].value = Number(inp.value); }));
+    itemsWrap.querySelectorAll('.qi_remove').forEach(btn=>btn.addEventListener('click', ()=>{
+      options[btn.dataset.oi].items.splice(Number(btn.dataset.ii),1);
+      renderItems(Number(btn.dataset.oi));
+    }));
+  }
+
+  function renderOptions(){
+    const wrap = document.getElementById('qo_options');
+    wrap.innerHTML = options.map((opt,oi)=>`
+      <div class="card" style="margin-bottom:14px;">
+        ${options.length>1?`<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;"><div style="font-size:12.5px;font-weight:600;">Opção ${oi+1}</div><button class="btn ghost small danger" data-remove-option="${oi}">remover opção</button></div>`:''}
+        <div class="field-row">
+          <div class="field"><label>Nome da opção <span class="hint">opcional</span></label><input type="text" class="qo_title" data-oi="${oi}" value="${opt.title||''}" placeholder="Ex: Gravação Avulsa"></div>
+          <div class="field"><label>Cobrança</label>
+            <select class="qo_recurring" data-oi="${oi}">
+              <option value="0" ${!opt.recurring?'selected':''}>Único</option>
+              <option value="1" ${opt.recurring?'selected':''}>Mensal</option>
+            </select>
+          </div>
+        </div>
+        <div class="field"><label>O que inclui <span class="hint">opcional</span></label><textarea class="qo_description" data-oi="${oi}" rows="2" placeholder="Ex: 1 diária de gravação (até 5 vídeos)">${opt.description||''}</textarea></div>
+        <div class="field"><label>Itens</label>
+          <div class="qo_items" data-oi="${oi}"></div>
+          <button class="btn ghost small qo_addItemBtn" data-oi="${oi}" style="margin-top:4px;">+ Item</button>
+        </div>
+        <div class="field" style="max-width:200px;margin-bottom:0;"><label>Desconto (R$) <span class="hint">opcional</span></label><input type="number" class="qo_discount" data-oi="${oi}" value="${opt.discount||0}"></div>
+      </div>
+    `).join('');
+    options.forEach((opt,oi)=>renderItems(oi));
+    wrap.querySelectorAll('.qo_title').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].title = inp.value; }));
+    wrap.querySelectorAll('.qo_recurring').forEach(sel=>sel.addEventListener('change', ()=>{ options[sel.dataset.oi].recurring = sel.value==='1'; }));
+    wrap.querySelectorAll('.qo_description').forEach(ta=>ta.addEventListener('input', ()=>{ options[ta.dataset.oi].description = ta.value; }));
+    wrap.querySelectorAll('.qo_discount').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].discount = Number(inp.value); }));
+    wrap.querySelectorAll('.qo_addItemBtn').forEach(btn=>btn.addEventListener('click', ()=>{
+      options[btn.dataset.oi].items.push({description:'', value:0});
+      renderItems(Number(btn.dataset.oi));
+    }));
+    wrap.querySelectorAll('[data-remove-option]').forEach(btn=>btn.addEventListener('click', ()=>{
+      options.splice(Number(btn.dataset.removeOption),1);
+      renderOptions();
+    }));
+  }
+
+  body.innerHTML = `
+    <div class="field"><label>Nome</label><input type="text" id="qf_name" value="${existing?.name||''}" placeholder="Nome do prospect"></div>
+    <div class="field-row">
+      <div class="field"><label>Empresa <span class="hint">opcional</span></label><input type="text" id="qf_company" value="${existing?.company||''}"></div>
+      <div class="field"><label>WhatsApp <span class="hint">opcional</span></label><input type="text" id="qf_wa" value="${existing?.whatsapp||''}"></div>
+    </div>
+    <div class="field-row">
+      <div class="field"><label>De</label><input type="text" id="qf_sender" value="${existing?.sender_name || currentUser().full_name}"></div>
+      <div class="field"><label>Validade (dias) <span class="hint">opcional</span></label><input type="number" id="qf_validity" value="${existing?.validity_days ?? 7}"></div>
+    </div>
+    <div id="qo_options"></div>
+    <button class="btn ghost small" id="qo_addOptionBtn" style="margin-bottom:16px;">+ Adicionar opção</button>
+    <div class="field"><label>Observações <span class="hint">opcional</span></label><textarea id="qf_notes" rows="3">${existing?.notes||''}</textarea></div>
+    <div class="modal-foot">
+      <button class="btn ghost" data-close="itemModalOverlay">Cancelar</button>
+      ${existing?`<button class="btn danger" id="deleteQuoteBtn">Excluir</button>`:''}
+      <button class="btn primary" id="saveQuoteBtn">Salvar</button>
+    </div>
+  `;
+  renderOptions();
+  document.getElementById('qo_addOptionBtn').addEventListener('click', ()=>{
+    options.push({title:'', description:'', recurring:false, discount:0, items:[{description:'', value:0}]});
+    renderOptions();
+  });
+
+  document.getElementById('saveQuoteBtn').addEventListener('click', ()=>{
+    const name = document.getElementById('qf_name').value.trim();
+    if(!name) return;
+    const cleanOptions = options.map(o=>({
+      title: o.title.trim(), description: o.description.trim(), recurring: !!o.recurring,
+      discount: Number(o.discount)||0, items: o.items.filter(i=>i.description.trim() && Number(i.value)>0),
+    })).filter(o=>o.items.length>0);
+    if(!cleanOptions.length) return;
+    const data = {
+      name, company: document.getElementById('qf_company').value.trim(),
+      whatsapp: document.getElementById('qf_wa').value.trim(),
+      sender_name: document.getElementById('qf_sender').value.trim(),
+      validity_days: Number(document.getElementById('qf_validity').value) || null,
+      options: cleanOptions,
+      notes: document.getElementById('qf_notes').value.trim(),
+    };
+    if(existing){
+      Object.assign(existing, data);
+    } else {
+      state.quotes.push({id:uid(), status:'aberto', created_by:currentUser().id, created_at:Date.now(), ...data});
+    }
+    saveState(state);
+    closeModal('itemModalOverlay');
+    render();
+  });
+  document.getElementById('deleteQuoteBtn')?.addEventListener('click', ()=>{
+    state.quotes = state.quotes.filter(q=>q.id!==existing.id);
+    saveState(state);
+    closeModal('itemModalOverlay');
+    render();
+  });
+  openModal('itemModalOverlay');
+}
+
+function openQuoteDetail(id){
+  const q = state.quotes.find(x=>x.id===id);
+  document.getElementById('genericModalTitle').textContent = 'Orçamento';
+  const body = document.getElementById('genericModalBody');
+  const issuedDate = new Date(q.created_at).toISOString().slice(0,10);
+  const validUntilDate = q.validity_days ? new Date(q.created_at + q.validity_days*86400000).toISOString().slice(0,10) : null;
+  const multiOption = (q.options||[]).length > 1;
+
+  body.innerHTML = `
+    <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <span class="badge ${QUOTE_STATUS_COLOR[q.status]}">${QUOTE_STATUS_LABEL[q.status]}</span>
+      ${canEditClients() && q.status==='aberto' ? `
+        <button class="btn small" id="qMarkAccepted">Marcar como aceito</button>
+        <button class="btn small ghost" id="qMarkRejected">Marcar como recusado</button>
+      ` : ''}
+      ${canEditClients()?`<button class="btn small ghost" id="qEditBtn" style="margin-left:auto;">Editar</button>`:''}
+      <button class="btn small primary" id="qPrintBtn">🖨️ Imprimir / Salvar PDF</button>
+    </div>
+    <div id="quotePaper" style="background:#0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
+        <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:24px;width:auto;">
+        <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">Proposta de serviços</div>
+      </div>
+
+      <div style="font-size:28px;font-weight:800;line-height:1.2;margin-bottom:14px;">Proposta para ${escapeHTML(q.name)}</div>
+      ${q.company?`<div style="font-size:13px;color:#8B95AC;margin-bottom:16px;">${escapeHTML(q.company)}</div>`:''}
+      <div style="display:flex;gap:28px;flex-wrap:wrap;font-size:11px;color:#8B95AC;margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:20px;">
+        ${q.sender_name?`<div>DE<br><span style="color:#fff;font-size:12.5px;">${escapeHTML(q.sender_name)}</span></div>`:''}
+        <div>DATA<br><span style="color:#fff;font-size:12.5px;">${fmtDate(issuedDate)}</span></div>
+        ${validUntilDate?`<div>VALIDADE<br><span style="color:#fff;font-size:12.5px;">${q.validity_days} dias (até ${fmtDate(validUntilDate)})</span></div>`:''}
+      </div>
+
+      ${(q.options||[]).map((opt,oi)=>{
+        const total = quoteOptionTotal(opt);
+        const investLabel = opt.recurring ? 'Investimento Mensal' : 'Investimento';
+        const totalLabel = opt.recurring ? 'TOTAL MENSAL' : 'TOTAL';
+        const heading = multiOption ? `Opção ${oi+1}${opt.title?' — '+escapeHTML(opt.title):''}` : escapeHTML(opt.title||'');
+        return `
+        <div style="margin-bottom:28px;">
+          ${heading?`<div style="font-size:15px;font-weight:700;margin-bottom:${opt.description?'6px':'14px'};">${heading}</div>`:''}
+          ${opt.description?`<div style="font-size:12.5px;color:#8B95AC;margin-bottom:14px;white-space:pre-line;">${escapeHTML(opt.description)}</div>`:''}
+          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5B8CFF;font-weight:700;margin-bottom:10px;">${investLabel}</div>
+          <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:10px;">
+            ${opt.items.map((i,idx)=>`<div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<opt.items.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13px;"><span>${escapeHTML(i.description)}</span><span class="mono">${fmtMoney(i.value)}</span></div>`).join('')}
+          </div>
+          ${opt.discount>0?`<div style="display:flex;justify-content:space-between;font-size:12.5px;color:#F87171;padding:0 4px;margin-bottom:8px;"><span>Desconto</span><span class="mono">-${fmtMoney(opt.discount)}</span></div>`:''}
+          <div style="display:flex;justify-content:space-between;align-items:baseline;background:#111A2E;border:1.5px solid #2F6FED;border-radius:12px;padding:16px 18px;">
+            <span style="font-size:12.5px;color:#8B95AC;font-weight:600;letter-spacing:.5px;">${totalLabel}</span>
+            <span style="font-size:24px;font-weight:800;color:#5B8CFF;" class="mono">${fmtMoney(total)}</span>
+          </div>
+        </div>`;
+      }).join('')}
+
+      ${q.notes?`<div style="font-size:12px;color:#8B95AC;margin-bottom:24px;padding:14px 16px;background:#111A2E;border-radius:10px;"><b style="color:#fff;">Observações:</b> ${escapeHTML(q.notes)}</div>`:''}
+
+      <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:18px;font-size:16px;font-weight:700;">Vamos trabalhar juntos?</div>
+    </div>
+    <div class="modal-foot"><button class="btn" data-close="genericModalOverlay">Fechar</button></div>
+  `;
+  document.getElementById('qPrintBtn').addEventListener('click', ()=>window.print());
+  document.getElementById('qEditBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openQuoteModal(q); });
+  document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ q.status='aceito'; saveState(state); openQuoteDetail(id); });
+  document.getElementById('qMarkRejected')?.addEventListener('click', ()=>{ q.status='recusado'; saveState(state); openQuoteDetail(id); });
+  openModal('genericModalOverlay');
+}
+
 function renderClientes(el){
   el.innerHTML = `
     <div class="filter-bar">
