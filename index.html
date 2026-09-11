@@ -441,6 +441,8 @@ const COMMITMENT_COLOR = {gravacao:'#B983F0', reuniao:'#4C7EFF', folga:'#8C93A3'
 const QUOTE_STATUS_LABEL = {aberto:'Aberto', aceito:'Aceito', recusado:'Recusado'};
 const QUOTE_STATUS_COLOR = {aberto:'blue', aceito:'green', recusado:'red'};
 const SERVICE_CATALOG = ['Captação', 'Edição de vídeo', 'Social Media', 'Tráfego Pago'];
+// só esses fazem sentido cobrar por quantidade (ex: 2 diárias de captação) — os outros são valor fechado
+const SERVICE_QTY_ELIGIBLE = ['Captação', 'Edição de vídeo'];
 const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado','concluido'];
 const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado', concluido:'Concluído',
   backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',
@@ -1209,8 +1211,9 @@ function renderDashboard(el){
 
 /* ---------- CLIENTES ---------- */
 let showArchivedClients = false;
+function quoteItemLineTotal(i){ return (Number(i.quantity)||1) * Number(i.value||0); }
 function quoteOptionTotal(opt){
-  const subtotal = (opt.items||[]).reduce((a,i)=>a+Number(i.value||0),0);
+  const subtotal = (opt.items||[]).reduce((a,i)=>a+quoteItemLineTotal(i),0);
   return Math.max(0, subtotal - Number(opt.discount||0));
 }
 function quoteMinTotal(q){
@@ -1251,7 +1254,7 @@ function renderOrcamentos(el){
 function openQuoteModal(existing){
   document.getElementById('itemModalTitle').textContent = existing ? 'Editar orçamento' : 'Novo orçamento';
   const body = document.getElementById('itemModalBody');
-  let options = existing?.options ? JSON.parse(JSON.stringify(existing.options)) : [{title:'', description:'', recurring:false, discount:0, items:[{description:'', value:0}]}];
+  let options = existing?.options ? JSON.parse(JSON.stringify(existing.options)) : [{title:'', description:'', recurring:false, discount:0, items:[{description:'', value:0, quantity:1}]}];
 
   function renderItems(oi){
     const itemsWrap = document.querySelector(`.qo_items[data-oi="${oi}"]`);
@@ -1268,7 +1271,8 @@ function openQuoteModal(existing){
           </select>
           <input type="text" class="qi_desc_custom" data-oi="${oi}" data-ii="${ii}" value="${!isCatalog?(it.description||''):''}" placeholder="Digite o serviço" style="margin-top:6px;${isCatalog||!it.description?'display:none;':''}">
         </div>
-        <div class="field" style="margin-bottom:0;max-width:120px;"><input type="number" class="qi_value" data-oi="${oi}" data-ii="${ii}" value="${it.value||0}"></div>
+        <div class="field qi_qty_field" data-oi="${oi}" data-ii="${ii}" style="margin-bottom:0;max-width:70px;${SERVICE_QTY_ELIGIBLE.includes(it.description)?'':'display:none;'}"><label style="font-size:10px;">Qtd</label><input type="number" min="1" class="qi_qty" data-oi="${oi}" data-ii="${ii}" value="${it.quantity||1}"></div>
+        <div class="field" style="margin-bottom:0;max-width:120px;"><label style="font-size:10px;">Valor unitário</label><input type="number" class="qi_value" data-oi="${oi}" data-ii="${ii}" value="${it.value||0}"></div>
         <button class="btn ghost small danger qi_remove" data-oi="${oi}" data-ii="${ii}" style="margin-bottom:2px;">×</button>
       </div>
     `;
@@ -1276,6 +1280,7 @@ function openQuoteModal(existing){
     itemsWrap.querySelectorAll('.qi_select').forEach(sel=>sel.addEventListener('change', ()=>{
       const oi2 = sel.dataset.oi, ii2 = sel.dataset.ii;
       const customInput = itemsWrap.querySelector(`.qi_desc_custom[data-oi="${oi2}"][data-ii="${ii2}"]`);
+      const qtyField = itemsWrap.querySelector(`.qi_qty_field[data-oi="${oi2}"][data-ii="${ii2}"]`);
       if(sel.value==='__custom__'){
         customInput.style.display = '';
         customInput.focus();
@@ -1284,9 +1289,16 @@ function openQuoteModal(existing){
         customInput.style.display = 'none';
         options[oi2].items[ii2].description = sel.value;
       }
+      const showQty = SERVICE_QTY_ELIGIBLE.includes(sel.value);
+      qtyField.style.display = showQty ? '' : 'none';
+      if(!showQty){
+        options[oi2].items[ii2].quantity = 1;
+        qtyField.querySelector('.qi_qty').value = 1;
+      }
     }));
     itemsWrap.querySelectorAll('.qi_desc_custom').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].description = inp.value; }));
     itemsWrap.querySelectorAll('.qi_value').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].value = Number(inp.value); }));
+    itemsWrap.querySelectorAll('.qi_qty').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].quantity = Number(inp.value)||1; }));
     itemsWrap.querySelectorAll('.qi_remove').forEach(btn=>btn.addEventListener('click', ()=>{
       options[btn.dataset.oi].items.splice(Number(btn.dataset.ii),1);
       renderItems(Number(btn.dataset.oi));
@@ -1321,7 +1333,7 @@ function openQuoteModal(existing){
     wrap.querySelectorAll('.qo_description').forEach(ta=>ta.addEventListener('input', ()=>{ options[ta.dataset.oi].description = ta.value; }));
     wrap.querySelectorAll('.qo_discount').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].discount = Number(inp.value); }));
     wrap.querySelectorAll('.qo_addItemBtn').forEach(btn=>btn.addEventListener('click', ()=>{
-      options[btn.dataset.oi].items.push({description:'', value:0});
+      options[btn.dataset.oi].items.push({description:'', value:0, quantity:1});
       renderItems(Number(btn.dataset.oi));
     }));
     wrap.querySelectorAll('[data-remove-option]').forEach(btn=>btn.addEventListener('click', ()=>{
@@ -1351,7 +1363,7 @@ function openQuoteModal(existing){
   `;
   renderOptions();
   document.getElementById('qo_addOptionBtn').addEventListener('click', ()=>{
-    options.push({title:'', description:'', recurring:false, discount:0, items:[{description:'', value:0}]});
+    options.push({title:'', description:'', recurring:false, discount:0, items:[{description:'', value:0, quantity:1}]});
     renderOptions();
   });
 
@@ -1432,7 +1444,7 @@ function openQuoteDetail(id){
           ${opt.description?`<div style="font-size:12.5px;color:#8B95AC;margin-bottom:14px;white-space:pre-line;">${escapeHTML(opt.description)}</div>`:''}
           <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5B8CFF;font-weight:700;margin-bottom:10px;">${investLabel}</div>
           <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:10px;">
-            ${opt.items.map((i,idx)=>`<div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<opt.items.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13px;"><span>${escapeHTML(i.description)}</span><span class="mono">${fmtMoney(i.value)}</span></div>`).join('')}
+            ${opt.items.map((i,idx)=>`<div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<opt.items.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13px;"><span>${escapeHTML(i.description)}${i.quantity>1?` (${i.quantity}x)`:''}</span><span class="mono">${fmtMoney(quoteItemLineTotal(i))}</span></div>`).join('')}
           </div>
           ${opt.discount>0?`<div style="display:flex;justify-content:space-between;font-size:12.5px;color:#F87171;padding:0 4px;margin-bottom:8px;"><span>Desconto</span><span class="mono">-${fmtMoney(opt.discount)}</span></div>`:''}
           <div style="display:flex;justify-content:space-between;align-items:baseline;background:#111A2E;border:1.5px solid #2F6FED;border-radius:12px;padding:16px 18px;">
