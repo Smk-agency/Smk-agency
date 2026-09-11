@@ -440,6 +440,7 @@ const COMMITMENT_TYPES = {gravacao:'Gravação', reuniao:'Reunião', folga:'Folg
 const COMMITMENT_COLOR = {gravacao:'#B983F0', reuniao:'#4C7EFF', folga:'#8C93A3', compromisso:'#E0A62D'};
 const QUOTE_STATUS_LABEL = {aberto:'Aberto', aceito:'Aceito', recusado:'Recusado'};
 const QUOTE_STATUS_COLOR = {aberto:'blue', aceito:'green', recusado:'red'};
+const SERVICE_CATALOG = ['Captação', 'Edição de vídeo', 'Social Media', 'Tráfego Pago'];
 const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado','concluido'];
 const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado', concluido:'Concluído',
   backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',
@@ -1255,14 +1256,36 @@ function openQuoteModal(existing){
   function renderItems(oi){
     const itemsWrap = document.querySelector(`.qo_items[data-oi="${oi}"]`);
     const opt = options[oi];
-    itemsWrap.innerHTML = opt.items.map((it,ii)=>`
+    itemsWrap.innerHTML = opt.items.map((it,ii)=>{
+      const isCatalog = SERVICE_CATALOG.includes(it.description);
+      return `
       <div class="field-row" style="align-items:flex-end;margin-bottom:6px;">
-        <div class="field" style="margin-bottom:0;"><input type="text" class="qi_desc" data-oi="${oi}" data-ii="${ii}" value="${it.description||''}" placeholder="Ex: Social Media"></div>
+        <div class="field" style="margin-bottom:0;">
+          <select class="qi_select" data-oi="${oi}" data-ii="${ii}">
+            <option value="" ${!it.description?'selected':''}>— selecionar —</option>
+            ${SERVICE_CATALOG.map(s=>`<option value="${s}" ${it.description===s?'selected':''}>${s}</option>`).join('')}
+            <option value="__custom__" ${(it.description && !isCatalog)?'selected':''}>Outro (digitar)</option>
+          </select>
+          <input type="text" class="qi_desc_custom" data-oi="${oi}" data-ii="${ii}" value="${!isCatalog?(it.description||''):''}" placeholder="Digite o serviço" style="margin-top:6px;${isCatalog||!it.description?'display:none;':''}">
+        </div>
         <div class="field" style="margin-bottom:0;max-width:120px;"><input type="number" class="qi_value" data-oi="${oi}" data-ii="${ii}" value="${it.value||0}"></div>
         <button class="btn ghost small danger qi_remove" data-oi="${oi}" data-ii="${ii}" style="margin-bottom:2px;">×</button>
       </div>
-    `).join('');
-    itemsWrap.querySelectorAll('.qi_desc').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].description = inp.value; }));
+    `;
+    }).join('');
+    itemsWrap.querySelectorAll('.qi_select').forEach(sel=>sel.addEventListener('change', ()=>{
+      const oi2 = sel.dataset.oi, ii2 = sel.dataset.ii;
+      const customInput = itemsWrap.querySelector(`.qi_desc_custom[data-oi="${oi2}"][data-ii="${ii2}"]`);
+      if(sel.value==='__custom__'){
+        customInput.style.display = '';
+        customInput.focus();
+        options[oi2].items[ii2].description = customInput.value;
+      } else {
+        customInput.style.display = 'none';
+        options[oi2].items[ii2].description = sel.value;
+      }
+    }));
+    itemsWrap.querySelectorAll('.qi_desc_custom').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].description = inp.value; }));
     itemsWrap.querySelectorAll('.qi_value').forEach(inp=>inp.addEventListener('input', ()=>{ options[inp.dataset.oi].items[inp.dataset.ii].value = Number(inp.value); }));
     itemsWrap.querySelectorAll('.qi_remove').forEach(btn=>btn.addEventListener('click', ()=>{
       options[btn.dataset.oi].items.splice(Number(btn.dataset.ii),1);
