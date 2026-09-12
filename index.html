@@ -2714,15 +2714,15 @@ function renderFinanceiro(el){
     <div class="section-title">Despesas do mês <button class="btn small primary" id="addExpenseBtn">+ Despesa</button></div>
     <div class="card">
       <div class="table-wrap"><table>
-        <tr><th>Categoria</th><th>Descrição</th><th>Valor</th><th>Data</th><th>Status</th><th></th></tr>
+        <tr><th>Categoria</th><th>Descrição</th><th>Responsável</th><th>Valor</th><th>Data</th><th>Status</th><th></th></tr>
         ${sortedExpenses.map(e=>`<tr>
-          <td>${e.category}</td><td>${e.description}</td><td class="mono">${fmtMoney(e.value)}</td><td>${fmtDate(e.expense_date)}</td>
+          <td>${e.category}</td><td>${e.description}</td><td>${e.responsible_id?(userById(e.responsible_id)?.full_name||'—'):'—'}</td><td class="mono">${fmtMoney(e.value)}</td><td>${fmtDate(e.expense_date)}</td>
           <td><span class="badge ${(e.status||'pago')==='pago'?'green':'blue'}">${e.status||'pago'}</span></td>
           <td style="text-align:right;white-space:nowrap;">
             ${e.status && e.status!=='pago'?`<button class="btn small primary" data-mark-expense-paid="${e.id}">Marcar como pago</button>`:''}
             <button class="btn ghost small" data-edit-expense="${e.id}">editar</button>
           </td>
-        </tr>`).join('') || `<tr><td colspan="6" style="color:var(--text-faint)">Nenhuma despesa lançada esse mês.</td></tr>`}
+        </tr>`).join('') || `<tr><td colspan="7" style="color:var(--text-faint)">Nenhuma despesa lançada esse mês.</td></tr>`}
       </table></div>
     </div>
   `;
@@ -2804,7 +2804,7 @@ function openPaymentModal(existing){
   });
   openModal('genericModalOverlay');
 }
-const EXPENSE_CATEGORIES = ['Software','Equipamentos','Internet','Escritório','Marketing','Funcionários','Prestadores','Impostos','Outros'];
+const EXPENSE_CATEGORIES = ['Software','Equipamentos','Internet','Escritório','Locomoção','Marketing','Funcionários','Prestadores','Impostos','Outros'];
 
 function openExpenseModal(existing){
   document.getElementById('genericModalTitle').textContent = existing ? 'Editar despesa' : 'Nova despesa';
@@ -2815,7 +2815,15 @@ function openExpenseModal(existing){
       <div class="field"><label>Valor</label><input type="number" id="ef_value" value="${existing?.value||0}"></div>
       <div class="field"><label>Data</label><input type="date" id="ef_date" value="${existing?.expense_date||todayISO()}"></div>
     </div>
-    <div class="field"><label>Status</label><select id="ef_status">${['pago','pendente'].map(s=>`<option value="${s}" ${(existing?.status||'pago')===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="field-row">
+      <div class="field"><label>Status</label><select id="ef_status">${['pago','pendente'].map(s=>`<option value="${s}" ${(existing?.status||'pago')===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      <div class="field"><label>Responsável <span class="hint">opcional</span></label>
+        <select id="ef_responsible">
+          <option value="">— ninguém —</option>
+          ${state.users.filter(u=>u.status!=='disabled').map(u=>`<option value="${u.id}" ${existing?.responsible_id===u.id?'selected':''}>${u.full_name}</option>`).join('')}
+        </select>
+      </div>
+    </div>
     <div class="modal-foot">
       ${existing?`<button class="btn ghost danger" id="deleteExpenseBtn" style="margin-right:auto;">Excluir</button>`:''}
       <button class="btn ghost" data-close="genericModalOverlay">Cancelar</button>
@@ -2829,7 +2837,8 @@ function openExpenseModal(existing){
   document.getElementById('saveExpenseBtn').addEventListener('click', ()=>{
     const status = document.getElementById('ef_status').value;
     const data = {category:document.getElementById('ef_cat').value, description:document.getElementById('ef_desc').value,
-      value:Number(document.getElementById('ef_value').value), expense_date:document.getElementById('ef_date').value, status};
+      value:Number(document.getElementById('ef_value').value), expense_date:document.getElementById('ef_date').value, status,
+      responsible_id: document.getElementById('ef_responsible').value || null};
     if(existing){
       Object.assign(existing, data);
       if(status==='pago' && !existing.paid_at) existing.paid_at = todayISO();
