@@ -574,7 +574,7 @@ function seed(){
     {id:'u_dono', full_name:'Smurk', username:'smurk', role:'dono', access_code:'1000'},
   ];
   return {users, clients:[], client_services:[], contracts:[], tasks:[], task_comments:[], task_versions:[],
-    payments:[], expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], quotes:[], archived_tasks:{}, archived_financeiro:{},
+    payments:[], expenses:[], fixed_expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], quotes:[], archived_tasks:{}, archived_financeiro:{},
     notification_reads:{},
     settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 }
@@ -590,7 +590,7 @@ function saveState(s){
 }
 
 let state = {users:[], clients:[], client_services:[], contracts:[], tasks:[], task_comments:[], task_versions:[],
-  payments:[], expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], quotes:[], archived_tasks:{}, archived_financeiro:{},
+  payments:[], expenses:[], fixed_expenses:[], team_costs:[], client_cost_allocations:[], commitments:[], quotes:[], archived_tasks:{}, archived_financeiro:{},
   notification_reads:{},
   settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 let currentView = 'mesa';
@@ -672,6 +672,24 @@ function generateMonthlyInvoices(){
   return changed;
 }
 
+// Todo mês, gera sozinho a cobrança de cada gasto fixo ativo (aluguel, assinatura etc.), sem duplicar
+// se já tiver sido gerada esse mês (mesma lógica anti-duplicata usada pras cobranças de cliente).
+function generateMonthlyFixedExpenses(){
+  let changed = false;
+  const monthKey = todayISO().slice(0,7);
+  const lastDay = new Date(Number(monthKey.slice(0,4)), Number(monthKey.slice(5,7)), 0).getDate();
+  (state.fixed_expenses||[]).filter(fe=>fe.status!=='pausado').forEach(fe=>{
+    const already = state.expenses.some(e=>e.fixed_expense_id===fe.id && (e.expense_date||'').startsWith(monthKey));
+    if(already) return;
+    const day = Math.min(fe.due_day||1, lastDay);
+    const dueDate = `${monthKey}-${String(day).padStart(2,'0')}`;
+    state.expenses.push({id:uid(), category:fe.category, description:fe.description, value:fe.value,
+      expense_date:dueDate, status:'pendente', paid_at:null, fixed_expense_id:fe.id});
+    changed = true;
+  });
+  return changed;
+}
+
 // Fim de mês: receitas/despesas já resolvidas (pagas/canceladas ou despesas passadas) saem do Financeiro ativo
 // e vão pra Arquivadas > Financeiro, por mês. Pendências/atrasos de meses antigos continuam visíveis até resolver.
 function archiveOldFinance(){
@@ -697,7 +715,10 @@ function archiveOldFinance(){
   const expensesActive = [];
   (state.expenses||[]).forEach(e=>{
     const eMonth = (e.expense_date||'').slice(0,7);
-    if(eMonth && eMonth < currentMonth){
+    const isPast = eMonth && eMonth < currentMonth;
+    // despesa sem status é lançamento antigo (de antes de existir status pago/pendente) — trata como já resolvida
+    const resolved = e.status==='pago' || !e.status;
+    if(isPast && resolved){
       state.archived_financeiro[eMonth] = state.archived_financeiro[eMonth] || {payments:[], expenses:[], team_cost_snapshot:0};
       state.archived_financeiro[eMonth].expenses.push(e);
       changed = true;
@@ -748,13 +769,15 @@ async function initApp(){
       if(!state.archived_financeiro) state.archived_financeiro = {};
       if(!state.commitments) state.commitments = [];
       if(!state.quotes) state.quotes = [];
+      if(!state.fixed_expenses) state.fixed_expenses = [];
       if(!state.notification_reads) state.notification_reads = {};
       const m1 = migrateLegacyTasks();
       const m2 = archiveOldCompletedTasks();
       const m3 = updateOverduePayments();
       const m4 = generateMonthlyInvoices();
+      const m4b = generateMonthlyFixedExpenses();
       const m5 = archiveOldFinance();
-      if(m1 || m2 || m3 || m4 || m5) saveState(state);
+      if(m1 || m2 || m3 || m4 || m4b || m5) saveState(state);
     }
 
     agencyDocRef.onSnapshot(docSnap=>{
@@ -764,6 +787,7 @@ async function initApp(){
       if(!state.archived_financeiro) state.archived_financeiro = {};
       if(!state.commitments) state.commitments = [];
       if(!state.quotes) state.quotes = [];
+      if(!state.fixed_expenses) state.fixed_expenses = [];
       if(!state.notification_reads) state.notification_reads = {};
       migrateLegacyTasks();
       archiveOldCompletedTasks();
@@ -2603,14 +2627,51 @@ function compressImageToDataURL(file, maxWidth, quality){
 }
 
 /* ---------- FINANCEIRO ---------- */
+function donutChartHTML(faturamento, despesas, lucro){
+  const despesaPct = faturamento>0 ? Math.min(100, Math.max(0,(despesas/faturamento)*100)) : 0;
+  const lucroPct = 100 - despesaPct;
+  return `
+    <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;">
+      <div style="width:120px;height:120px;border-radius:50%;flex-shrink:0;background:conic-gradient(var(--red) 0 ${despesaPct}%, var(--accent) ${despesaPct}% 100%);position:relative;">
+        <div style="position:absolute;inset:15px;border-radius:50%;background:var(--surface);display:flex;align-items:center;justify-content:center;flex-direction:column;">
+          <div style="font-size:9.5px;color:var(--text-faint);">MARGEM</div>
+          <div style="font-size:16px;font-weight:700;color:${lucro>=0?'var(--accent-soft)':'var(--red)'};">${lucroPct.toFixed(0)}%</div>
+        </div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:9px;font-size:12.5px;min-width:180px;">
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--text-faint);flex-shrink:0;"></span>Faturamento <span class="mono" style="margin-left:auto;font-weight:600;">${fmtMoney(faturamento)}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--red);flex-shrink:0;"></span>Despesas + folha <span class="mono" style="margin-left:auto;">${fmtMoney(despesas)}</span></div>
+        <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:var(--accent);flex-shrink:0;"></span>Lucro <span class="mono" style="margin-left:auto;color:${lucro>=0?'var(--accent-soft)':'var(--red)'};">${fmtMoney(lucro)}</span></div>
+      </div>
+    </div>
+  `;
+}
+
 function renderFinanceiro(el){
   const sortedPayments = [...state.payments].sort((a,b)=>{
     const rank = s=> s==='atrasado'?0 : s==='pendente'?1 : s==='pago'?2 : 3;
     if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
     return (a.due_date||'').localeCompare(b.due_date||'');
   });
+  const sortedExpenses = [...state.expenses].sort((a,b)=>{
+    const rank = s=> s==='pendente'?0 : 1;
+    if(rank(a.status)!==rank(b.status)) return rank(a.status)-rank(b.status);
+    return (a.expense_date||'').localeCompare(b.expense_date||'');
+  });
+
+  const faturamento = state.payments.reduce((a,p)=>a+Number(p.value),0);
+  const despesasSoltas = state.expenses.reduce((a,e)=>a+Number(e.value),0);
+  const folha = state.team_costs.reduce((a,t)=>a+Number(t.monthly_cost),0);
+  const despesasTotais = despesasSoltas + folha;
+  const lucro = faturamento - despesasTotais;
+
   el.innerHTML = `
-    <div class="section-title" style="margin-top:0;">Receitas <button class="btn small primary" id="addPaymentBtn">+ Receita</button></div>
+    <div class="section-title" style="margin-top:0;">Resumo do mês</div>
+    <div class="card" style="margin-bottom:24px;">
+      ${donutChartHTML(faturamento, despesasTotais, lucro)}
+    </div>
+
+    <div class="section-title">Receitas <button class="btn small primary" id="addPaymentBtn">+ Receita</button></div>
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
         <tr><th>Cliente</th><th>Valor</th><th>Vencimento</th><th>Status</th><th></th></tr>
@@ -2628,16 +2689,39 @@ function renderFinanceiro(el){
       </table></div>
     </div>
 
-    <div class="section-title">Despesas da agência <button class="btn small primary" id="addExpenseBtn">+ Despesa</button></div>
+    <div class="section-title">Gastos fixos <button class="btn small primary" id="addFixedExpenseBtn">+ Gasto fixo</button></div>
+    <div class="card" style="margin-bottom:24px;">
+      <div class="table-wrap"><table>
+        <tr><th>Categoria</th><th>Descrição</th><th>Valor mensal</th><th>Vencimento</th><th>Status</th><th></th></tr>
+        ${(state.fixed_expenses||[]).map(fe=>`<tr style="${fe.status==='pausado'?'opacity:.5;':''}">
+          <td>${fe.category}</td><td>${fe.description}</td><td class="mono">${fmtMoney(fe.value)}</td><td>todo dia ${fe.due_day}</td>
+          <td><span class="badge ${fe.status==='pausado'?'gray':'green'}">${fe.status==='pausado'?'pausado':'ativo'}</span></td>
+          <td style="text-align:right;white-space:nowrap;">
+            <button class="btn ghost small" data-edit-fixed="${fe.id}">editar</button>
+            <button class="btn ghost small" data-toggle-fixed="${fe.id}">${fe.status==='pausado'?'reativar':'pausar'}</button>
+          </td>
+        </tr>`).join('') || `<tr><td colspan="6" style="color:var(--text-faint)">Nenhum gasto fixo cadastrado — ex: aluguel, assinatura de software.</td></tr>`}
+      </table></div>
+    </div>
+
+    <div class="section-title">Despesas do mês <button class="btn small primary" id="addExpenseBtn">+ Despesa</button></div>
     <div class="card">
       <div class="table-wrap"><table>
-        <tr><th>Categoria</th><th>Descrição</th><th>Valor</th><th>Data</th></tr>
-        ${state.expenses.map(e=>`<tr><td>${e.category}</td><td>${e.description}</td><td class="mono">${fmtMoney(e.value)}</td><td>${fmtDate(e.expense_date)}</td></tr>`).join('')}
+        <tr><th>Categoria</th><th>Descrição</th><th>Valor</th><th>Data</th><th>Status</th><th></th></tr>
+        ${sortedExpenses.map(e=>`<tr>
+          <td>${e.category}</td><td>${e.description}</td><td class="mono">${fmtMoney(e.value)}</td><td>${fmtDate(e.expense_date)}</td>
+          <td><span class="badge ${(e.status||'pago')==='pago'?'green':'blue'}">${e.status||'pago'}</span></td>
+          <td style="text-align:right;white-space:nowrap;">
+            ${e.status && e.status!=='pago'?`<button class="btn small primary" data-mark-expense-paid="${e.id}">Marcar como pago</button>`:''}
+            <button class="btn ghost small" data-edit-expense="${e.id}">editar</button>
+          </td>
+        </tr>`).join('') || `<tr><td colspan="6" style="color:var(--text-faint)">Nenhuma despesa lançada esse mês.</td></tr>`}
       </table></div>
     </div>
   `;
   document.getElementById('addPaymentBtn').addEventListener('click', ()=>openPaymentModal());
   document.getElementById('addExpenseBtn').addEventListener('click', ()=>openExpenseModal());
+  document.getElementById('addFixedExpenseBtn').addEventListener('click', ()=>openFixedExpenseModal());
   el.querySelectorAll('[data-mark-paid]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const p = state.payments.find(x=>x.id===btn.dataset.markPaid);
@@ -2650,6 +2734,31 @@ function renderFinanceiro(el){
   el.querySelectorAll('[data-edit-payment]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       openPaymentModal(state.payments.find(x=>x.id===btn.dataset.editPayment));
+    });
+  });
+  el.querySelectorAll('[data-edit-fixed]').forEach(btn=>{
+    btn.addEventListener('click', ()=>openFixedExpenseModal(state.fixed_expenses.find(f=>f.id===btn.dataset.editFixed)));
+  });
+  el.querySelectorAll('[data-toggle-fixed]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const fe = state.fixed_expenses.find(f=>f.id===btn.dataset.toggleFixed);
+      fe.status = fe.status==='pausado' ? 'ativo' : 'pausado';
+      saveState(state);
+      render();
+    });
+  });
+  el.querySelectorAll('[data-mark-expense-paid]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const e = state.expenses.find(x=>x.id===btn.dataset.markExpensePaid);
+      e.status = 'pago';
+      e.paid_at = todayISO();
+      saveState(state);
+      render();
+    });
+  });
+  el.querySelectorAll('[data-edit-expense]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      openExpenseModal(state.expenses.find(e=>e.id===btn.dataset.editExpense));
     });
   });
 }
@@ -2688,23 +2797,76 @@ function openPaymentModal(existing){
   });
   openModal('genericModalOverlay');
 }
-function openExpenseModal(){
-  document.getElementById('genericModalTitle').textContent = 'Nova despesa';
+const EXPENSE_CATEGORIES = ['Software','Equipamentos','Internet','Escritório','Marketing','Funcionários','Prestadores','Impostos','Outros'];
+
+function openExpenseModal(existing){
+  document.getElementById('genericModalTitle').textContent = existing ? 'Editar despesa' : 'Nova despesa';
   document.getElementById('genericModalBody').innerHTML = `
-    <div class="field"><label>Categoria</label><select id="ef_cat">${['Software','Equipamentos','Internet','Escritório','Marketing','Funcionários','Prestadores','Impostos','Outros'].map(c=>`<option>${c}</option>`).join('')}</select></div>
-    <div class="field"><label>Descrição</label><input type="text" id="ef_desc"></div>
+    <div class="field"><label>Categoria</label><select id="ef_cat">${EXPENSE_CATEGORIES.map(c=>`<option ${existing?.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Descrição</label><input type="text" id="ef_desc" value="${existing?.description||''}"></div>
     <div class="field-row">
-      <div class="field"><label>Valor</label><input type="number" id="ef_value" value="0"></div>
-      <div class="field"><label>Data</label><input type="date" id="ef_date" value="${todayISO()}"></div>
+      <div class="field"><label>Valor</label><input type="number" id="ef_value" value="${existing?.value||0}"></div>
+      <div class="field"><label>Data</label><input type="date" id="ef_date" value="${existing?.expense_date||todayISO()}"></div>
     </div>
-    <div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Cancelar</button><button class="btn primary" id="saveExpenseBtn">Salvar</button></div>
+    <div class="field"><label>Status</label><select id="ef_status">${['pago','pendente'].map(s=>`<option value="${s}" ${(existing?.status||'pago')===s?'selected':''}>${s}</option>`).join('')}</select></div>
+    <div class="modal-foot">
+      ${existing?`<button class="btn ghost danger" id="deleteExpenseBtn" style="margin-right:auto;">Excluir</button>`:''}
+      <button class="btn ghost" data-close="genericModalOverlay">Cancelar</button>
+      <button class="btn primary" id="saveExpenseBtn">Salvar</button>
+    </div>
   `;
+  document.getElementById('deleteExpenseBtn')?.addEventListener('click', ()=>{
+    state.expenses = state.expenses.filter(e=>e.id!==existing.id);
+    saveState(state); closeModal('genericModalOverlay'); render();
+  });
   document.getElementById('saveExpenseBtn').addEventListener('click', ()=>{
-    state.expenses.push({id:uid(), category:document.getElementById('ef_cat').value, description:document.getElementById('ef_desc').value,
-      value:Number(document.getElementById('ef_value').value), expense_date:document.getElementById('ef_date').value});
+    const status = document.getElementById('ef_status').value;
+    const data = {category:document.getElementById('ef_cat').value, description:document.getElementById('ef_desc').value,
+      value:Number(document.getElementById('ef_value').value), expense_date:document.getElementById('ef_date').value, status};
+    if(existing){
+      Object.assign(existing, data);
+      if(status==='pago' && !existing.paid_at) existing.paid_at = todayISO();
+      if(status!=='pago') existing.paid_at = null;
+    } else {
+      state.expenses.push({id:uid(), ...data, paid_at: status==='pago'?todayISO():null});
+    }
     saveState(state); closeModal('genericModalOverlay'); render();
   });
   openModal('genericModalOverlay');
+}
+
+function openFixedExpenseModal(existing){
+  document.getElementById('itemModalTitle').textContent = existing ? 'Editar gasto fixo' : 'Novo gasto fixo';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div class="field"><label>Categoria</label><select id="fe_cat">${EXPENSE_CATEGORIES.map(c=>`<option ${existing?.category===c?'selected':''}>${c}</option>`).join('')}</select></div>
+    <div class="field"><label>Descrição</label><input type="text" id="fe_desc" value="${existing?.description||''}" placeholder="Ex: Aluguel do escritório"></div>
+    <div class="field-row">
+      <div class="field"><label>Valor mensal</label><input type="number" id="fe_value" value="${existing?.value||0}"></div>
+      <div class="field"><label>Dia de vencimento</label><input type="number" id="fe_day" min="1" max="31" value="${existing?.due_day||1}"></div>
+    </div>
+    <div class="modal-foot">
+      ${existing?`<button class="btn ghost danger" id="deleteFixedExpenseBtn" style="margin-right:auto;">Excluir</button>`:''}
+      <button class="btn ghost" data-close="itemModalOverlay">Cancelar</button>
+      <button class="btn primary" id="saveFixedExpenseBtn">Salvar</button>
+    </div>
+  `;
+  document.getElementById('deleteFixedExpenseBtn')?.addEventListener('click', ()=>{
+    state.fixed_expenses = state.fixed_expenses.filter(f=>f.id!==existing.id);
+    saveState(state); closeModal('itemModalOverlay'); render();
+  });
+  document.getElementById('saveFixedExpenseBtn').addEventListener('click', ()=>{
+    const description = document.getElementById('fe_desc').value.trim();
+    if(!description) return;
+    const data = {category:document.getElementById('fe_cat').value, description,
+      value:Number(document.getElementById('fe_value').value), due_day:Number(document.getElementById('fe_day').value)||1};
+    if(existing){
+      Object.assign(existing, data);
+    } else {
+      state.fixed_expenses.push({id:uid(), status:'ativo', created_at:Date.now(), ...data});
+    }
+    saveState(state); closeModal('itemModalOverlay'); render();
+  });
+  openModal('itemModalOverlay');
 }
 
 /* ---------- RENTABILIDADE ---------- */
