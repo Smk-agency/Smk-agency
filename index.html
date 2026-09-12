@@ -2693,6 +2693,11 @@ function renderFinanceiro(el){
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
         <tr><th>Categoria</th><th>Descrição</th><th>Valor mensal</th><th>Vencimento</th><th>Status</th><th></th></tr>
+        ${state.team_costs.map(tc=>`<tr>
+          <td>Folha</td><td>${tc.professional_name} — ${tc.role}</td><td class="mono">${fmtMoney(tc.monthly_cost)}</td><td>—</td>
+          <td><span class="badge green">ativo</span></td>
+          <td style="text-align:right;white-space:nowrap;"><span style="font-size:11px;color:var(--text-faint);">editar na Equipe</span></td>
+        </tr>`).join('')}
         ${(state.fixed_expenses||[]).map(fe=>`<tr style="${fe.status==='pausado'?'opacity:.5;':''}">
           <td>${fe.category}</td><td>${fe.description}</td><td class="mono">${fmtMoney(fe.value)}</td><td>todo dia ${fe.due_day}</td>
           <td><span class="badge ${fe.status==='pausado'?'gray':'green'}">${fe.status==='pausado'?'pausado':'ativo'}</span></td>
@@ -2700,8 +2705,10 @@ function renderFinanceiro(el){
             <button class="btn ghost small" data-edit-fixed="${fe.id}">editar</button>
             <button class="btn ghost small" data-toggle-fixed="${fe.id}">${fe.status==='pausado'?'reativar':'pausar'}</button>
           </td>
-        </tr>`).join('') || `<tr><td colspan="6" style="color:var(--text-faint)">Nenhum gasto fixo cadastrado — ex: aluguel, assinatura de software.</td></tr>`}
+        </tr>`).join('')}
+        ${(!state.team_costs.length && !(state.fixed_expenses||[]).length) ? `<tr><td colspan="6" style="color:var(--text-faint)">Nenhum gasto fixo cadastrado — ex: aluguel, assinatura de software.</td></tr>` : ''}
       </table></div>
+      <div style="font-size:11px;color:var(--text-faint);margin-top:10px;">Folha da equipe é gerenciada na aba Equipe — aqui é só pra você ver tudo que é gasto fixo junto.</div>
     </div>
 
     <div class="section-title">Despesas do mês <button class="btn small primary" id="addExpenseBtn">+ Despesa</button></div>
