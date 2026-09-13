@@ -303,7 +303,15 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
   .topbar{padding:14px 16px;}
   .field-row{grid-template-columns:1fr;}
   .mobile-menu-btn{display:flex!important;}
+
+  /* no mobile os modais abrem como uma folha subindo do rodapé, estilo iOS */
+  .modal-overlay{align-items:flex-end;padding:0;}
+  .modal{border-radius:18px 18px 0 0;max-width:100%;margin-bottom:0;max-height:86vh;overflow-y:auto;position:relative;padding-top:28px;}
+  .modal.modal-lg{max-width:100%;}
+  .modal::before{content:'';position:absolute;top:10px;left:50%;transform:translateX(-50%);width:36px;height:4px;border-radius:3px;background:var(--border);}
+  .modal-overlay.open .modal{animation:sheetUp .32s cubic-bezier(.32,.72,0,1);}
 }
+@keyframes sheetUp{from{transform:translateY(100%);}to{transform:translateY(0);}}
 .mobile-menu-btn{display:none;background:var(--surface-2);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:8px;align-items:center;justify-content:center;font-size:14px;}
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;}
 .sidebar-backdrop.open{display:block;}
