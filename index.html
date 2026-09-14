@@ -76,6 +76,8 @@ button{font-family:inherit;cursor:pointer;}
 .passcode-wrap{position:relative;display:flex;gap:20px;justify-content:center;padding:16px 0 6px;}
 .passcode-dot{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border);background:transparent;transition:background-color .12s ease,border-color .12s ease,transform .12s ease;}
 .passcode-dot.filled{background:var(--blue);border-color:var(--blue);transform:scale(1.1);}
+.passcode-dot.success{background:var(--accent);border-color:var(--accent);animation:dotPop .3s ease;}
+@keyframes dotPop{0%{transform:scale(1.1);}50%{transform:scale(1.4);}100%{transform:scale(1.1);}}
 .passcode-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;padding:0;margin:0;cursor:pointer;font-size:16px;}
 .passcode-wrap.shake{animation:passcodeShake .4s ease;}
 @keyframes passcodeShake{
@@ -1073,7 +1075,10 @@ function shakePasscode(){
 function renderLogin(){
   document.getElementById('loginName').value = '';
   document.getElementById('loginCode').value = '';
+  document.getElementById('loginCode').disabled = false;
+  document.getElementById('loginBtn').disabled = false;
   document.getElementById('loginError').style.display = 'none';
+  document.querySelectorAll('.passcode-dot').forEach(d=> d.classList.remove('success'));
   updatePasscodeDots();
 }
 
@@ -1094,8 +1099,14 @@ function attemptLogin(){
     return;
   }
   state.currentUserId = user.id;
-  saveState(state);
-  enterApp();
+  document.getElementById('loginCode').disabled = true;
+  document.getElementById('loginBtn').disabled = true;
+  const dots = document.querySelectorAll('.passcode-dot');
+  dots.forEach((d,i)=>{ setTimeout(()=> d.classList.add('success'), i*70); });
+  setTimeout(()=>{
+    saveState(state);
+    enterApp();
+  }, dots.length*70 + 280);
 }
 document.getElementById('loginBtn').addEventListener('click', attemptLogin);
 document.getElementById('loginCode').addEventListener('input', ()=>{
