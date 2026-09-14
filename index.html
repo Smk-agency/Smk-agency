@@ -73,6 +73,17 @@ button{font-family:inherit;cursor:pointer;}
 .brand-logo-sm{height:22px;width:auto;display:block;filter:drop-shadow(0 0 10px rgba(76,126,255,.35));}
 .login-title{font-size:22px;font-weight:600;margin-bottom:6px;}
 .login-desc{color:var(--text-muted);font-size:13px;margin-bottom:28px;}
+.passcode-wrap{position:relative;display:flex;gap:20px;justify-content:center;padding:16px 0 6px;}
+.passcode-dot{width:15px;height:15px;border-radius:50%;border:1.5px solid var(--border);background:transparent;transition:background-color .12s ease,border-color .12s ease,transform .12s ease;}
+.passcode-dot.filled{background:var(--blue);border-color:var(--blue);transform:scale(1.1);}
+.passcode-input{position:absolute;inset:0;width:100%;height:100%;opacity:0;border:none;padding:0;margin:0;cursor:pointer;font-size:16px;}
+.passcode-wrap.shake{animation:passcodeShake .4s ease;}
+@keyframes passcodeShake{
+  10%,90%{transform:translateX(-1px);}
+  20%,80%{transform:translateX(3px);}
+  30%,50%,70%{transform:translateX(-6px);}
+  40%,60%{transform:translateX(6px);}
+}
 .profile-grid{display:flex;flex-direction:column;gap:8px;}
 .profile-btn{
   display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);
@@ -369,7 +380,16 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
     <div class="login-title">Entrar</div>
     <div class="login-desc">Digite seu nome e o código de 4 dígitos que o Dono te passou.</div>
     <div class="field"><label>Nome</label><input type="text" id="loginName" placeholder="Ex: Camila Ortiz" autocomplete="off"></div>
-    <div class="field"><label>Código de acesso</label><input type="text" id="loginCode" placeholder="0000" maxlength="4" inputmode="numeric" autocomplete="off" style="letter-spacing:4px;font-family:var(--font-mono);"></div>
+    <div class="field">
+      <label>Código de acesso</label>
+      <div class="passcode-wrap" id="passcodeWrap">
+        <div class="passcode-dot"></div>
+        <div class="passcode-dot"></div>
+        <div class="passcode-dot"></div>
+        <div class="passcode-dot"></div>
+        <input type="text" id="loginCode" maxlength="4" inputmode="numeric" autocomplete="off" class="passcode-input">
+      </div>
+    </div>
     <div id="loginError" style="display:none;color:var(--red);font-size:12px;margin-bottom:10px;"></div>
     <button class="btn primary" id="loginBtn" style="width:100%;justify-content:center;padding:11px;">Entrar</button>
   </div>
@@ -1037,10 +1057,24 @@ document.addEventListener('click', (e)=>{
 });
 
 /* ================= LOGIN ================= */
+function updatePasscodeDots(){
+  const val = document.getElementById('loginCode').value;
+  document.querySelectorAll('.passcode-dot').forEach((d,i)=> d.classList.toggle('filled', i < val.length));
+}
+function shakePasscode(){
+  const wrap = document.getElementById('passcodeWrap');
+  wrap.classList.remove('shake');
+  void wrap.offsetWidth;
+  wrap.classList.add('shake');
+  document.getElementById('loginCode').value = '';
+  updatePasscodeDots();
+  document.getElementById('loginCode').focus();
+}
 function renderLogin(){
   document.getElementById('loginName').value = '';
   document.getElementById('loginCode').value = '';
   document.getElementById('loginError').style.display = 'none';
+  updatePasscodeDots();
 }
 
 function attemptLogin(){
@@ -1056,6 +1090,7 @@ function attemptLogin(){
   if(!user){
     errEl.textContent = 'Nome ou código incorretos. Confere com o Dono.';
     errEl.style.display = 'block';
+    shakePasscode();
     return;
   }
   state.currentUserId = user.id;
@@ -1063,6 +1098,12 @@ function attemptLogin(){
   enterApp();
 }
 document.getElementById('loginBtn').addEventListener('click', attemptLogin);
+document.getElementById('loginCode').addEventListener('input', ()=>{
+  const codeEl = document.getElementById('loginCode');
+  codeEl.value = codeEl.value.replace(/\D/g,'').slice(0,4);
+  updatePasscodeDots();
+  if(codeEl.value.length === 4) attemptLogin();
+});
 document.getElementById('loginCode').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
 document.getElementById('loginName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginCode').focus(); });
 
