@@ -3175,7 +3175,28 @@ function openArchivedTaskView(t){
 }
 
 function renderEquipe(el){
+  const editors = state.users.filter(u=>['editor','designer_editor'].includes(u.role) && u.status!=='disabled')
+    .map(u=>({u, count:videosApprovedThisMonth(u.id)}))
+    .sort((a,b)=>b.count-a.count);
+  const maxCount = Math.max(1, ...editors.map(e=>e.count));
+  const monthLabel = new Date().toLocaleDateString('pt-BR',{month:'long'});
+  const rankingHTML = editors.length ? `
+    <div class="section-title" style="margin-top:0;">🏆 Competição do mês <span class="hint">vídeos aprovados em ${monthLabel}</span></div>
+    <div class="card" style="margin-bottom:24px;">
+      ${editors.map((r,i)=>`
+        <div style="display:flex;align-items:center;gap:14px;padding:9px 0;${i<editors.length-1?'border-bottom:1px solid var(--border);':''}">
+          <div style="width:24px;text-align:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:${i===0?'var(--amber)':'var(--text-faint)'};">${i===0?'🏆':(i+1)+'º'}</div>
+          <div style="width:120px;flex-shrink:0;font-size:13px;font-weight:600;">${r.u.full_name}</div>
+          <div style="flex:1;background:var(--surface-2);border-radius:6px;height:18px;overflow:hidden;">
+            <div style="height:100%;width:${(r.count/maxCount*100)}%;background:var(--blue);border-radius:6px;transition:width .4s ease;"></div>
+          </div>
+          <div style="width:28px;text-align:right;font-family:var(--font-mono);font-weight:700;font-size:13px;">${r.count}</div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
   el.innerHTML = `
+    ${rankingHTML}
     <div class="section-title" style="margin-top:0;">Usuários <button class="btn small primary" id="addUserBtn">+ Novo usuário</button></div>
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
