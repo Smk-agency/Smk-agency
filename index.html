@@ -2566,7 +2566,10 @@ function openTaskModal(id){
     <div class="field">
       <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer... (recomendado pra vídeo/arquivo pesado)</span></label>
       <input type="text" id="tf_delivery" value="${t?.delivery_link||''}" placeholder="https://...">
-      ${t?.delivery_link?`<div style="margin-top:6px;"><a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12px;">↗ Abrir entrega</a></div>`:''}
+      ${t?.delivery_link?`<div style="margin-top:6px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12px;">↗ Abrir entrega</a>
+        ${t.delivery_link_updated_at?`<span style="color:var(--text-faint);font-size:11px;">Atualizado em ${new Date(t.delivery_link_updated_at).toLocaleString('pt-BR')}</span>`:''}
+      </div>`:''}
     </div>
     ${t?`
     <div class="section-title" style="margin-top:20px;">Atividade & comentários</div>
@@ -2585,6 +2588,16 @@ function openTaskModal(id){
       <button class="btn primary" id="saveTaskBtn">Salvar</button>
     </div>
   `;
+
+  function updateVideoFieldsVisibility(){
+    const isVideo = VIDEO_TASK_TYPES.includes(document.getElementById('tf_type').value);
+    ['tf_head_field','tf_sub_field','tf_legenda_field'].forEach(fid=>{
+      const fEl = document.getElementById(fid);
+      if(fEl) fEl.style.display = isVideo ? 'none' : '';
+    });
+  }
+  updateVideoFieldsVisibility();
+  document.getElementById('tf_type').addEventListener('change', updateVideoFieldsVisibility);
 
   ['tf_brief','tf_head','tf_sub','tf_ref','tf_legenda'].forEach(fid=>{
     const el = document.getElementById(fid);
@@ -2669,6 +2682,9 @@ function openTaskModal(id){
       delivery_link:document.getElementById('tf_delivery').value.trim(),
       assignee_id: ownerId
     };
+    if(data.delivery_link !== (t?.delivery_link||'')){
+      data.delivery_link_updated_at = data.delivery_link ? Date.now() : null;
+    }
 
     if(t){
       const oldStatus = t.status, oldDue = t.due_date, me = currentUser().id;
@@ -3168,7 +3184,10 @@ function openArchivedTaskView(t){
     ${t.briefing?.sub?`<div class="field"><label>Sub</label><div class="card" style="font-size:12.5px;">${escapeHTML(t.briefing.sub)}</div></div>`:''}
     ${t.briefing?.referencia?`<div class="field"><label>Referência</label><div class="card" style="font-size:12.5px;">${linkify(t.briefing.referencia)}</div></div>`:''}
     ${t.briefing?.legenda?`<div class="field"><label>Legenda</label><div class="card" style="font-size:12.5px;">${escapeHTML(t.briefing.legenda)}</div></div>`:''}
-    ${t.delivery_link?`<div style="margin-top:10px;"><a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12.5px;">↗ Abrir entrega</a></div>`:''}
+    ${t.delivery_link?`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12.5px;">↗ Abrir entrega</a>
+      ${t.delivery_link_updated_at?`<span style="color:var(--text-faint);font-size:11px;">Atualizado em ${new Date(t.delivery_link_updated_at).toLocaleString('pt-BR')}</span>`:''}
+    </div>`:''}
     <div class="modal-foot"><button class="btn primary" data-close="genericModalOverlay">Fechar</button></div>
   `;
   openModal('genericModalOverlay');
