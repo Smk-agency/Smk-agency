@@ -2534,6 +2534,18 @@ function openTaskModal(id){
   const creator = t ? userById(t.created_by) : currentUser();
 
   body.innerHTML = `
+    ${!t?`
+    <div class="field">
+      <button type="button" class="btn ghost small" id="pasteTrelloBtn">📋 Colar do Trello</button>
+      <div id="trelloPasteWrap" style="display:none;margin-top:10px;">
+        <textarea id="trelloPasteText" rows="5" placeholder="Cola aqui o título e a descrição do card do Trello..."></textarea>
+        <div style="margin-top:6px;display:flex;gap:8px;">
+          <button type="button" class="btn small primary" id="trelloFillBtn">Preencher</button>
+          <button type="button" class="btn small ghost" id="trelloCancelBtn">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    `:''}
     <div class="field"><label>Título</label><input type="text" id="tf_title" value="${t?.title||''}"></div>
     <div class="field-row">
       <div class="field"><label>Cliente</label>
@@ -2598,6 +2610,31 @@ function openTaskModal(id){
   }
   updateVideoFieldsVisibility();
   document.getElementById('tf_type').addEventListener('change', updateVideoFieldsVisibility);
+
+  document.getElementById('pasteTrelloBtn')?.addEventListener('click', ()=>{
+    document.getElementById('trelloPasteWrap').style.display = 'block';
+    document.getElementById('pasteTrelloBtn').style.display = 'none';
+    document.getElementById('trelloPasteText').focus();
+  });
+  document.getElementById('trelloCancelBtn')?.addEventListener('click', ()=>{
+    document.getElementById('trelloPasteWrap').style.display = 'none';
+    document.getElementById('pasteTrelloBtn').style.display = '';
+    document.getElementById('trelloPasteText').value = '';
+  });
+  document.getElementById('trelloFillBtn')?.addEventListener('click', ()=>{
+    const raw = document.getElementById('trelloPasteText').value;
+    const lines = raw.split('\n').map(l=>l.trim()).filter(l=>l!=='');
+    if(lines.length){
+      document.getElementById('tf_title').value = lines[0];
+      document.getElementById('tf_brief').value = lines.slice(1).join('\n');
+      document.getElementById('tf_brief').dispatchEvent(new Event('input'));
+      const urlMatch = raw.match(/https?:\/\/[^\s)]+/);
+      if(urlMatch) document.getElementById('tf_delivery').value = urlMatch[0];
+    }
+    document.getElementById('trelloPasteWrap').style.display = 'none';
+    document.getElementById('pasteTrelloBtn').style.display = '';
+    document.getElementById('trelloPasteText').value = '';
+  });
 
   ['tf_brief','tf_head','tf_sub','tf_ref','tf_legenda'].forEach(fid=>{
     const el = document.getElementById(fid);
