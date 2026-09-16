@@ -12,6 +12,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="SMK OS">
 <link rel="apple-touch-icon" href="icon-256.png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -2442,6 +2443,35 @@ function drawAgendaCalendar(board){
   }
 }
 
+async function copyElementAsImage(elId, btnEl){
+  const el = document.getElementById(elId);
+  if(!el) return;
+  const originalLabel = btnEl.textContent;
+  if(!window.html2canvas || !navigator.clipboard?.write || typeof ClipboardItem==='undefined'){
+    alert('Esse navegador não deixa copiar a imagem direto. Tira um print da tela mesmo.');
+    return;
+  }
+  try{
+    btnEl.disabled = true;
+    btnEl.textContent = 'Copiando...';
+    await navigator.clipboard.write([
+      new ClipboardItem({
+        'image/png': new Promise((resolve, reject)=>{
+          html2canvas(el, {backgroundColor:'#0A1128', scale:2}).then(canvas=>{
+            canvas.toBlob(blob=> blob ? resolve(blob) : reject(new Error('sem imagem')), 'image/png');
+          }).catch(reject);
+        })
+      })
+    ]);
+    btnEl.textContent = '✓ Copiado!';
+    setTimeout(()=>{ btnEl.disabled = false; btnEl.textContent = originalLabel; }, 1800);
+  }catch(e){
+    alert('Não consegui copiar automaticamente. Tira um print da tela mesmo.');
+    btnEl.disabled = false;
+    btnEl.textContent = originalLabel;
+  }
+}
+
 function openCommitmentCard(id){
   const c = state.commitments.find(x=>x.id===id);
   if(!c) return;
@@ -2472,8 +2502,12 @@ function openCommitmentCard(id){
       </div>
       <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);font-size:13px;color:#8B95AC;">Qualquer dúvida, é só chamar 🙂</div>
     </div>
-    <div class="modal-foot"><button class="btn primary" data-close="genericModalOverlay">Fechar</button></div>
+    <div class="modal-foot">
+      <button class="btn ghost" data-close="genericModalOverlay">Fechar</button>
+      <button type="button" class="btn primary" id="copyCommitCardBtn">📋 Copiar imagem</button>
+    </div>
   `;
+  document.getElementById('copyCommitCardBtn').addEventListener('click', function(){ copyElementAsImage('commitCard', this); });
   openModal('genericModalOverlay');
 }
 
