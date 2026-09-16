@@ -2512,6 +2512,10 @@ function openCommitmentCard(id){
           <div><div style="font-size:11px;color:#8B95AC;">Local</div><div style="font-size:14px;font-weight:600;color:#5B8CFF;">${escapeHTML(c.location)}</div></div>
         </a>`:''}
       </div>
+      ${c.notes?`<div style="margin-top:14px;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:11px;color:#8B95AC;margin-bottom:4px;">Observações</div>
+        <div style="font-size:13.5px;line-height:1.5;white-space:pre-line;">${escapeHTML(c.notes)}</div>
+      </div>`:''}
       <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);font-size:13px;color:#8B95AC;">Qualquer dúvida, é só chamar 🙂</div>
     </div>
     <div class="modal-foot">
