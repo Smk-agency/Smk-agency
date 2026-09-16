@@ -2435,6 +2435,19 @@ document.getElementById('newTaskBtn').addEventListener('click', ()=>openTaskModa
 let agendaCalCursor = new Date();
 let agendaSelectedDay = todayISO();
 let agendaTab = 'mine';
+const AGENDA_FILTER_KEYS = ['demandas','gravacao','reuniao','folga','compromisso'];
+const AGENDA_FILTER_LABELS = {demandas:'Demandas', gravacao:'Gravação', reuniao:'Reunião', folga:'Folga', compromisso:'Compromisso'};
+let agendaTypeFilters = (() => {
+  try{
+    const saved = JSON.parse(localStorage.getItem('smkos_agenda_filters'));
+    if(saved) return saved;
+  }catch(e){}
+  return {demandas:true, gravacao:true, reuniao:true, folga:true, compromisso:true};
+})();
+function toggleAgendaFilter(key){
+  agendaTypeFilters[key] = !agendaTypeFilters[key];
+  localStorage.setItem('smkos_agenda_filters', JSON.stringify(agendaTypeFilters));
+}
 
 function buildAgendaDayMap(scopeUserId){
   const map = {};
@@ -2463,10 +2476,20 @@ function renderAgenda(el){
       <button class="btn small ${agendaTab==='agency'?'primary':''}" id="agTabAgency">Agência (todos)</button>`:''}
       ${showAdd?`<button class="btn primary small" id="addCommitmentBtn" style="margin-left:auto;">+ Compromisso</button>`:''}
     </div>`:''}
+    <div class="status-tabs" id="agendaTypeFilterBar">
+      ${AGENDA_FILTER_KEYS.map(key=>`<button class="status-tab ${agendaTypeFilters[key]?'active':''}" data-filter-key="${key}">${AGENDA_FILTER_LABELS[key]}</button>`).join('')}
+    </div>
     <div id="agendaBoard"></div>
   `;
   document.getElementById('agTabMine')?.addEventListener('click', ()=>{ agendaTab='mine'; render(); });
   document.getElementById('agTabAgency')?.addEventListener('click', ()=>{ agendaTab='agency'; render(); });
+  document.querySelectorAll('#agendaTypeFilterBar [data-filter-key]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      toggleAgendaFilter(btn.dataset.filterKey);
+      btn.classList.toggle('active', agendaTypeFilters[btn.dataset.filterKey]);
+      drawAgendaCalendar(document.getElementById('agendaBoard'));
+    });
+  });
   document.getElementById('addCommitmentBtn')?.addEventListener('click', ()=>openCommitmentModal(null, agendaSelectedDay));
   drawAgendaCalendar(document.getElementById('agendaBoard'));
 }
@@ -2491,8 +2514,9 @@ function drawAgendaCalendar(board){
     const isToday = iso===todayISO();
 
     const chips = [];
-    dayItems.demandas.forEach(t=>chips.push({color:clientColor(t.client_id)||'var(--accent)', text:t.title, kind:'task', id:t.id}));
+    if(agendaTypeFilters.demandas) dayItems.demandas.forEach(t=>chips.push({color:clientColor(t.client_id)||'var(--accent)', text:t.title, kind:'task', id:t.id}));
     ['gravacao','reuniao','folga','compromisso'].forEach(key=>{
+      if(!agendaTypeFilters[key]) return;
       dayItems[key].forEach(c=>chips.push({color: c.client_id ? clientColor(c.client_id) : COMMITMENT_COLOR[key], text:c.title, kind:'commitment', id:c.id}));
     });
     const visibleChips = chips.slice(0, MAX_CHIPS);
@@ -2536,9 +2560,10 @@ function openAgendaDayModal(iso){
   const scopeUserId = agendaTab==='mine' ? currentUser().id : null;
   const dayMap = buildAgendaDayMap(scopeUserId);
   const sel = dayMap[iso] || {demandas:[], gravacao:[], reuniao:[], folga:[], compromisso:[]};
-  const isEmpty = Object.values(sel).every(arr=>arr.length===0);
+  const isEmpty = AGENDA_FILTER_KEYS.every(key=>!agendaTypeFilters[key] || !sel[key].length);
 
   function sectionHTML(key, label){
+    if(!agendaTypeFilters[key]) return '';
     const items = sel[key];
     if(!items.length) return '';
     const rows = key==='demandas'
