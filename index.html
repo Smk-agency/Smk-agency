@@ -129,6 +129,17 @@ button{font-family:inherit;cursor:pointer;}
 .notif-item:hover{background:var(--surface-2);}
 .notif-item .t{color:var(--text-faint);font-size:10.5px;margin-top:2px;}
 .notif-empty{padding:20px;text-align:center;color:var(--text-faint);font-size:12px;}
+.search-wrap{position:relative;flex:1;max-width:320px;margin:0 16px;}
+.search-input{width:100%;padding:8px 12px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:12.5px;transition:.15s;}
+.search-input:focus{outline:none;border-color:var(--blue);}
+.search-dropdown{display:none;position:absolute;top:100%;left:0;right:0;margin-top:6px;max-height:380px;overflow-y:auto;background:var(--surface);border:1px solid var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:300;padding:6px;}
+.search-dropdown.open{display:block;}
+.search-group-label{font-size:10px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);padding:8px 10px 4px;}
+.search-result-item{padding:9px 10px;border-radius:8px;cursor:pointer;font-size:12.5px;transition:.15s;}
+.search-result-item:hover{background:var(--surface-2);}
+.search-result-item .sub{font-size:11px;color:var(--text-faint);margin-top:2px;}
+.search-empty{padding:20px;text-align:center;color:var(--text-faint);font-size:12px;}
+@media(max-width:860px){ .search-wrap{display:none;} }
 .notif-head{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);padding:6px 10px;}
 .nav-group{margin-bottom:18px;}
 .nav-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:var(--text-faint);padding:0 10px;margin-bottom:6px;}
@@ -443,6 +454,10 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
         <div style="display:flex;align-items:center;gap:12px;">
           <button class="mobile-menu-btn" id="menuBtn">☰</button>
           <div><h1 id="pageTitle">Minha Mesa</h1><div class="topbar-sub" id="pageSub"></div></div>
+        </div>
+        <div class="search-wrap" id="searchWrap">
+          <input type="text" id="globalSearch" class="search-input" placeholder="Buscar clientes, demandas..." autocomplete="off">
+          <div class="search-dropdown" id="searchDropdown"></div>
         </div>
         <button class="btn primary small" id="newTaskBtn">+ Nova demanda</button>
       </div>
@@ -1064,6 +1079,54 @@ document.getElementById('notifBellBtn').addEventListener('click', (e)=>{
 document.addEventListener('click', (e)=>{
   const wrap = document.querySelector('.notif-wrap');
   if(wrap && !wrap.contains(e.target)) document.getElementById('notifDropdown').classList.remove('open');
+});
+
+/* ================= BUSCA GLOBAL ================= */
+function closeGlobalSearch(){
+  document.getElementById('searchDropdown').classList.remove('open');
+}
+function renderSearchDropdown(q){
+  const dropdown = document.getElementById('searchDropdown');
+  const query = q.trim().toLowerCase();
+  if(query.length < 2){ closeGlobalSearch(); return; }
+  const clients = state.clients.filter(c=>
+    c.name.toLowerCase().includes(query) || (c.company||'').toLowerCase().includes(query)
+  ).slice(0,6);
+  const tasks = state.tasks.filter(t=>
+    t.title.toLowerCase().includes(query) || (clientById(t.client_id)?.name||'').toLowerCase().includes(query)
+  ).slice(0,6);
+  if(!clients.length && !tasks.length){
+    dropdown.innerHTML = '<div class="search-empty">Nada encontrado.</div>';
+    dropdown.classList.add('open');
+    return;
+  }
+  dropdown.innerHTML = `
+    ${clients.length?`<div class="search-group-label">Clientes</div>${clients.map(c=>`
+      <div class="search-result-item" data-search-client="${c.id}">
+        <div>${escapeHTML(c.name)}</div>${c.company?`<div class="sub">${escapeHTML(c.company)}</div>`:''}
+      </div>`).join('')}`:''}
+    ${tasks.length?`<div class="search-group-label">Demandas</div>${tasks.map(t=>`
+      <div class="search-result-item" data-search-task="${t.id}">
+        <div>${escapeHTML(t.title)}</div><div class="sub">${escapeHTML(clientById(t.client_id)?.name||'—')}</div>
+      </div>`).join('')}`:''}
+  `;
+  dropdown.classList.add('open');
+  dropdown.querySelectorAll('[data-search-client]').forEach(el=>el.addEventListener('click', ()=>{
+    closeGlobalSearch();
+    document.getElementById('globalSearch').value = '';
+    openClientDetail(el.dataset.searchClient);
+  }));
+  dropdown.querySelectorAll('[data-search-task]').forEach(el=>el.addEventListener('click', ()=>{
+    closeGlobalSearch();
+    document.getElementById('globalSearch').value = '';
+    openTaskModal(el.dataset.searchTask);
+  }));
+}
+document.getElementById('globalSearch').addEventListener('input', e=>renderSearchDropdown(e.target.value));
+document.getElementById('globalSearch').addEventListener('focus', e=>{ if(e.target.value.trim().length>=2) renderSearchDropdown(e.target.value); });
+document.addEventListener('click', (e)=>{
+  const wrap = document.getElementById('searchWrap');
+  if(wrap && !wrap.contains(e.target)) closeGlobalSearch();
 });
 
 /* ================= LOGIN ================= */
