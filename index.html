@@ -376,8 +376,8 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
   #genericModalOverlay { display:block !important; position:static !important; background:#0A1128 !important; padding:0 !important; backdrop-filter:none !important; }
   #genericModalOverlay .modal { max-width:none !important; width:100% !important; margin:0 !important; padding:24px !important; border:none !important; background:#0A1128 !important; box-shadow:none !important; max-height:none !important; overflow:visible !important; border-radius:0 !important; }
   #genericModalOverlay .modal-head,
-  #genericModalBody > div:not(#quotePaper) { display:none !important; }
-  #quotePaper, #quotePaper * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  #genericModalBody > div:not(.printable-card) { display:none !important; }
+  .printable-card, .printable-card * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
 </style>
 </head>
@@ -1611,7 +1611,7 @@ function openQuoteDetail(id){
       <button class="btn small primary" id="qPrintBtn">🖨️ Imprimir / Salvar PDF</button>
       <button type="button" class="btn small" id="qCopyImgBtn">📋 Copiar imagem</button>
     </div>
-    <div id="quotePaper" style="background:#0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
+    <div id="quotePaper" class="printable-card" style="background:#0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
         <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:24px;width:auto;">
         <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">Proposta de serviços</div>
@@ -3004,6 +3004,81 @@ function donutChartHTML(faturamento, despesas, lucro){
   `;
 }
 
+function openFinanceReportModal(faturamento, despesasSoltas, folha, despesasTotais, lucro){
+  const rawMonthLabel = new Date().toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+  const monthLabel = rawMonthLabel.charAt(0).toUpperCase() + rawMonthLabel.slice(1);
+  const emitted = new Date().toLocaleDateString('pt-BR');
+  const despesaPct = faturamento>0 ? Math.min(100, Math.max(0,(despesasTotais/faturamento)*100)) : 0;
+  const margem = faturamento>0 ? (lucro/faturamento*100) : 0;
+
+  const catTotals = {};
+  state.expenses.forEach(e=>{ catTotals[e.category] = (catTotals[e.category]||0) + Number(e.value); });
+  if(folha>0) catTotals['Folha da equipe'] = folha;
+  const catRows = Object.entries(catTotals).sort((a,b)=>b[1]-a[1]);
+
+  const recebido = state.payments.filter(p=>p.status==='pago').reduce((a,p)=>a+Number(p.value),0);
+  const aReceber = state.payments.filter(p=>p.status==='pendente').reduce((a,p)=>a+Number(p.value),0);
+  const emAtraso = state.payments.filter(p=>p.status==='atrasado').reduce((a,p)=>a+Number(p.value),0);
+
+  document.getElementById('genericModalTitle').textContent = 'Relatório do mês';
+  document.getElementById('genericModalBody').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <button type="button" class="btn small primary" id="reportPrintBtn">🖨️ Imprimir / Salvar PDF</button>
+      <button type="button" class="btn small" id="reportCopyImgBtn">📋 Copiar imagem</button>
+    </div>
+    <div id="financeReportCard" class="printable-card" style="background:#0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
+        <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:22px;width:auto;">
+        <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">Relatório financeiro</div>
+      </div>
+      <div style="font-size:26px;font-weight:800;line-height:1.25;margin-bottom:4px;">Resumo de ${monthLabel}</div>
+      <div style="font-size:13px;color:#8B95AC;margin-bottom:28px;">Emitido em ${emitted}</div>
+
+      <div style="display:flex;align-items:center;gap:28px;flex-wrap:wrap;margin-bottom:28px;padding-bottom:28px;border-bottom:1px solid rgba(255,255,255,.1);">
+        <div style="width:130px;height:130px;border-radius:50%;flex-shrink:0;background:conic-gradient(#E0553D 0 ${despesaPct}%, #1FA97C ${despesaPct}% 100%);position:relative;">
+          <div style="position:absolute;inset:16px;border-radius:50%;background:#0A1128;display:flex;align-items:center;justify-content:center;flex-direction:column;">
+            <div style="font-size:10px;color:#8B95AC;letter-spacing:.5px;">MARGEM</div>
+            <div style="font-size:19px;font-weight:800;color:${lucro>=0?'#5EDBA8':'#F1897A'};">${margem.toFixed(0)}%</div>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:10px;font-size:13.5px;min-width:200px;">
+          <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#5B8CFF;flex-shrink:0;"></span>Faturamento <span class="mono" style="margin-left:auto;font-weight:700;">${fmtMoney(faturamento)}</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#F1897A;flex-shrink:0;"></span>Despesas + folha <span class="mono" style="margin-left:auto;">${fmtMoney(despesasTotais)}</span></div>
+          <div style="display:flex;align-items:center;gap:8px;"><span style="width:10px;height:10px;border-radius:3px;background:#5EDBA8;flex-shrink:0;"></span>Lucro <span class="mono" style="margin-left:auto;color:${lucro>=0?'#5EDBA8':'#F1897A'};font-weight:700;">${fmtMoney(lucro)}</span></div>
+        </div>
+      </div>
+
+      <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5B8CFF;font-weight:700;margin-bottom:12px;">Receitas</div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:28px;">
+        <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+          <div style="font-size:11px;color:#8B95AC;margin-bottom:4px;">Recebido</div>
+          <div style="font-size:15px;font-weight:700;color:#5EDBA8;">${fmtMoney(recebido)}</div>
+        </div>
+        <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+          <div style="font-size:11px;color:#8B95AC;margin-bottom:4px;">A receber</div>
+          <div style="font-size:15px;font-weight:700;">${fmtMoney(aReceber)}</div>
+        </div>
+        <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+          <div style="font-size:11px;color:#8B95AC;margin-bottom:4px;">Em atraso</div>
+          <div style="font-size:15px;font-weight:700;color:${emAtraso>0?'#F1897A':'#fff'};">${fmtMoney(emAtraso)}</div>
+        </div>
+      </div>
+
+      ${catRows.length?`
+      <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5B8CFF;font-weight:700;margin-bottom:12px;">Despesas por categoria</div>
+      <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;">
+        ${catRows.map(([cat,val],i)=>`<div style="display:flex;justify-content:space-between;padding:12px 16px;${i<catRows.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13px;"><span>${escapeHTML(cat)}</span><span class="mono">${fmtMoney(val)}</span></div>`).join('')}
+      </div>`:''}
+
+      <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);font-size:12px;color:#8B95AC;">Relatório gerado automaticamente pelo SMK OS.</div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Fechar</button></div>
+  `;
+  document.getElementById('reportPrintBtn').addEventListener('click', ()=>window.print());
+  document.getElementById('reportCopyImgBtn').addEventListener('click', function(){ copyElementAsImage('financeReportCard', this); });
+  openModal('genericModalOverlay');
+}
+
 function renderFinanceiro(el){
   const sortedPayments = [...state.payments].sort((a,b)=>{
     const rank = s=> s==='atrasado'?0 : s==='pendente'?1 : s==='pago'?2 : 3;
@@ -3023,7 +3098,7 @@ function renderFinanceiro(el){
   const lucro = faturamento - despesasTotais;
 
   el.innerHTML = `
-    <div class="section-title" style="margin-top:0;">Resumo do mês</div>
+    <div class="section-title" style="margin-top:0;">Resumo do mês <button class="btn small" id="openFinanceReportBtn">📄 Relatório do mês</button></div>
     <div class="card" style="margin-bottom:24px;">
       ${donutChartHTML(faturamento, despesasTotais, lucro)}
     </div>
@@ -3083,6 +3158,7 @@ function renderFinanceiro(el){
       </table></div>
     </div>
   `;
+  document.getElementById('openFinanceReportBtn').addEventListener('click', ()=>openFinanceReportModal(faturamento, despesasSoltas, folha, despesasTotais, lucro));
   document.getElementById('addPaymentBtn').addEventListener('click', ()=>openPaymentModal());
   document.getElementById('addExpenseBtn').addEventListener('click', ()=>openExpenseModal());
   document.getElementById('addFixedExpenseBtn').addEventListener('click', ()=>openFixedExpenseModal());
