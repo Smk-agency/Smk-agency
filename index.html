@@ -247,7 +247,10 @@ tr:last-child td{border-bottom:none;}
 .kanban-col{min-width:250px;flex-shrink:0;}
 .kanban-col-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;font-size:12px;font-weight:600;color:var(--text-muted);}
 .kanban-col-head .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
-.kanban-cards{display:flex;flex-direction:column;gap:8px;min-height:40px;}
+.kanban-cards{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:10px;transition:background-color .15s ease;}
+.kanban-cards.drag-over{background:var(--blue-dim);outline:1.5px dashed var(--blue);outline-offset:4px;}
+.kanban-empty{display:flex;align-items:center;justify-content:center;height:60px;border:1.5px dashed var(--border);border-radius:9px;font-size:11px;color:var(--text-faint);text-align:center;padding:0 10px;}
+.task-card.dragging{opacity:.4;}
 .task-card{background:linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,0) 42%), var(--surface);border:1px solid var(--border);border-radius:9px;padding:11px 12px;cursor:pointer;transition:.15s;box-shadow:0 1px 0 0 rgba(255,255,255,.05) inset,0 8px 18px -16px rgba(0,0,0,.6);}
 .task-card:hover{border-color:var(--accent);transform:translateY(-2px);box-shadow:0 1px 0 0 rgba(255,255,255,.05) inset,0 6px 16px rgba(0,0,0,.24);}
 .task-card .tclient{font-size:10.5px;color:var(--text-faint);margin-bottom:4px;text-transform:uppercase;letter-spacing:.4px;}
@@ -2225,8 +2228,6 @@ function taskCardHTML(t){
 
 function assignableUsers(){ return state.users.filter(u=>EXECUTOR_ROLES.includes(u.role)); }
 
-let demandaStatusTab = 'todas';
-
 function filteredTasks(){
   const clientF = document.getElementById('filterClient')?.value || '';
   const ownerF = document.getElementById('filterOwner')?.value || '';
@@ -2250,7 +2251,7 @@ function renderDemandas(el){
       <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
       <select id="filterType"><option value="">Todos os tipos</option>${TASK_TYPES.map(ty=>`<option value="${ty}">${ty}</option>`).join('')}</select>
       ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}">${u.full_name}</option>`).join('')}</select>`:''}
-      <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Lista</button>
+      <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Quadro</button>
       <button class="btn small ${demandaView==='calendar'?'primary':''}" id="viewCalendarBtn">▦ Calendário</button>
     </div>
     ${!isDono()?`<div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">${EXECUTOR_ROLES.includes(currentUser().role) ? 'Mostrando só as demandas atribuídas a você.' : 'Mostrando as demandas que você criou.'}</div>`:''}
@@ -2266,33 +2267,59 @@ function renderDemandas(el){
 
 function drawDemandas(){
   const board = document.getElementById('demandaBoard');
-  if(demandaView==='kanban') drawStatusTabs(board);
+  if(demandaView==='kanban') drawKanbanBoard(board);
   else drawCalendar(board);
 }
 
-function drawStatusTabs(board){
+function changeTaskStatus(taskId, newStatus){
+  const t = state.tasks.find(x=>x.id===taskId);
+  if(!t || t.status===newStatus) return;
+  const oldStatus = t.status;
+  t.status = newStatus;
+  if(newStatus==='concluido' && oldStatus!=='concluido' && !t.completed_month) t.completed_month = todayISO().slice(0,7);
+  if(newStatus!=='concluido') t.completed_month = null;
+  state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:currentUser().id,
+    content:`moveu de "${STATUS_LABEL[oldStatus]}" para "${STATUS_LABEL[newStatus]}"`, created_at:Date.now()});
+  saveState(state);
+}
+
+function drawKanbanBoard(board){
   const tasks = filteredTasks();
-  const tabs = [{key:'todas', label:'Todas'}, ...STATUS_FLOW.map(s=>({key:s, label:STATUS_LABEL[s]}))];
-  const counts = {};
-  tabs.forEach(tb=>{ counts[tb.key] = tb.key==='todas' ? tasks.length : tasks.filter(t=>t.status===tb.key).length; });
-
-  const shown = (demandaStatusTab==='todas' ? tasks : tasks.filter(t=>t.status===demandaStatusTab))
-    .sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999'));
-
   board.innerHTML = `
-    <div class="status-tabs">
-      ${tabs.map(tb=>{
-        const color = STATUS_COLOR[tb.key];
+    <div class="kanban">
+      ${STATUS_FLOW.map(status=>{
+        const items = tasks.filter(t=>t.status===status).sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999'));
+        const color = STATUS_COLOR[status];
         const cntStyle = color ? `background:${color}33;color:${color};` : '';
-        return `<button class="status-tab ${demandaStatusTab===tb.key?'active':''}" data-tab="${tb.key}">${tb.label} <span class="cnt" style="${cntStyle}">${counts[tb.key]}</span></button>`;
+        return `<div class="kanban-col">
+          <div class="kanban-col-head"><span>${STATUS_LABEL[status]}</span><span class="cnt" style="${cntStyle}">${items.length}</span></div>
+          <div class="kanban-cards" data-status="${status}">
+            ${items.length ? items.map(t=>demandaListItemHTML(t)).join('') : '<div class="kanban-empty">Arraste um card aqui</div>'}
+          </div>
+        </div>`;
       }).join('')}
     </div>
-    <div class="task-list-vertical" id="statusTabList">
-      ${shown.map(t=>demandaListItemHTML(t)).join('') || '<div class="empty">Nenhuma demanda aqui.</div>'}
-    </div>
   `;
-  board.querySelectorAll('.status-tab').forEach(b=>b.addEventListener('click', ()=>{ demandaStatusTab=b.dataset.tab; drawStatusTabs(board); }));
-  board.querySelectorAll('.task-card').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
+  board.querySelectorAll('.task-card').forEach(c=>{
+    c.addEventListener('click', ()=>openTaskModal(c.dataset.id));
+    c.addEventListener('dragstart', e=>{
+      e.dataTransfer.setData('text/plain', c.dataset.id);
+      e.dataTransfer.effectAllowed = 'move';
+      setTimeout(()=>c.classList.add('dragging'), 0);
+    });
+    c.addEventListener('dragend', ()=>c.classList.remove('dragging'));
+  });
+  board.querySelectorAll('.kanban-cards').forEach(col=>{
+    col.addEventListener('dragover', e=>{ e.preventDefault(); e.dataTransfer.dropEffect='move'; col.classList.add('drag-over'); });
+    col.addEventListener('dragleave', ()=>col.classList.remove('drag-over'));
+    col.addEventListener('drop', e=>{
+      e.preventDefault();
+      col.classList.remove('drag-over');
+      const taskId = e.dataTransfer.getData('text/plain');
+      changeTaskStatus(taskId, col.dataset.status);
+      drawDemandas();
+    });
+  });
 }
 
 function taskHasImage(t){ return state.task_comments.some(c=>c.task_id===t.id && c.type==='image'); }
@@ -2301,7 +2328,7 @@ function demandaListItemHTML(t){
   const c = clientById(t.client_id);
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
   const isLate = isTaskLate(t);
-  return `<div class="task-card" data-id="${t.id}" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
+  return `<div class="task-card" data-id="${t.id}" draggable="true" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
       <div style="min-width:0;">
         <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span>${owner?' · '+owner.full_name:''}</div>
