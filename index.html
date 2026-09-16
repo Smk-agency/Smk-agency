@@ -245,7 +245,7 @@ tr:last-child td{border-bottom:none;}
 /* kanban */
 .kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;cursor:grab;}
 .kanban.panning{cursor:grabbing;user-select:none;}
-.kanban-col{min-width:250px;flex-shrink:0;}
+.kanban-col{min-width:var(--kanban-col-w, 250px);flex-shrink:0;}
 .kanban-col-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;font-size:12px;font-weight:600;color:var(--text-muted);}
 .kanban-col-head .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
 .kanban-cards{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:10px;transition:background-color .15s ease;}
@@ -2218,6 +2218,9 @@ let demandaSelectedDay = null;
 let demandaFilterClient = '';
 let demandaFilterType = '';
 let demandaFilterOwner = '';
+let kanbanColWidth = localStorage.getItem('smkos_kanban_w') || '250';
+function applyKanbanWidth(){ document.documentElement.style.setProperty('--kanban-col-w', kanbanColWidth+'px'); }
+applyKanbanWidth();
 
 function taskCardHTML(t){
   const c = clientById(t.client_id);
@@ -2259,6 +2262,11 @@ function renderDemandas(el){
       ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}" ${demandaFilterOwner===u.id?'selected':''}>${u.full_name}</option>`).join('')}</select>`:''}
       <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Quadro</button>
       <button class="btn small ${demandaView==='calendar'?'primary':''}" id="viewCalendarBtn">▦ Calendário</button>
+      ${demandaView==='kanban'?`<select id="kanbanWidthSelect" title="Largura das colunas">
+        <option value="190" ${kanbanColWidth==='190'?'selected':''}>Colunas compactas</option>
+        <option value="250" ${kanbanColWidth==='250'?'selected':''}>Colunas padrão</option>
+        <option value="320" ${kanbanColWidth==='320'?'selected':''}>Colunas largas</option>
+      </select>`:''}
     </div>
     ${!isDono()?`<div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">${EXECUTOR_ROLES.includes(currentUser().role) ? 'Mostrando só as demandas atribuídas a você.' : 'Mostrando as demandas que você criou.'}</div>`:''}
     <div id="demandaBoard"></div>
@@ -2266,6 +2274,11 @@ function renderDemandas(el){
   document.getElementById('filterClient').addEventListener('change', e=>{ demandaFilterClient=e.target.value; drawDemandas(); });
   document.getElementById('filterType').addEventListener('change', e=>{ demandaFilterType=e.target.value; drawDemandas(); });
   document.getElementById('filterOwner')?.addEventListener('change', e=>{ demandaFilterOwner=e.target.value; drawDemandas(); });
+  document.getElementById('kanbanWidthSelect')?.addEventListener('change', e=>{
+    kanbanColWidth = e.target.value;
+    localStorage.setItem('smkos_kanban_w', kanbanColWidth);
+    applyKanbanWidth();
+  });
   document.getElementById('viewKanbanBtn').addEventListener('click', ()=>{ demandaView='kanban'; render(); });
   document.getElementById('viewCalendarBtn').addEventListener('click', ()=>{ demandaView='calendar'; render(); });
   drawDemandas();
