@@ -448,8 +448,10 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
         <button class="nav-item" data-view="arquivadas" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></span> Arquivadas</button>
       </div>
       <div class="sidebar-user">
-        <div class="profile-avatar" id="sbAvatar"></div>
-        <div><div class="uname" id="sbName"></div><div class="urole" id="sbRole"></div></div>
+        <button type="button" id="openProfileBtn" style="display:flex;align-items:center;gap:9px;background:none;border:none;padding:0;text-align:left;cursor:pointer;color:inherit;flex:1;min-width:0;">
+          <div class="profile-avatar" id="sbAvatar"></div>
+          <div style="min-width:0;"><div class="uname" id="sbName"></div><div class="urole" id="sbRole"></div></div>
+        </button>
         <button class="switch-btn" id="logoutBtn">trocar</button>
       </div>
     </aside>
@@ -523,6 +525,7 @@ let db, agencyDocRef;
 /* ================= DATA / SEED ================= */
 const ROLE_LABEL = {dono:'Dono',estrategista:'Estrategista',social_media:'Social Media',designer:'Designer',editor:'Editor de Vídeo',designer_editor:'Designer e Editor'};
 const ROLE_COLOR = {dono:'#1FA97C',estrategista:'#4C7EFF',social_media:'#E0A62D',designer:'#B983F0',editor:'#E0553D',designer_editor:'#E0709A'};
+const AVATAR_COLORS = ['#1FA97C','#4C7EFF','#E0A62D','#B983F0','#E0553D','#E0709A','#2DBFC4','#F0C36B'];
 const EXECUTOR_ROLES = ['designer','editor','designer_editor'];
 const TASK_TYPES = ['Arte','Story','Carrossel','Post','Reels','Vídeo','Thumbnail','Fotografia','Copy','Estratégia','Outro'];
 const COMMITMENT_TYPES = {gravacao:'Gravação', reuniao:'Reunião', folga:'Folga', compromisso:'Compromisso'};
@@ -1193,15 +1196,20 @@ document.getElementById('loginCode').addEventListener('input', ()=>{
 document.getElementById('loginCode').addEventListener('keydown', e=>{ if(e.key==='Enter') attemptLogin(); });
 document.getElementById('loginName').addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('loginCode').focus(); });
 
-function enterApp(){
-  document.getElementById('loginScreen').style.display='none';
-  document.getElementById('app').style.display='block';
+function refreshSidebarProfile(){
   const u = currentUser();
-  document.getElementById('sbAvatar').style.background = ROLE_COLOR[u.role]+'22';
-  document.getElementById('sbAvatar').style.color = ROLE_COLOR[u.role];
+  const avColor = u.avatar_color || ROLE_COLOR[u.role];
+  document.getElementById('sbAvatar').style.background = avColor+'22';
+  document.getElementById('sbAvatar').style.color = avColor;
   document.getElementById('sbAvatar').textContent = initials(u.full_name);
   document.getElementById('sbName').textContent = u.full_name;
   document.getElementById('sbRole').textContent = ROLE_LABEL[u.role];
+}
+
+function enterApp(){
+  document.getElementById('loginScreen').style.display='none';
+  document.getElementById('app').style.display='block';
+  refreshSidebarProfile();
   document.querySelectorAll('[data-owner]').forEach(el=>{
     el.style.display = isDono() ? '' : 'none';
   });
@@ -1218,6 +1226,68 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
   document.getElementById('loginScreen').style.display='flex';
   renderLogin();
 });
+document.getElementById('openProfileBtn').addEventListener('click', ()=>openProfileModal());
+
+function openProfileModal(){
+  const u = currentUser();
+  const avColor = u.avatar_color || ROLE_COLOR[u.role];
+  document.getElementById('itemModalTitle').textContent = 'Meu perfil';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+      <div class="profile-avatar" id="profilePreviewAvatar" style="width:52px;height:52px;font-size:17px;background:${avColor}22;color:${avColor};">${initials(u.full_name)}</div>
+      <div><div style="font-weight:600;font-size:14.5px;">${escapeHTML(u.full_name)}</div><div style="font-size:12px;color:var(--text-faint);">${ROLE_LABEL[u.role]}</div></div>
+    </div>
+    <div class="field">
+      <label>Cor do avatar</label>
+      <div id="avatarColorPicker" style="display:flex;gap:9px;flex-wrap:wrap;">
+        ${AVATAR_COLORS.map(c=>`<button type="button" class="avatar-swatch ${avColor===c?'sel':''}" data-color="${c}" style="width:30px;height:30px;border-radius:50%;background:${c};border:2px solid ${avColor===c?'#fff':'transparent'};cursor:pointer;"></button>`).join('')}
+      </div>
+    </div>
+    <div class="field" style="margin-top:18px;">
+      <label>Trocar código de acesso</label>
+      <input type="text" id="pf_code" maxlength="4" inputmode="numeric" placeholder="0000" style="font-family:var(--font-mono);letter-spacing:3px;" autocomplete="off">
+      <div id="pf_codeError" style="display:none;color:var(--red);font-size:11.5px;margin-top:5px;"></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" data-close="itemModalOverlay">Cancelar</button>
+      <button class="btn primary" id="saveProfileBtn">Salvar</button>
+    </div>
+  `;
+  let pickedColor = avColor;
+  document.querySelectorAll('#avatarColorPicker .avatar-swatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      pickedColor = sw.dataset.color;
+      document.querySelectorAll('#avatarColorPicker .avatar-swatch').forEach(s=>{
+        s.style.border = s.dataset.color===pickedColor ? '2px solid #fff' : '2px solid transparent';
+      });
+      const prev = document.getElementById('profilePreviewAvatar');
+      prev.style.background = pickedColor+'22';
+      prev.style.color = pickedColor;
+    });
+  });
+  document.getElementById('saveProfileBtn').addEventListener('click', ()=>{
+    const codeInput = document.getElementById('pf_code').value.trim();
+    const errEl = document.getElementById('pf_codeError');
+    if(codeInput){
+      if(!/^\d{4}$/.test(codeInput)){
+        errEl.textContent = 'O código precisa ter exatamente 4 dígitos.';
+        errEl.style.display = 'block';
+        return;
+      }
+      if(state.users.some(x=>x.id!==u.id && x.access_code===codeInput)){
+        errEl.textContent = 'Esse código já está em uso por outra pessoa.';
+        errEl.style.display = 'block';
+        return;
+      }
+      u.access_code = codeInput;
+    }
+    u.avatar_color = pickedColor;
+    saveState(state);
+    refreshSidebarProfile();
+    closeModal('itemModalOverlay');
+  });
+  openModal('itemModalOverlay');
+}
 
 /* ================= NAV ================= */
 document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
