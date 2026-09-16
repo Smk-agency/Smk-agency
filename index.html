@@ -2376,7 +2376,37 @@ function drawAgendaCalendar(board){
     </div>`;
   }
 
-  const sel = dayMap[agendaSelectedDay] || {demandas:[], gravacao:[], reuniao:[], folga:[], compromisso:[]};
+  board.innerHTML = `
+    <div class="cal-header">
+      <button class="btn ghost small" id="agCalPrev">‹</button>
+      <div style="font-weight:600;font-size:13.5px;text-transform:capitalize;">${monthLabel}</div>
+      <button class="btn ghost small" id="agCalNext">›</button>
+    </div>
+    <div class="agcal-grid agcal-weekdays"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
+    <div class="agcal-grid">${cells}</div>
+  `;
+  document.getElementById('agCalPrev').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()-1); drawAgendaCalendar(board); });
+  document.getElementById('agCalNext').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()+1); drawAgendaCalendar(board); });
+  board.querySelectorAll('.agcal-day[data-day]').forEach(d=>{
+    d.addEventListener('click', ()=>{ agendaSelectedDay = d.dataset.day; drawAgendaCalendar(board); openAgendaDayModal(agendaSelectedDay); });
+  });
+  board.querySelectorAll('.agcal-chip').forEach(chip=>{
+    chip.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      agendaSelectedDay = chip.closest('.agcal-day').dataset.day;
+      if(chip.dataset.chipKind==='task') openTaskModal(chip.dataset.chipId);
+      else if(isDono()) openCommitmentModal(state.commitments.find(x=>x.id===chip.dataset.chipId));
+      else openAgendaDayModal(agendaSelectedDay);
+    });
+  });
+}
+
+// abre os detalhes do dia num modal (em vez de precisar rolar a página até a seção
+// embaixo do calendário) — reaproveita os mesmos componentes visuais (task-card etc.)
+function openAgendaDayModal(iso){
+  const scopeUserId = agendaTab==='mine' ? currentUser().id : null;
+  const dayMap = buildAgendaDayMap(scopeUserId);
+  const sel = dayMap[iso] || {demandas:[], gravacao:[], reuniao:[], folga:[], compromisso:[]};
   const isEmpty = Object.values(sel).every(arr=>arr.length===0);
 
   function sectionHTML(key, label){
@@ -2405,42 +2435,24 @@ function drawAgendaCalendar(board){
     return `<div class="section-title" style="margin-top:16px;">${label} <span class="hint">${items.length}</span></div>${rows}`;
   }
 
-  board.innerHTML = `
-    <div class="cal-header">
-      <button class="btn ghost small" id="agCalPrev">‹</button>
-      <div style="font-weight:600;font-size:13.5px;text-transform:capitalize;">${monthLabel}</div>
-      <button class="btn ghost small" id="agCalNext">›</button>
-    </div>
-    <div class="agcal-grid agcal-weekdays"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
-    <div class="agcal-grid">${cells}</div>
-    <div class="section-title" style="margin-top:16px;text-transform:capitalize;">${fmtDate(agendaSelectedDay)}</div>
+  document.getElementById('genericModalTitle').textContent = fmtDate(iso);
+  document.getElementById('genericModalBody').innerHTML = `
     ${sectionHTML('demandas','Demandas')}
     ${sectionHTML('gravacao', COMMITMENT_TYPES.gravacao)}
     ${sectionHTML('reuniao', COMMITMENT_TYPES.reuniao)}
     ${sectionHTML('folga', COMMITMENT_TYPES.folga)}
     ${sectionHTML('compromisso', COMMITMENT_TYPES.compromisso)}
     ${isEmpty ? '<div class="empty">Nada nesse dia.</div>' : ''}
+    <div class="modal-foot"><button class="btn primary" data-close="genericModalOverlay">Fechar</button></div>
   `;
-  document.getElementById('agCalPrev').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()-1); drawAgendaCalendar(board); });
-  document.getElementById('agCalNext').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()+1); drawAgendaCalendar(board); });
-  board.querySelectorAll('.agcal-day[data-day]').forEach(d=>{
-    d.addEventListener('click', ()=>{ agendaSelectedDay = d.dataset.day; drawAgendaCalendar(board); });
-  });
-  board.querySelectorAll('.agcal-chip').forEach(chip=>{
-    chip.addEventListener('click', (e)=>{
-      e.stopPropagation();
-      agendaSelectedDay = chip.closest('.agcal-day').dataset.day;
-      if(chip.dataset.chipKind==='task') openTaskModal(chip.dataset.chipId);
-      else if(isDono()) openCommitmentModal(state.commitments.find(x=>x.id===chip.dataset.chipId));
-      else drawAgendaCalendar(board);
-    });
-  });
-  board.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click',()=>openTaskModal(c.dataset.id)));
-  board.querySelectorAll('.cm-inner-link').forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
-  board.querySelectorAll('[data-commitment-card]').forEach(el=>el.addEventListener('click', e=>{ e.stopPropagation(); openCommitmentCard(el.dataset.commitmentCard); }));
+  const body = document.getElementById('genericModalBody');
+  body.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click',()=>{ closeModal('genericModalOverlay'); openTaskModal(c.dataset.id); }));
+  body.querySelectorAll('.cm-inner-link').forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
+  body.querySelectorAll('[data-commitment-card]').forEach(el=>el.addEventListener('click', e=>{ e.stopPropagation(); openCommitmentCard(el.dataset.commitmentCard); }));
   if(isDono()){
-    board.querySelectorAll('.task-card[data-commitment-id]').forEach(c=>c.addEventListener('click',()=>openCommitmentModal(state.commitments.find(x=>x.id===c.dataset.commitmentId))));
+    body.querySelectorAll('.task-card[data-commitment-id]').forEach(c=>c.addEventListener('click',()=>{ closeModal('genericModalOverlay'); openCommitmentModal(state.commitments.find(x=>x.id===c.dataset.commitmentId)); }));
   }
+  openModal('genericModalOverlay');
 }
 
 async function copyElementAsImage(elId, btnEl){
