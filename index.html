@@ -243,7 +243,8 @@ tr:last-child td{border-bottom:none;}
 .crow .v{font-family:var(--font-mono);font-weight:600;}
 
 /* kanban */
-.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;}
+.kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;cursor:grab;}
+.kanban.panning{cursor:grabbing;user-select:none;}
 .kanban-col{min-width:250px;flex-shrink:0;}
 .kanban-col-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;font-size:12px;font-weight:600;color:var(--text-muted);}
 .kanban-col-head .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
@@ -2212,6 +2213,9 @@ function openContractModal(clientId, existing){
 let demandaView = 'kanban';
 let demandaCalCursor = new Date();
 let demandaSelectedDay = null;
+let demandaFilterClient = '';
+let demandaFilterType = '';
+let demandaFilterOwner = '';
 
 function taskCardHTML(t){
   const c = clientById(t.client_id);
@@ -2229,9 +2233,9 @@ function taskCardHTML(t){
 function assignableUsers(){ return state.users.filter(u=>EXECUTOR_ROLES.includes(u.role)); }
 
 function filteredTasks(){
-  const clientF = document.getElementById('filterClient')?.value || '';
-  const ownerF = document.getElementById('filterOwner')?.value || '';
-  const typeF = document.getElementById('filterType')?.value || '';
+  const clientF = demandaFilterClient;
+  const ownerF = demandaFilterOwner;
+  const typeF = demandaFilterType;
   return state.tasks.filter(t=>{
     if(clientF && t.client_id!==clientF) return false;
     if(typeF && t.task_type!==typeF) return false;
@@ -2248,18 +2252,18 @@ function filteredTasks(){
 function renderDemandas(el){
   el.innerHTML = `
     <div class="filter-bar">
-      <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}">${c.name}</option>`).join('')}</select>
-      <select id="filterType"><option value="">Todos os tipos</option>${TASK_TYPES.map(ty=>`<option value="${ty}">${ty}</option>`).join('')}</select>
-      ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}">${u.full_name}</option>`).join('')}</select>`:''}
+      <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}" ${demandaFilterClient===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
+      <select id="filterType"><option value="">Todos os tipos</option>${TASK_TYPES.map(ty=>`<option ${demandaFilterType===ty?'selected':''}>${ty}</option>`).join('')}</select>
+      ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}" ${demandaFilterOwner===u.id?'selected':''}>${u.full_name}</option>`).join('')}</select>`:''}
       <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Quadro</button>
       <button class="btn small ${demandaView==='calendar'?'primary':''}" id="viewCalendarBtn">▦ Calendário</button>
     </div>
     ${!isDono()?`<div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">${EXECUTOR_ROLES.includes(currentUser().role) ? 'Mostrando só as demandas atribuídas a você.' : 'Mostrando as demandas que você criou.'}</div>`:''}
     <div id="demandaBoard"></div>
   `;
-  document.getElementById('filterClient').addEventListener('change', drawDemandas);
-  document.getElementById('filterType').addEventListener('change', drawDemandas);
-  document.getElementById('filterOwner')?.addEventListener('change', drawDemandas);
+  document.getElementById('filterClient').addEventListener('change', e=>{ demandaFilterClient=e.target.value; drawDemandas(); });
+  document.getElementById('filterType').addEventListener('change', e=>{ demandaFilterType=e.target.value; drawDemandas(); });
+  document.getElementById('filterOwner')?.addEventListener('change', e=>{ demandaFilterOwner=e.target.value; drawDemandas(); });
   document.getElementById('viewKanbanBtn').addEventListener('click', ()=>{ demandaView='kanban'; render(); });
   document.getElementById('viewCalendarBtn').addEventListener('click', ()=>{ demandaView='calendar'; render(); });
   drawDemandas();
@@ -2285,6 +2289,7 @@ function changeTaskStatus(taskId, newStatus){
 
 function drawKanbanBoard(board){
   const tasks = filteredTasks();
+  const prevScrollLeft = board.querySelector('.kanban')?.scrollLeft || 0;
   board.innerHTML = `
     <div class="kanban">
       ${STATUS_FLOW.map(status=>{
@@ -2300,6 +2305,25 @@ function drawKanbanBoard(board){
       }).join('')}
     </div>
   `;
+  const kanbanEl = board.querySelector('.kanban');
+  kanbanEl.scrollLeft = prevScrollLeft;
+  // arrastar em área vazia do quadro rola horizontalmente (sem atrapalhar o drag dos cards)
+  let isPanning = false, panStartX = 0, panScrollLeft = 0;
+  kanbanEl.addEventListener('pointerdown', e=>{
+    if(e.target.closest('.task-card')) return;
+    isPanning = true;
+    panStartX = e.clientX;
+    panScrollLeft = kanbanEl.scrollLeft;
+    kanbanEl.setPointerCapture(e.pointerId);
+    kanbanEl.classList.add('panning');
+  });
+  kanbanEl.addEventListener('pointermove', e=>{
+    if(!isPanning) return;
+    kanbanEl.scrollLeft = panScrollLeft - (e.clientX - panStartX);
+  });
+  const endPan = ()=>{ isPanning = false; kanbanEl.classList.remove('panning'); };
+  kanbanEl.addEventListener('pointerup', endPan);
+  kanbanEl.addEventListener('pointercancel', endPan);
   board.querySelectorAll('.task-card').forEach(c=>{
     c.addEventListener('click', ()=>openTaskModal(c.dataset.id));
     c.addEventListener('dragstart', e=>{
