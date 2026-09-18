@@ -1581,10 +1581,15 @@ function openShowcaseLogosModal(){
       if(!file) return;
       try{
         const dataUrl = await compressImageToDataURL(file, 240, 0.9, 'image/png');
+        state.settings = state.settings || {};
+        state.settings.showcase_logos = state.settings.showcase_logos || [];
         state.settings.showcase_logos[Number(inp.dataset.slot)] = {id:uid(), data_url:dataUrl};
         saveState(state);
         openShowcaseLogosModal();
-      }catch(err){ alert('Não consegui processar essa imagem. Tenta outra.'); }
+      }catch(err){
+        console.error('Erro ao processar logo:', err);
+        alert('Não consegui processar essa imagem: ' + (err?.message || err) + '\nTenta outra ou avisa o suporte com essa mensagem.');
+      }
     });
   });
   document.querySelectorAll('[data-remove-logo]').forEach(btn=>{
@@ -3223,15 +3228,17 @@ function compressImageToDataURL(file, maxWidth, quality, format){
     reader.onerror = reject;
     reader.onload = (e)=>{
       const img = new Image();
-      img.onerror = reject;
+      img.onerror = ()=>reject(new Error('Não consegui ler essa imagem (arquivo corrompido ou formato não suportado).'));
       img.onload = ()=>{
-        const scale = Math.min(1, maxWidth/img.width);
-        const canvas = document.createElement('canvas');
-        canvas.width = img.width*scale;
-        canvas.height = img.height*scale;
-        const ctx = canvas.getContext('2d');
-        ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL(format||'image/jpeg', quality));
+        try{
+          const scale = Math.min(1, maxWidth/img.width);
+          const canvas = document.createElement('canvas');
+          canvas.width = img.width*scale;
+          canvas.height = img.height*scale;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img,0,0,canvas.width,canvas.height);
+          resolve(canvas.toDataURL(format||'image/jpeg', quality));
+        }catch(err){ reject(err); }
       };
       img.src = e.target.result;
     };
