@@ -1544,14 +1544,14 @@ function renderOrcamentos(el){
   grid.querySelectorAll('.client-card').forEach(c=>c.addEventListener('click',()=>openQuoteDetail(c.dataset.id)));
 }
 
-function openShowcaseLogosModal(){
-  state.settings.showcase_logos = state.settings.showcase_logos || [];
-  const logos = state.settings.showcase_logos;
+function openShowcaseLogosModal(pending){
+  const logos = pending ? pending.logos : (state.settings.showcase_logos || []).slice();
+  const aboutUs = pending ? pending.aboutUs : (state.settings.about_us || '');
   document.getElementById('itemModalTitle').textContent = 'Identidade da proposta';
   document.getElementById('itemModalBody').innerHTML = `
     <div class="field">
       <label>Sobre a gente <span class="hint">opcional — aparece no topo da proposta</span></label>
-      <textarea id="pb_aboutUs" rows="3" placeholder="Ex: Somos uma produtora audiovisual movida pela paixão de contar histórias...">${state.settings.about_us||''}</textarea>
+      <textarea id="pb_aboutUs" rows="3" placeholder="Ex: Somos uma produtora audiovisual movida pela paixão de contar histórias...">${aboutUs}</textarea>
     </div>
     <div class="field"><label>Logos de clientes <span class="hint">até 6 — aparecem como prova social no rodapé. Funciona melhor com PNG de fundo transparente</span></label></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px;">
@@ -1572,6 +1572,7 @@ function openShowcaseLogosModal(){
   `;
   document.getElementById('pb_saveBtn').addEventListener('click', ()=>{
     state.settings.about_us = document.getElementById('pb_aboutUs').value.trim();
+    state.settings.showcase_logos = logos;
     saveState(state);
     closeModal('itemModalOverlay');
   });
@@ -1581,11 +1582,8 @@ function openShowcaseLogosModal(){
       if(!file) return;
       try{
         const dataUrl = await compressImageToDataURL(file, 240, 0.9, 'image/png');
-        state.settings = state.settings || {};
-        state.settings.showcase_logos = state.settings.showcase_logos || [];
-        state.settings.showcase_logos.push({id:uid(), data_url:dataUrl});
-        saveState(state);
-        openShowcaseLogosModal();
+        logos.push({id:uid(), data_url:dataUrl});
+        openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value});
       }catch(err){
         console.error('Erro ao processar logo:', err);
         alert('Não consegui processar essa imagem: ' + (err?.message || err) + '\nTenta outra ou avisa o suporte com essa mensagem.');
@@ -1594,9 +1592,8 @@ function openShowcaseLogosModal(){
   });
   document.querySelectorAll('[data-remove-logo]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
-      state.settings.showcase_logos.splice(Number(btn.dataset.removeLogo),1);
-      saveState(state);
-      openShowcaseLogosModal();
+      logos.splice(Number(btn.dataset.removeLogo),1);
+      openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value});
     });
   });
   openModal('itemModalOverlay');
