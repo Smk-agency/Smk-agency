@@ -1564,7 +1564,7 @@ function openShowcaseLogosModal(){
              </div>`
           : `<label style="border:1.5px dashed var(--border);border-radius:9px;height:64px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-faint);font-size:22px;">
                +
-               <input type="file" accept="image/*" data-slot="${i}" class="logoSlotInput" style="display:none;">
+               <input type="file" accept="image/*" class="logoSlotInput" style="display:none;">
              </label>`;
       }).join('')}
     </div>
@@ -1583,7 +1583,7 @@ function openShowcaseLogosModal(){
         const dataUrl = await compressImageToDataURL(file, 240, 0.9, 'image/png');
         state.settings = state.settings || {};
         state.settings.showcase_logos = state.settings.showcase_logos || [];
-        state.settings.showcase_logos[Number(inp.dataset.slot)] = {id:uid(), data_url:dataUrl};
+        state.settings.showcase_logos.push({id:uid(), data_url:dataUrl});
         saveState(state);
         openShowcaseLogosModal();
       }catch(err){
