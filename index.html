@@ -186,6 +186,8 @@ button{font-family:inherit;cursor:pointer;}
 /* kpi cards */
 .kpi-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:26px;}
 .kpi-card{background:linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,0) 42%), var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 1px 0 0 rgba(255,255,255,.05) inset,0 10px 22px -18px rgba(0,0,0,.6);}
+.kpi-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;flex-shrink:0;}
+.kpi-icon svg{width:16px;height:16px;}
 .kpi-label{font-size:11.5px;color:var(--text-muted);margin-bottom:8px;}
 .kpi-value{font-family:var(--font-mono);font-size:21px;font-weight:600;}
 .kpi-value.pos{color:var(--accent-soft);}
@@ -564,6 +566,34 @@ function todayISO(){ return new Date().toISOString().slice(0,10); }
 function addDays(n){ const d=new Date(); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
 function fmtMoney(v){ return 'R$ ' + (v||0).toLocaleString('pt-BR',{minimumFractionDigits:2,maximumFractionDigits:2}); }
 function fmtDate(iso){ if(!iso) return '—'; const [y,m,d]=iso.split('-'); return d+'/'+m+'/'+y; }
+
+// ícones dos cards de KPI (traço fino, estilo feather) — o mesmo ícone+cor vira uma "marca" visual pro tipo de métrica
+const KPI_ICONS = {
+  trendUp: '<polyline points="3 17 9 11 13 15 21 7"/><polyline points="14 7 21 7 21 14"/>',
+  trendDown: '<polyline points="3 7 9 13 13 9 21 17"/><polyline points="21 10 21 17 14 17"/>',
+  check: '<path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>',
+  clock: '<circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/>',
+  alert: '<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>',
+  percent: '<line x1="19" y1="5" x2="5" y2="19"/><circle cx="6.5" cy="6.5" r="2.5"/><circle cx="17.5" cy="17.5" r="2.5"/>',
+  users: '<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>',
+  listChecks: '<path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8"/><path d="M13 12h8"/><path d="M13 18h8"/>',
+  briefcase: '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>',
+  user: '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  tag: '<path d="M20.59 13.41 13.42 20.58a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>',
+  calendar: '<rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/>',
+  dollar: '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>',
+};
+function kpiIconHTML(icon, color){
+  return `<div class="kpi-icon" style="background:${color}1F;color:${color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${KPI_ICONS[icon]||KPI_ICONS.dollar}</svg></div>`;
+}
+function kpiCardHTML({icon, color='var(--blue)', label, value, valueClass='', valueStyle='', sub='', style=''}){
+  return `<div class="kpi-card" style="${style}">
+    ${kpiIconHTML(icon, color)}
+    <div class="kpi-label">${label}</div>
+    <div class="kpi-value ${valueClass}" style="${valueStyle}">${value}</div>
+    ${sub?`<div class="kpi-sub">${sub}</div>`:''}
+  </div>`;
+}
 
 // link do WhatsApp com mensagem pronta — o Dono só confere e manda (não envia sozinho)
 function greetingByHour(){ const h = new Date().getHours(); return h<12 ? 'Bom dia' : h<18 ? 'Boa tarde' : 'Boa noite'; }
@@ -1449,15 +1479,15 @@ function renderDashboard(el){
     </div>
 
     <div class="kpi-grid" style="margin-top:22px;">
-      <div class="kpi-card"><div class="kpi-label">Faturamento do mês</div><div class="kpi-value mono">${fmtMoney(faturamento)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Recebido</div><div class="kpi-value pos">${fmtMoney(recebido)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">A receber</div><div class="kpi-value">${fmtMoney(aReceber)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Em atraso</div><div class="kpi-value ${atrasado>0?'neg':''}">${fmtMoney(atrasado)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Despesas + folha da equipe</div><div class="kpi-value">${fmtMoney(despesas+folhaEquipe)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Lucro estimado</div><div class="kpi-value ${lucro>=0?'pos':'neg'}">${fmtMoney(lucro)}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Margem média</div><div class="kpi-value">${margem.toFixed(1)}%</div></div>
-      <div class="kpi-card"><div class="kpi-label">Clientes ativos</div><div class="kpi-value">${clientesAtivos}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Demandas abertas</div><div class="kpi-value">${abertas}</div><div class="kpi-sub">${atrasadas} atrasada(s)</div></div>
+      ${kpiCardHTML({icon:'trendUp', color:'#5B8CFF', label:'Faturamento do mês', value:fmtMoney(faturamento), valueClass:'mono'})}
+      ${kpiCardHTML({icon:'check', color:'#1FA97C', label:'Recebido', value:fmtMoney(recebido), valueClass:'pos'})}
+      ${kpiCardHTML({icon:'clock', color:'#E0A62D', label:'A receber', value:fmtMoney(aReceber)})}
+      ${kpiCardHTML({icon:'alert', color:'#E0553D', label:'Em atraso', value:fmtMoney(atrasado), valueClass:atrasado>0?'neg':''})}
+      ${kpiCardHTML({icon:'trendDown', color:'#E0553D', label:'Despesas + folha da equipe', value:fmtMoney(despesas+folhaEquipe)})}
+      ${kpiCardHTML({icon:'trendUp', color:lucro>=0?'#1FA97C':'#E0553D', label:'Lucro estimado', value:fmtMoney(lucro), valueClass:lucro>=0?'pos':'neg'})}
+      ${kpiCardHTML({icon:'percent', color:'#B983F0', label:'Margem média', value:margem.toFixed(1)+'%'})}
+      ${kpiCardHTML({icon:'users', color:'#5B8CFF', label:'Clientes ativos', value:clientesAtivos})}
+      ${kpiCardHTML({icon:'listChecks', color:'#E0A62D', label:'Demandas abertas', value:abertas, sub:atrasadas+' atrasada(s)'})}
     </div>
 
     <div class="section-title">Alertas <span class="hint">${alerts.length} no momento</span></div>
@@ -1486,10 +1516,12 @@ function renderOrcamentos(el){
   el.innerHTML = `
     <div class="filter-bar">
       ${canEditClients()?`<button class="btn primary small" id="addQuoteBtn">+ Novo orçamento</button>`:''}
+      ${canEditClients()?`<button class="btn ghost small" id="manageLogosBtn">🏢 Identidade da proposta</button>`:''}
     </div>
     <div class="client-grid" id="quoteGrid"></div>
   `;
   document.getElementById('addQuoteBtn')?.addEventListener('click', ()=>openQuoteModal());
+  document.getElementById('manageLogosBtn')?.addEventListener('click', ()=>openShowcaseLogosModal());
 
   const grid = document.getElementById('quoteGrid');
   const list = [...state.quotes].sort((a,b)=>b.created_at-a.created_at);
@@ -1510,6 +1542,59 @@ function renderOrcamentos(el){
     </div>`;
   }).join('');
   grid.querySelectorAll('.client-card').forEach(c=>c.addEventListener('click',()=>openQuoteDetail(c.dataset.id)));
+}
+
+function openShowcaseLogosModal(){
+  state.settings.showcase_logos = state.settings.showcase_logos || [];
+  const logos = state.settings.showcase_logos;
+  document.getElementById('itemModalTitle').textContent = 'Identidade da proposta';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div class="field">
+      <label>Sobre a gente <span class="hint">opcional — aparece no topo da proposta</span></label>
+      <textarea id="pb_aboutUs" rows="3" placeholder="Ex: Somos uma produtora audiovisual movida pela paixão de contar histórias...">${state.settings.about_us||''}</textarea>
+    </div>
+    <div class="field"><label>Logos de clientes <span class="hint">até 6 — aparecem como prova social no rodapé. Funciona melhor com PNG de fundo transparente</span></label></div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px;">
+      ${Array.from({length:6}).map((_,i)=>{
+        const logo = logos[i];
+        return logo
+          ? `<div style="position:relative;background:#fff;border-radius:9px;padding:10px;display:flex;align-items:center;justify-content:center;height:64px;">
+               <img src="${logo.data_url}" style="max-width:100%;max-height:100%;object-fit:contain;">
+               <button type="button" data-remove-logo="${i}" style="position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;border:none;border-radius:50%;width:20px;height:20px;line-height:20px;padding:0;cursor:pointer;font-size:12px;">×</button>
+             </div>`
+          : `<label style="border:1.5px dashed var(--border);border-radius:9px;height:64px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--text-faint);font-size:22px;">
+               +
+               <input type="file" accept="image/*" data-slot="${i}" class="logoSlotInput" style="display:none;">
+             </label>`;
+      }).join('')}
+    </div>
+    <div class="modal-foot"><button class="btn primary" id="pb_saveBtn">Salvar</button></div>
+  `;
+  document.getElementById('pb_saveBtn').addEventListener('click', ()=>{
+    state.settings.about_us = document.getElementById('pb_aboutUs').value.trim();
+    saveState(state);
+    closeModal('itemModalOverlay');
+  });
+  document.querySelectorAll('.logoSlotInput').forEach(inp=>{
+    inp.addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const dataUrl = await compressImageToDataURL(file, 240, 0.9, 'image/png');
+        state.settings.showcase_logos[Number(inp.dataset.slot)] = {id:uid(), data_url:dataUrl};
+        saveState(state);
+        openShowcaseLogosModal();
+      }catch(err){ alert('Não consegui processar essa imagem. Tenta outra.'); }
+    });
+  });
+  document.querySelectorAll('[data-remove-logo]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.settings.showcase_logos.splice(Number(btn.dataset.removeLogo),1);
+      saveState(state);
+      openShowcaseLogosModal();
+    });
+  });
+  openModal('itemModalOverlay');
 }
 
 function openQuoteModal(existing){
@@ -1669,6 +1754,12 @@ function openQuoteDetail(id){
   const issuedDate = new Date(q.created_at).toISOString().slice(0,10);
   const validUntilDate = q.validity_days ? new Date(q.created_at + q.validity_days*86400000).toISOString().slice(0,10) : null;
   const multiOption = (q.options||[]).length > 1;
+  const hasAbout = !!state.settings.about_us;
+  const hasLogos = (state.settings.showcase_logos||[]).length > 0;
+  const sectionHead = (label) => `<div style="display:flex;align-items:center;gap:10px;margin-bottom:18px;">
+    <div style="width:3px;height:20px;background:#3E6FF0;border-radius:2px;flex-shrink:0;"></div>
+    <div style="font-size:20px;font-weight:800;color:#fff;">${label}</div>
+  </div>`;
 
   body.innerHTML = `
     <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
@@ -1681,20 +1772,29 @@ function openQuoteDetail(id){
       <button class="btn small primary" id="qPrintBtn">🖨️ Imprimir / Salvar PDF</button>
       <button type="button" class="btn small" id="qCopyImgBtn">📋 Copiar imagem</button>
     </div>
-    <div id="quotePaper" class="printable-card" style="background:#0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:28px;">
+    <div id="quotePaper" class="printable-card" style="background:radial-gradient(circle at 12% 0%, rgba(76,126,255,.14), transparent 40%), radial-gradient(circle at 92% 15%, rgba(76,126,255,.08), transparent 45%), #0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
         <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:24px;width:auto;">
         <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">Proposta de serviços</div>
       </div>
 
-      <div style="font-size:28px;font-weight:800;line-height:1.2;margin-bottom:14px;">Proposta para ${escapeHTML(q.name)}</div>
-      ${q.company?`<div style="font-size:13px;color:#8B95AC;margin-bottom:16px;">${escapeHTML(q.company)}</div>`:''}
-      <div style="display:flex;gap:28px;flex-wrap:wrap;font-size:11px;color:#8B95AC;margin-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:20px;">
+      <div style="display:flex;gap:14px;align-items:flex-start;margin-bottom:${q.company?'6px':'24px'};">
+        <div style="width:4px;align-self:stretch;background:#3E6FF0;border-radius:2px;flex-shrink:0;margin-top:6px;"></div>
+        <div style="font-size:34px;font-weight:800;line-height:1.15;">${escapeHTML(q.company || q.name)}</div>
+      </div>
+      ${q.company?`<div style="font-size:13px;color:#8B95AC;margin:0 0 24px 18px;">Responsável: ${escapeHTML(q.name)}</div>`:''}
+      <div style="display:flex;gap:28px;flex-wrap:wrap;font-size:11px;color:#8B95AC;margin-bottom:36px;border-bottom:1px solid rgba(255,255,255,.1);padding-bottom:20px;">
         ${q.sender_name?`<div>DE<br><span style="color:#fff;font-size:12.5px;">${escapeHTML(q.sender_name)}</span></div>`:''}
         <div>DATA<br><span style="color:#fff;font-size:12.5px;">${fmtDate(issuedDate)}</span></div>
         ${validUntilDate?`<div>VALIDADE<br><span style="color:#fff;font-size:12.5px;">${q.validity_days} dias (até ${fmtDate(validUntilDate)})</span></div>`:''}
       </div>
 
+      ${hasAbout?`
+      <div style="margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);">
+        ${sectionHead('Sobre a gente')}
+        <div style="font-size:13.5px;line-height:1.7;color:#C7CEE0;white-space:pre-line;padding-left:13px;">${escapeHTML(state.settings.about_us)}</div>
+      </div>`:''}
+      <div style="margin-bottom:18px;">${sectionHead('Investimento')}</div>
       ${(q.options||[]).map((opt,oi)=>{
         const total = quoteOptionTotal(opt);
         const investLabel = opt.recurring ? 'Investimento Mensal' : 'Investimento';
@@ -1704,21 +1804,49 @@ function openQuoteDetail(id){
         <div style="margin-bottom:28px;">
           ${heading?`<div style="font-size:15px;font-weight:700;margin-bottom:${opt.description?'6px':'14px'};">${heading}</div>`:''}
           ${opt.description?`<div style="font-size:12.5px;color:#8B95AC;margin-bottom:14px;white-space:pre-line;">${escapeHTML(opt.description)}</div>`:''}
-          <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5B8CFF;font-weight:700;margin-bottom:10px;">${investLabel}</div>
+          ${multiOption?`<div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#5B8CFF;font-weight:700;margin-bottom:10px;">${investLabel}</div>`:(opt.recurring?`<div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8FE3C0;font-weight:700;margin-bottom:10px;">Cobrança mensal</div>`:'')}
           <div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;overflow:hidden;margin-bottom:10px;">
             ${opt.items.map((i,idx)=>`<div style="display:flex;justify-content:space-between;padding:12px 16px;${idx<opt.items.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13px;"><span>${escapeHTML(i.description)}${i.quantity>1?` (${i.quantity}x)`:''}</span><span class="mono">${fmtMoney(quoteItemLineTotal(i))}</span></div>`).join('')}
           </div>
           ${opt.discount>0?`<div style="display:flex;justify-content:space-between;font-size:12.5px;color:#F87171;padding:0 4px;margin-bottom:8px;"><span>Desconto</span><span class="mono">-${fmtMoney(opt.discount)}</span></div>`:''}
-          <div style="display:flex;justify-content:space-between;align-items:baseline;background:#111A2E;border:1.5px solid #2F6FED;border-radius:12px;padding:16px 18px;">
-            <span style="font-size:12.5px;color:#8B95AC;font-weight:600;letter-spacing:.5px;">${totalLabel}</span>
-            <span style="font-size:24px;font-weight:800;color:#5B8CFF;" class="mono">${fmtMoney(total)}</span>
+          <div style="background:linear-gradient(160deg, rgba(91,140,255,.16), rgba(17,26,46,0) 60%), #111A2E;border:1.5px solid #2F6FED;border-radius:16px;padding:26px 20px;text-align:center;margin-bottom:14px;box-shadow:0 0 60px -16px rgba(91,140,255,.6);">
+            <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:700;margin-bottom:10px;">${totalLabel}</div>
+            <div style="font-size:40px;font-weight:800;color:#fff;" class="mono">${fmtMoney(total)}</div>
+          </div>
+          <div style="display:flex;gap:10px;">
+            <div style="flex:1;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;text-align:center;">
+              <div style="font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:#8B95AC;margin-bottom:4px;">Itens</div>
+              <div style="font-size:15px;font-weight:700;">${opt.items.length}</div>
+            </div>
+            <div style="flex:1;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;text-align:center;">
+              <div style="font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:#8B95AC;margin-bottom:4px;">Cobrança</div>
+              <div style="font-size:15px;font-weight:700;">${opt.recurring?'Mensal':'Único'}</div>
+            </div>
+            ${opt.discount>0?`<div style="flex:1;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px 12px;text-align:center;">
+              <div style="font-size:9.5px;letter-spacing:.5px;text-transform:uppercase;color:#8B95AC;margin-bottom:4px;">Desconto</div>
+              <div style="font-size:15px;font-weight:700;color:#F87171;">-${fmtMoney(opt.discount)}</div>
+            </div>`:''}
           </div>
         </div>`;
       }).join('')}
 
-      ${q.notes?`<div style="font-size:12px;color:#8B95AC;margin-bottom:24px;padding:14px 16px;background:#111A2E;border-radius:10px;"><b style="color:#fff;">Observações:</b> ${escapeHTML(q.notes)}</div>`:''}
+      ${q.notes?`<div style="margin-bottom:32px;padding-bottom:32px;border-bottom:1px solid rgba(255,255,255,.1);">
+        ${sectionHead('Observações')}
+        <div style="font-size:13px;line-height:1.6;color:#C7CEE0;padding:16px 18px;background:#111A2E;border-radius:12px;white-space:pre-line;margin-left:13px;">${escapeHTML(q.notes)}</div>
+      </div>`:''}
 
-      <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:18px;font-size:16px;font-weight:700;">Vamos trabalhar juntos?</div>
+      ${hasLogos?`
+      <div style="margin-bottom:32px;">
+        ${sectionHead('Clientes que confiam na gente')}
+        <div style="display:flex;flex-wrap:wrap;gap:10px;padding-left:13px;">
+          ${state.settings.showcase_logos.map(l=>`<div style="background:#fff;border-radius:8px;padding:8px 14px;height:36px;display:flex;align-items:center;"><img src="${l.data_url}" style="max-height:100%;max-width:90px;object-fit:contain;"></div>`).join('')}
+        </div>
+      </div>`:''}
+
+      <div style="border-top:1px solid rgba(255,255,255,.1);padding-top:26px;display:flex;align-items:center;gap:14px;">
+        <div style="width:38px;height:38px;border-radius:11px;background:#3E6FF0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:#fff;font-size:16px;flex-shrink:0;">S</div>
+        <div style="font-size:20px;font-weight:800;">Vamos trabalhar juntos?</div>
+      </div>
     </div>
     <div class="modal-foot"><button class="btn" data-close="genericModalOverlay">Fechar</button></div>
   `;
@@ -1891,9 +2019,9 @@ function openClientDetail(id){
     ${isDono()?`
     <div class="section-title">Rentabilidade</div>
     <div class="kpi-grid">
-      <div class="kpi-card"><div class="kpi-label">Receita</div><div class="kpi-value">${fmtMoney(clientReceita(id))}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Custo</div><div class="kpi-value">${fmtMoney(clientCusto(id))}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Lucro</div><div class="kpi-value ${clientLucro(id)>=0?'pos':'neg'}">${fmtMoney(clientLucro(id))}</div></div>
+      ${kpiCardHTML({icon:'dollar', color:'#5B8CFF', label:'Receita', value:fmtMoney(clientReceita(id))})}
+      ${kpiCardHTML({icon:'trendDown', color:'#E0553D', label:'Custo', value:fmtMoney(clientCusto(id))})}
+      ${kpiCardHTML({icon:'trendUp', color:clientLucro(id)>=0?'#1FA97C':'#E0553D', label:'Lucro', value:fmtMoney(clientLucro(id)), valueClass:clientLucro(id)>=0?'pos':'neg'})}
     </div>
 
     <div class="section-title">Cobranças deste mês</div>
@@ -3089,7 +3217,7 @@ function openTaskModal(id){
   openModal('taskModalOverlay');
 }
 
-function compressImageToDataURL(file, maxWidth, quality){
+function compressImageToDataURL(file, maxWidth, quality, format){
   return new Promise((resolve, reject)=>{
     const reader = new FileReader();
     reader.onerror = reject;
@@ -3103,7 +3231,7 @@ function compressImageToDataURL(file, maxWidth, quality){
         canvas.height = img.height*scale;
         const ctx = canvas.getContext('2d');
         ctx.drawImage(img,0,0,canvas.width,canvas.height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
+        resolve(canvas.toDataURL(format||'image/jpeg', quality));
       };
       img.src = e.target.result;
     };
@@ -3626,10 +3754,10 @@ function openArchivedTaskView(t){
   document.getElementById('genericModalBody').innerHTML = `
     <div style="font-size:11px;color:var(--text-faint);margin-bottom:14px;">Demanda arquivada — somente leitura</div>
     <div class="kpi-grid" style="margin-bottom:16px;">
-      <div class="kpi-card"><div class="kpi-label">Cliente</div><div class="kpi-value" style="font-size:14px;">${c?.name||'—'}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Responsável</div><div class="kpi-value" style="font-size:14px;">${owner?.full_name||'—'}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Tipo</div><div class="kpi-value" style="font-size:14px;">${t.task_type||'—'}</div></div>
-      <div class="kpi-card"><div class="kpi-label">Prazo</div><div class="kpi-value" style="font-size:14px;">${fmtDate(t.due_date)}</div></div>
+      ${kpiCardHTML({icon:'briefcase', color:'#5B8CFF', label:'Cliente', value:c?.name||'—', valueStyle:'font-size:14px;'})}
+      ${kpiCardHTML({icon:'user', color:'#B983F0', label:'Responsável', value:owner?.full_name||'—', valueStyle:'font-size:14px;'})}
+      ${kpiCardHTML({icon:'tag', color:'#E0A62D', label:'Tipo', value:t.task_type||'—', valueStyle:'font-size:14px;'})}
+      ${kpiCardHTML({icon:'calendar', color:'#1FA97C', label:'Prazo', value:fmtDate(t.due_date), valueStyle:'font-size:14px;'})}
     </div>
     <div style="font-size:11.5px;color:var(--text-faint);margin-bottom:10px;">Criado por ${creator?.full_name||'—'}</div>
     ${t.briefing?.briefing?`<div class="field"><label>Briefing</label><div class="card" style="font-size:12.5px;">${linkify(t.briefing.briefing)}</div></div>`:''}
