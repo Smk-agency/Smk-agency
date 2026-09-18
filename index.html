@@ -647,9 +647,9 @@ function autoResizeTextarea(el){
   el.style.height = el.scrollHeight + 'px';
 }
 // campo de texto com preview de link clicável logo abaixo (pra colar referência/briefing com URL)
-function linkableFieldHTML(id, label, value, rows){
+function linkableFieldHTML(id, label, value, rows, hidden){
   const hasLink = value && /https?:\/\//.test(value);
-  return `<div class="field${hasLink?' field-has-link':''}" id="${id}_field">
+  return `<div class="field${hasLink?' field-has-link':''}" id="${id}_field" style="${hidden?'display:none;':''}">
     <label>${label}</label>
     <textarea id="${id}" rows="${rows||3}">${value||''}</textarea>
     <div class="link-preview" id="${id}_preview" style="${hasLink?'':'display:none;'}">${extractLinksHTML(value)}</div>
@@ -2852,6 +2852,15 @@ function openTaskModal(id){
   const body = document.getElementById('taskModalBody');
   const feed = t ? state.task_comments.filter(c=>c.task_id===t.id).sort((a,b)=>a.created_at-b.created_at) : [];
   const creator = t ? userById(t.created_by) : currentUser();
+  const OPTIONAL_TASK_FIELDS = [
+    {id:'tf_brief', label:'Briefing', rows:4, value:t?.briefing?.briefing},
+    {id:'tf_head', label:'Head-line', rows:2, value:t?.briefing?.head},
+    {id:'tf_sub', label:'Sub', rows:2, value:t?.briefing?.sub},
+    {id:'tf_ref', label:'Referência', rows:3, value:t?.briefing?.referencia},
+    {id:'tf_legenda', label:'Legenda', rows:3, value:t?.briefing?.legenda},
+  ];
+  const fieldOpenState = {};
+  OPTIONAL_TASK_FIELDS.forEach(f=>{ fieldOpenState[f.id] = !!f.value; });
 
   body.innerHTML = `
     ${!t?`
@@ -2890,11 +2899,10 @@ function openTaskModal(id){
       </div>
     </div>
     <div style="font-size:11px;color:var(--text-faint);margin:-10px 0 14px;">Criado por: <b style="color:var(--text-muted);">${creator?.full_name||'—'}</b>${t?.created_by?'':' (você, ao salvar)'}</div>
-    ${linkableFieldHTML('tf_brief','Briefing', t?.briefing?.briefing, 4)}
-    ${linkableFieldHTML('tf_head','Head-line', t?.briefing?.head, 2)}
-    ${linkableFieldHTML('tf_sub','Sub', t?.briefing?.sub, 2)}
-    ${linkableFieldHTML('tf_ref','Referência', t?.briefing?.referencia, 3)}
-    ${linkableFieldHTML('tf_legenda','Legenda', t?.briefing?.legenda, 3)}
+    <div id="addFieldButtons" style="display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px;">
+      ${OPTIONAL_TASK_FIELDS.map(f=>`<button type="button" class="btn small ghost" data-add-field="${f.id}" style="${f.value?'display:none;':''}">+ ${f.label}</button>`).join('')}
+    </div>
+    ${OPTIONAL_TASK_FIELDS.map(f=>linkableFieldHTML(f.id, f.label, f.value, f.rows, !f.value)).join('')}
     <div class="field">
       <label>Link de entrega <span style="color:var(--text-faint);font-weight:400;">— Drive, Figma, Canva, WeTransfer... (recomendado pra vídeo/arquivo pesado)</span></label>
       <input type="text" id="tf_delivery" value="${t?.delivery_link||''}" placeholder="https://...">
@@ -2921,15 +2929,27 @@ function openTaskModal(id){
     </div>
   `;
 
-  function updateVideoFieldsVisibility(){
+  const VIDEO_HIDDEN_FIELDS = {tf_head:true, tf_sub:true, tf_legenda:true};
+  function refreshOptionalFieldsUI(){
     const isVideo = VIDEO_TASK_TYPES.includes(document.getElementById('tf_type').value);
-    ['tf_head_field','tf_sub_field','tf_legenda_field'].forEach(fid=>{
-      const fEl = document.getElementById(fid);
-      if(fEl) fEl.style.display = isVideo ? 'none' : '';
+    OPTIONAL_TASK_FIELDS.forEach(f=>{
+      const hiddenByVideo = isVideo && VIDEO_HIDDEN_FIELDS[f.id];
+      const fEl = document.getElementById(f.id+'_field');
+      const btn = document.querySelector(`[data-add-field="${f.id}"]`);
+      if(fEl) fEl.style.display = (fieldOpenState[f.id] && !hiddenByVideo) ? '' : 'none';
+      if(btn) btn.style.display = (!fieldOpenState[f.id] && !hiddenByVideo) ? '' : 'none';
     });
   }
-  updateVideoFieldsVisibility();
-  document.getElementById('tf_type').addEventListener('change', updateVideoFieldsVisibility);
+  refreshOptionalFieldsUI();
+  document.getElementById('tf_type').addEventListener('change', refreshOptionalFieldsUI);
+  document.querySelectorAll('[data-add-field]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const fid = btn.dataset.addField;
+      fieldOpenState[fid] = true;
+      refreshOptionalFieldsUI();
+      document.getElementById(fid)?.focus();
+    });
+  });
 
   document.getElementById('pasteTrelloBtn')?.addEventListener('click', ()=>{
     document.getElementById('trelloPasteWrap').style.display = 'block';
