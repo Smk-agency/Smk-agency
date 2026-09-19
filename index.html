@@ -290,6 +290,12 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .status-tab .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
 .status-tab.active{background:var(--accent-dim);border-color:var(--accent);color:var(--accent-soft);}
 .status-tab.active .cnt{background:rgba(143,227,192,0.18);}
+.afp-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;border:1px solid rgba(0,0,0,.25);background:var(--pill);}
+.agenda-filter-pill{color:var(--pill);}
+.agenda-filter-pill.active{background:var(--pill);border-color:var(--pill);color:#12151a;}
+.seg-control{display:inline-flex;background:var(--surface-2);border:1px solid var(--border);border-radius:9px;padding:3px;gap:2px;}
+.seg-control button{border:none;background:transparent;padding:6px 12px;border-radius:6px;font-size:12.5px;font-weight:600;color:var(--text-muted);cursor:pointer;transition:.15s;white-space:nowrap;}
+.seg-control button.active{background:var(--accent);color:#04140D;box-shadow:0 1px 0 0 rgba(255,255,255,.18) inset;}
 .task-list-vertical{display:flex;flex-direction:column;gap:9px;}
 .img-preview{max-width:130px;max-height:110px;border-radius:8px;border:1px solid var(--border);display:block;cursor:pointer;object-fit:cover;}
 .feed-item-image{margin-top:4px;}
@@ -335,11 +341,12 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .agcal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;}
 .agcal-weekdays{margin-bottom:6px;}
 .agcal-weekdays div{text-align:center;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;padding:4px 0;}
-.agcal-day{min-height:96px;background:linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,0) 50%), var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:.15s;overflow:hidden;align-items:stretch;}
+.agcal-day{min-height:104px;background:linear-gradient(160deg, rgba(255,255,255,.04), rgba(255,255,255,0) 50%), var(--surface);border:1px solid var(--border);border-radius:8px;padding:6px;cursor:pointer;display:flex;flex-direction:column;gap:3px;transition:.15s;overflow:hidden;align-items:stretch;}
 .agcal-day:hover{border-color:var(--accent);}
 .agcal-day.sel{border-color:var(--accent);background:var(--accent-dim);}
-.agcal-day.today .agcal-daynum{color:var(--accent-soft);font-weight:700;}
-.agcal-daynum{font-size:12px;font-weight:600;color:var(--text-muted);}
+.agcal-day.today{border-color:rgba(143,227,192,0.35);}
+.agcal-daynum{font-size:12px;font-weight:600;color:var(--text-muted);width:20px;height:20px;display:flex;align-items:center;justify-content:center;border-radius:50%;}
+.agcal-day.today .agcal-daynum{background:var(--accent);color:#04140D;font-weight:700;}
 .agcal-chip{font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#12151a;font-weight:600;cursor:pointer;}
 .agcal-chip:hover{filter:brightness(1.12);}
 .agcal-more{font-size:10px;color:var(--text-faint);padding:0 6px;}
@@ -2637,6 +2644,7 @@ let agendaSelectedDay = todayISO();
 let agendaTab = 'mine';
 const AGENDA_FILTER_KEYS = ['demandas','gravacao','reuniao','folga','compromisso'];
 const AGENDA_FILTER_LABELS = {demandas:'Demandas', gravacao:'Gravação', reuniao:'Reunião', folga:'Folga', compromisso:'Compromisso'};
+const AGENDA_FILTER_COLOR = {demandas:'var(--accent)', ...COMMITMENT_COLOR};
 let agendaTypeFilters = (() => {
   try{
     const saved = JSON.parse(localStorage.getItem('smkos_agenda_filters'));
@@ -2672,12 +2680,18 @@ function renderAgenda(el){
   const showAdd = isDono();
   el.innerHTML = `
     ${(showTabs||showAdd) ? `<div class="filter-bar">
-      ${showTabs?`<button class="btn small ${agendaTab==='mine'?'primary':''}" id="agTabMine">Minha agenda</button>
-      <button class="btn small ${agendaTab==='agency'?'primary':''}" id="agTabAgency">Agência (todos)</button>`:''}
+      ${showTabs?`<div class="seg-control">
+        <button class="${agendaTab==='mine'?'active':''}" id="agTabMine">Minha agenda</button>
+        <button class="${agendaTab==='agency'?'active':''}" id="agTabAgency">Agência (todos)</button>
+      </div>`:''}
       ${showAdd?`<button class="btn primary small" id="addCommitmentBtn" style="margin-left:auto;">+ Compromisso</button>`:''}
     </div>`:''}
     <div class="status-tabs" id="agendaTypeFilterBar">
-      ${AGENDA_FILTER_KEYS.map(key=>`<button class="status-tab ${agendaTypeFilters[key]?'active':''}" data-filter-key="${key}">${AGENDA_FILTER_LABELS[key]}</button>`).join('')}
+      ${AGENDA_FILTER_KEYS.map(key=>{
+        const active = agendaTypeFilters[key];
+        const color = AGENDA_FILTER_COLOR[key];
+        return `<button class="status-tab agenda-filter-pill ${active?'active':''}" data-filter-key="${key}" style="--pill:${color};"><span class="afp-dot"></span>${AGENDA_FILTER_LABELS[key]}</button>`;
+      }).join('')}
     </div>
     <div id="agendaBoard"></div>
   `;
@@ -2724,7 +2738,7 @@ function drawAgendaCalendar(board){
 
     cells += `<div class="agcal-day ${agendaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
       <div class="agcal-daynum">${d}</div>
-      ${visibleChips.map(ch=>`<div class="agcal-chip" style="background:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}">${ch.text}</div>`).join('')}
+      ${visibleChips.map(ch=>`<div class="agcal-chip" style="background:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}" title="${escapeHTML(ch.text)}">${ch.text}</div>`).join('')}
       ${extra>0?`<div class="agcal-more">+${extra} mais</div>`:''}
     </div>`;
   }
@@ -2732,7 +2746,10 @@ function drawAgendaCalendar(board){
   board.innerHTML = `
     <div class="cal-header">
       <button class="btn ghost small" id="agCalPrev">‹</button>
-      <div style="font-weight:600;font-size:13.5px;text-transform:capitalize;">${monthLabel}</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-weight:600;font-size:13.5px;text-transform:capitalize;">${monthLabel}</div>
+        <button class="btn ghost small" id="agCalToday">Hoje</button>
+      </div>
       <button class="btn ghost small" id="agCalNext">›</button>
     </div>
     <div class="agcal-grid agcal-weekdays"><div>Dom</div><div>Seg</div><div>Ter</div><div>Qua</div><div>Qui</div><div>Sex</div><div>Sáb</div></div>
@@ -2740,6 +2757,7 @@ function drawAgendaCalendar(board){
   `;
   document.getElementById('agCalPrev').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()-1); drawAgendaCalendar(board); });
   document.getElementById('agCalNext').addEventListener('click', ()=>{ agendaCalCursor.setMonth(agendaCalCursor.getMonth()+1); drawAgendaCalendar(board); });
+  document.getElementById('agCalToday').addEventListener('click', ()=>{ agendaCalCursor = new Date(); agendaSelectedDay = todayISO(); drawAgendaCalendar(board); });
   board.querySelectorAll('.agcal-day[data-day]').forEach(d=>{
     d.addEventListener('click', ()=>{ agendaSelectedDay = d.dataset.day; drawAgendaCalendar(board); openAgendaDayModal(agendaSelectedDay); });
   });
