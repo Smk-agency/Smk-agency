@@ -3277,13 +3277,16 @@ function openTaskModal(id){
     document.getElementById('tf_image')?.addEventListener('change', (e)=>{
       const file = e.target.files[0];
       if(!file) return;
-      compressImageToDataURL(file, 700, 0.72).then(dataUrl=>{
+      compressImageToDataURL(file, 640, 0.6).then(dataUrl=>{
         const caption = document.getElementById('newComment').value.trim();
         state.task_comments.push({id:uid(), task_id:t.id, type:'image', user_id:currentUser().id, content:caption, image_url:dataUrl, created_at:Date.now()});
         document.getElementById('newComment').value = '';
         saveState(state);
         openTaskModal(id);
-      }).catch(()=>alert('Não consegui processar essa imagem. Tenta outra.'));
+      }).catch(err=>{
+        console.error('Erro ao processar imagem do comentário:', err);
+        alert('Não consegui processar essa imagem: ' + (err?.message || err) + '\nTenta outra ou avisa o suporte com essa mensagem.');
+      });
     });
     document.getElementById('deleteTaskBtn').addEventListener('click', ()=>{
       state.tasks = state.tasks.filter(x=>x.id!==t.id);
