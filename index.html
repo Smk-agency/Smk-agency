@@ -349,7 +349,32 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .agcal-day.today .agcal-daynum{background:var(--accent);color:#04140D;font-weight:700;}
 .agcal-chip{font-size:10px;padding:2px 6px;border-radius:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#12151a;font-weight:600;cursor:pointer;}
 .agcal-chip:hover{filter:brightness(1.12);}
-.agcal-more{font-size:10px;color:var(--text-faint);padding:0 6px;}
+.agcal-more{font-size:10px;color:var(--text-faint);padding:0 6px;cursor:default;}
+.agcal-more-popover{
+  position:fixed;z-index:200;pointer-events:none;
+  background:linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,0) 55%), var(--surface-2);
+  border:1px solid var(--border);border-radius:12px;
+  box-shadow:0 24px 50px -20px rgba(0,0,0,.65),0 1px 0 0 rgba(255,255,255,.06) inset;
+  padding:10px;min-width:170px;max-width:230px;
+  opacity:0;transform:scale(.4);transform-origin:22px -6px;
+  backdrop-filter:blur(6px);
+  transition:transform .32s ease,border-radius .32s ease,opacity .22s ease;
+}
+.agcal-more-popover.show{
+  opacity:1;pointer-events:auto;
+  animation:agcalLiquidIn .62s cubic-bezier(.19,1,.22,1) forwards;
+}
+@keyframes agcalLiquidIn{
+  0%{ transform:scale(.15) translateY(-10px); border-radius:64% 36% 58% 42% / 50% 62% 38% 50%; opacity:0; }
+  35%{ transform:scale(1.1) translateY(3px); border-radius:34% 66% 40% 60% / 60% 35% 65% 40%; opacity:1; }
+  55%{ transform:scale(.94) translateY(-2px); border-radius:56% 44% 62% 38% / 42% 58% 40% 60%; }
+  75%{ transform:scale(1.035) translateY(1px); border-radius:42% 58% 46% 54% / 55% 44% 56% 45%; }
+  100%{ transform:scale(1) translateY(0); border-radius:12px; }
+}
+.agcal-more-popover .amp-title{font-size:9.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:6px;}
+.agcal-more-popover .amp-item{font-size:11px;padding:5px 8px;border-radius:6px;color:#12151a;font-weight:600;margin-bottom:4px;cursor:pointer;transition:filter .1s;}
+.agcal-more-popover .amp-item:last-child{margin-bottom:0;}
+.agcal-more-popover .amp-item:hover{filter:brightness(1.12);}
 @media(max-width:860px){
   .agcal-day{min-height:64px;padding:4px;gap:2px;}
   .agcal-daynum{font-size:11px;}
@@ -480,6 +505,8 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
     </main>
   </div>
 </div>
+
+<div class="agcal-more-popover" id="agcalMorePopover"></div>
 
 <!-- ============ MODALS ============ -->
 <div class="modal-overlay" id="taskModalOverlay" style="z-index:110;">
@@ -2720,6 +2747,7 @@ function drawAgendaCalendar(board){
   const monthLabel = agendaCalCursor.toLocaleDateString('pt-BR',{month:'long',year:'numeric'});
 
   const MAX_CHIPS = 3;
+  const dayChipsCache = {};
   let cells = '';
   for(let i=0;i<startOffset;i++) cells += `<div style="visibility:hidden;"></div>`;
   for(let d=1; d<=daysInMonth; d++){
@@ -2735,11 +2763,12 @@ function drawAgendaCalendar(board){
     });
     const visibleChips = chips.slice(0, MAX_CHIPS);
     const extra = chips.length - visibleChips.length;
+    dayChipsCache[iso] = chips;
 
     cells += `<div class="agcal-day ${agendaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
       <div class="agcal-daynum">${d}</div>
       ${visibleChips.map(ch=>`<div class="agcal-chip" style="background:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}" title="${escapeHTML(ch.text)}">${ch.text}</div>`).join('')}
-      ${extra>0?`<div class="agcal-more">+${extra} mais</div>`:''}
+      ${extra>0?`<div class="agcal-more" data-day="${iso}">+${extra} mais</div>`:''}
     </div>`;
   }
 
@@ -2764,12 +2793,86 @@ function drawAgendaCalendar(board){
   board.querySelectorAll('.agcal-chip').forEach(chip=>{
     chip.addEventListener('click', (e)=>{
       e.stopPropagation();
-      agendaSelectedDay = chip.closest('.agcal-day').dataset.day;
-      if(chip.dataset.chipKind==='task') openTaskModal(chip.dataset.chipId);
-      else if(isDono()) openCommitmentModal(state.commitments.find(x=>x.id===chip.dataset.chipId));
-      else openAgendaDayModal(agendaSelectedDay);
+      openAgendaChipItem(chip.dataset.chipKind, chip.dataset.chipId, chip.closest('.agcal-day').dataset.day);
     });
   });
+  board.querySelectorAll('.agcal-more[data-day]').forEach(more=>{
+    more.addEventListener('mouseenter', ()=>showAgendaMorePopover(more, dayChipsCache[more.dataset.day]||[]));
+    more.addEventListener('mouseleave', scheduleHideAgendaMorePopover);
+  });
+}
+
+function openAgendaChipItem(kind, id, iso){
+  agendaSelectedDay = iso;
+  if(kind==='task') openTaskModal(id);
+  else if(isDono()) openCommitmentModal(state.commitments.find(x=>x.id===id));
+  else openAgendaDayModal(iso);
+}
+
+let agendaMoreHideTimer = null;
+function showAgendaMorePopover(triggerEl, chips){
+  clearTimeout(agendaMoreHideTimer);
+  const pop = document.getElementById('agcalMorePopover');
+  if(!pop.dataset.wired){
+    pop.dataset.wired = '1';
+    pop.addEventListener('mouseenter', ()=>clearTimeout(agendaMoreHideTimer));
+    pop.addEventListener('mouseleave', scheduleHideAgendaMorePopover);
+  }
+  const iso = triggerEl.dataset.day;
+  pop.innerHTML = `<div class="amp-title">${chips.length} nesse dia</div>${chips.map(ch=>`<div class="amp-item" style="background:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}">${escapeHTML(ch.text)}</div>`).join('')}`;
+  pop.querySelectorAll('.amp-item').forEach(item=>{
+    item.addEventListener('click', ()=>{
+      hideAgendaMorePopoverNow();
+      openAgendaChipItem(item.dataset.chipKind, item.dataset.chipId, iso);
+    });
+  });
+  const rect = triggerEl.getBoundingClientRect();
+  const popWidth = 230;
+  let left = rect.left - 8;
+  if(left + popWidth > window.innerWidth - 10) left = window.innerWidth - popWidth - 10;
+  if(left < 10) left = 10;
+  const popHeight = pop.offsetHeight;
+  let top = rect.bottom + 6;
+  let originY = '-6px';
+  if(top + popHeight > window.innerHeight - 10){
+    top = rect.top - popHeight - 6;
+    originY = `${popHeight + 6}px`;
+  }
+  if(top < 10) top = 10;
+  pop.style.left = `${left}px`;
+  pop.style.top = `${top}px`;
+  pop.style.transformOrigin = `22px ${originY}`;
+  pop.classList.remove('show');
+  void pop.offsetWidth;
+  pop.classList.add('show');
+  playLiquidPopSound();
+}
+let agendaPopAudioCtx = null;
+function playLiquidPopSound(){
+  try{
+    if(!agendaPopAudioCtx) agendaPopAudioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const ctx = agendaPopAudioCtx;
+    if(ctx.state==='suspended') ctx.resume();
+    const now = ctx.currentTime;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(1050, now+0.08);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(0.28, now+0.018);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now+0.12);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now+0.14);
+  }catch(e){}
+}
+function scheduleHideAgendaMorePopover(){
+  clearTimeout(agendaMoreHideTimer);
+  agendaMoreHideTimer = setTimeout(hideAgendaMorePopoverNow, 150);
+}
+function hideAgendaMorePopoverNow(){
+  document.getElementById('agcalMorePopover').classList.remove('show');
 }
 
 // abre os detalhes do dia num modal (em vez de precisar rolar a página até a seção
