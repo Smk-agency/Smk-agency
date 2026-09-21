@@ -2629,6 +2629,7 @@ let demandaSelectedDay = null;
 let demandaFilterClient = '';
 let demandaFilterType = '';
 let demandaFilterOwner = '';
+let demandaTodayOnly = false;
 let kanbanColWidth = localStorage.getItem('smkos_kanban_w') || '250';
 function applyKanbanWidth(){ document.documentElement.style.setProperty('--kanban-col-w', kanbanColWidth+'px'); }
 applyKanbanWidth();
@@ -2677,7 +2678,8 @@ function renderDemandas(el){
         <option value="190" ${kanbanColWidth==='190'?'selected':''}>Colunas compactas</option>
         <option value="250" ${kanbanColWidth==='250'?'selected':''}>Colunas padrão</option>
         <option value="320" ${kanbanColWidth==='320'?'selected':''}>Colunas largas</option>
-      </select>`:''}
+      </select>
+      <button class="btn small ${demandaTodayOnly?'primary':'ghost'}" id="todayOnlyBtn" title="Mostra só as de hoje (e atrasadas) na coluna A Fazer">📅 Só de hoje</button>`:''}
     </div>
     ${!isDono()?`<div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">${EXECUTOR_ROLES.includes(currentUser().role) ? 'Mostrando só as demandas atribuídas a você.' : 'Mostrando as demandas que você criou.'}</div>`:''}
     <div id="demandaBoard"></div>
@@ -2692,6 +2694,7 @@ function renderDemandas(el){
   });
   document.getElementById('viewKanbanBtn').addEventListener('click', ()=>{ demandaView='kanban'; render(); });
   document.getElementById('viewCalendarBtn').addEventListener('click', ()=>{ demandaView='calendar'; render(); });
+  document.getElementById('todayOnlyBtn')?.addEventListener('click', ()=>{ demandaTodayOnly=!demandaTodayOnly; render(); });
   drawDemandas();
 }
 
@@ -2719,13 +2722,14 @@ function drawKanbanBoard(board){
   board.innerHTML = `
     <div class="kanban">
       ${STATUS_FLOW.map(status=>{
-        const items = tasks.filter(t=>t.status===status).sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999'));
+        let items = tasks.filter(t=>t.status===status).sort((a,b)=>(a.due_date||'9999').localeCompare(b.due_date||'9999'));
+        if(status==='a_fazer' && demandaTodayOnly) items = items.filter(t=>t.due_date && t.due_date<=todayISO());
         const color = STATUS_COLOR[status];
         const cntStyle = color ? `background:${color}33;color:${color};` : '';
         return `<div class="kanban-col">
           <div class="kanban-col-head"><span>${STATUS_LABEL[status]}</span><span class="cnt" style="${cntStyle}">${items.length}</span></div>
           <div class="kanban-cards" data-status="${status}">
-            ${items.length ? items.map(t=>demandaListItemHTML(t)).join('') : '<div class="kanban-empty">Arraste um card aqui</div>'}
+            ${items.length ? items.map(t=>demandaListItemHTML(t)).join('') : (status==='a_fazer' && demandaTodayOnly ? '<div class="kanban-empty">Nada pra hoje 🎉</div>' : '<div class="kanban-empty">Arraste um card aqui</div>')}
           </div>
         </div>`;
       }).join('')}
