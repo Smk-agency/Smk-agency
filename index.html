@@ -483,6 +483,7 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
         <button class="nav-item" data-view="mesa"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 16 12 14 15 10 15 8 12 2 12"/><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11Z"/></svg></span> Minha Mesa</button>
         <button class="nav-item" data-view="dashboard" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg></span> Dashboard</button>
         <button class="nav-item" data-view="clientes"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="8" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></span> Clientes</button>
+        <button class="nav-item" data-view="identidade"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg></span> Identidade Visual</button>
         <button class="nav-item" data-view="orcamentos" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 3v4a1 1 0 0 0 1 1h4"/><path d="M17 21H7a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7l5 5v11a2 2 0 0 1-2 2Z"/><path d="M9 9H8"/><path d="M16 13H8"/><path d="M16 17H8"/></svg></span> Orçamentos</button>
         <button class="nav-item" data-view="demandas"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M3 6h.01"/><path d="M3 12h.01"/><path d="M3 18h.01"/></svg></span> Demandas</button>
         <button class="nav-item" data-view="agenda"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg></span> Agenda</button>
@@ -1392,6 +1393,7 @@ document.getElementById('sidebarBackdrop').addEventListener('click', ()=>{
 const TITLES = {
   mesa:['Minha Mesa',''], dashboard:['Dashboard','Visão executiva da agência'],
   clientes:['Clientes','Cadastro e serviços contratados'], orcamentos:['Orçamentos','Propostas comerciais pra prospects'],
+  identidade:['Identidade Visual','Logo, cores e guia de marca de cada cliente'],
   demandas:['Demandas','Fluxo de produção'],
   agenda:['Agenda','Gravações, reuniões, folgas e compromissos da equipe'],
   financeiro:['Financeiro','Receitas e despesas — visível só ao Dono'],
@@ -1414,6 +1416,7 @@ function render(){
   if(currentView==='mesa') return renderMesa(el);
   if(currentView==='dashboard') return renderDashboard(el);
   if(currentView==='clientes') return renderClientes(el);
+  if(currentView==='identidade') return renderBrandKit(el);
   if(currentView==='orcamentos') return renderOrcamentos(el);
   if(currentView==='demandas') return renderDemandas(el);
   if(currentView==='agenda') return renderAgenda(el);
@@ -2207,6 +2210,165 @@ function openClientDetail(id){
     });
   });
   openModal('genericModalOverlay');
+}
+
+/* ================= IDENTIDADE VISUAL (logo/cores/guia de marca por cliente) ================= */
+function renderBrandKit(el){
+  el.innerHTML = `
+    <div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">Logo, cores da marca e guia completo de cada cliente — útil pra quem for criar uma arte sem ter os arquivos em mãos.</div>
+    <div class="client-grid" id="brandGrid"></div>
+  `;
+  const grid = document.getElementById('brandGrid');
+  const list = state.clients.filter(c=>c.status!=='encerrado');
+  if(list.length===0){
+    grid.innerHTML = `<div class="empty">Nenhum cliente cadastrado ainda.</div>`;
+    return;
+  }
+  grid.innerHTML = list.map(c=>{
+    const brand = c.brand || {};
+    const colors = brand.colors || [];
+    return `
+    <div class="client-card" data-id="${c.id}">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
+        <div style="width:48px;height:48px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
+          ${brand.logo_url ? `<img src="${brand.logo_url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<span style="color:#bbb;font-size:18px;">—</span>`}
+        </div>
+        <div style="min-width:0;"><div class="cname">${c.name}</div><div class="ccompany">${c.company_name||''}</div></div>
+      </div>
+      ${colors.length ? `<div style="display:flex;gap:5px;">${colors.slice(0,6).map(col=>`<div style="width:16px;height:16px;border-radius:4px;background:${col.hex};border:1px solid rgba(255,255,255,.15);" title="${escapeHTML(col.label||col.hex)}"></div>`).join('')}</div>` : `<div style="font-size:11px;color:var(--text-faint);">Sem identidade cadastrada ainda</div>`}
+    </div>`;
+  }).join('');
+  grid.querySelectorAll('.client-card').forEach(c=>c.addEventListener('click',()=>openBrandKitDetail(c.dataset.id)));
+}
+
+function openBrandKitDetail(id){
+  const c = clientById(id);
+  const brand = c.brand || {};
+  const colors = brand.colors || [];
+  document.getElementById('genericModalTitle').textContent = `Identidade Visual — ${c.name}`;
+  document.getElementById('genericModalBody').innerHTML = `
+    <div style="display:flex;justify-content:center;margin-bottom:20px;">
+      <div style="width:160px;height:160px;border-radius:14px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+        ${brand.logo_url ? `<img src="${brand.logo_url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<span style="color:#bbb;font-size:13px;">Sem logo</span>`}
+      </div>
+    </div>
+    ${colors.length ? `
+    <div class="section-title">Cores da marca</div>
+    <div style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px;">
+      ${colors.map(col=>`<div style="text-align:center;">
+        <div class="brandSwatch" data-hex="${col.hex}" style="width:52px;height:52px;border-radius:10px;background:${col.hex};border:1px solid rgba(255,255,255,.15);cursor:pointer;margin-bottom:4px;" title="Clique pra copiar"></div>
+        <div style="font-size:10.5px;color:var(--text-muted);">${escapeHTML(col.label||'')}</div>
+        <div style="font-size:10px;color:var(--text-faint);font-family:var(--font-mono);">${col.hex}</div>
+      </div>`).join('')}
+    </div>` : ''}
+    ${brand.fonts ? `<div class="section-title">Fontes</div><div class="card" style="margin-bottom:18px;font-size:12.5px;white-space:pre-wrap;">${escapeHTML(brand.fonts)}</div>` : ''}
+    ${brand.guide_link ? `<div class="section-title">Guia completo</div><a href="${brand.guide_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12.5px;display:block;margin-bottom:18px;">↗ Abrir guia de marca</a>` : ''}
+    ${brand.notes ? `<div class="section-title">Observações</div><div class="card" style="font-size:12.5px;white-space:pre-wrap;">${escapeHTML(brand.notes)}</div>` : ''}
+    ${!brand.logo_url && !colors.length && !brand.fonts && !brand.guide_link && !brand.notes ? `<div class="empty">Nada cadastrado ainda.</div>` : ''}
+    <div class="modal-foot">
+      ${canEditClients()?`<button class="btn primary" id="editBrandBtn">Editar identidade</button>`:''}
+    </div>
+  `;
+  document.getElementById('genericModalBody').querySelectorAll('.brandSwatch').forEach(sw=>{
+    sw.addEventListener('click', ()=>{
+      navigator.clipboard?.writeText(sw.dataset.hex).catch(()=>{});
+      const original = sw.style.transform;
+      sw.style.transform = 'scale(0.9)';
+      setTimeout(()=>{ sw.style.transform = original||''; }, 150);
+    });
+  });
+  document.getElementById('editBrandBtn')?.addEventListener('click', ()=>openBrandKitEditModal(id));
+  openModal('genericModalOverlay');
+}
+
+function openBrandKitEditModal(id){
+  const c = clientById(id);
+  const brand = { ...(c.brand || {}) };
+  let colors = (brand.colors||[]).map(col=>({...col}));
+  document.getElementById('itemModalTitle').textContent = `Editar identidade — ${c.name}`;
+
+  function renderBody(){
+    document.getElementById('itemModalBody').innerHTML = `
+      <div class="field">
+        <label>Logo <span class="hint">funciona melhor com PNG de fundo transparente</span></label>
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div style="width:72px;height:72px;border-radius:10px;background:#fff;display:flex;align-items:center;justify-content:center;overflow:hidden;flex-shrink:0;">
+            ${brand.logo_url ? `<img src="${brand.logo_url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<span style="color:#bbb;font-size:11px;">Sem logo</span>`}
+          </div>
+          <div style="display:flex;flex-direction:column;gap:6px;">
+            <label class="btn small ghost" style="cursor:pointer;text-align:center;">Trocar logo<input type="file" accept="image/*" id="bk_logoInput" style="display:none;"></label>
+            ${brand.logo_url?`<button type="button" class="btn small ghost" id="bk_removeLogo" style="color:var(--red);">Remover logo</button>`:''}
+          </div>
+        </div>
+      </div>
+      <div class="field">
+        <label>Cores da marca</label>
+        <div id="bk_colorsWrap" style="display:flex;flex-direction:column;gap:8px;">
+          ${colors.map((col,i)=>`<div style="display:flex;gap:8px;align-items:center;">
+            <input type="color" value="${col.hex||'#3E6FF0'}" data-color-hex="${i}" style="height:34px;width:44px;padding:2px;flex-shrink:0;">
+            <input type="text" placeholder="Nome (ex: Azul principal)" value="${escapeHTML(col.label||'')}" data-color-label="${i}" style="flex:1;">
+            <button type="button" class="btn ghost small danger" data-remove-color="${i}">×</button>
+          </div>`).join('') || `<div style="font-size:11.5px;color:var(--text-faint);">Nenhuma cor ainda.</div>`}
+        </div>
+        <button type="button" class="btn small ghost" id="bk_addColor" style="margin-top:8px;">+ Cor</button>
+      </div>
+      <div class="field"><label>Fontes <span class="hint">opcional</span></label><textarea id="bk_fonts" rows="2" placeholder="Ex: Poppins (títulos), Inter (texto)">${brand.fonts||''}</textarea></div>
+      <div class="field"><label>Link do guia completo <span class="hint">opcional — Drive, Canva, PDF...</span></label><input type="text" id="bk_guideLink" value="${brand.guide_link||''}" placeholder="https://..."></div>
+      <div class="field"><label>Observações <span class="hint">opcional — tom de voz, o que evitar, etc.</span></label><textarea id="bk_notes" rows="3">${brand.notes||''}</textarea></div>
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="bk_saveBtn">Salvar</button></div>
+    `;
+    wireEvents();
+  }
+
+  function wireEvents(){
+    document.getElementById('bk_logoInput').addEventListener('change', async (e)=>{
+      const file = e.target.files[0];
+      if(!file) return;
+      try{
+        const dataUrl = await compressImageToDataURL(file, 400, 0.9, 'image/png');
+        brand.logo_url = dataUrl;
+        renderBody();
+      }catch(err){
+        console.error('Erro ao processar logo:', err);
+        alert('Não consegui processar essa imagem: ' + (err?.message || err) + '\nTenta outra ou avisa o suporte com essa mensagem.');
+      }
+    });
+    document.getElementById('bk_removeLogo')?.addEventListener('click', ()=>{ brand.logo_url = ''; renderBody(); });
+    document.getElementById('bk_addColor').addEventListener('click', ()=>{
+      const fontsVal = document.getElementById('bk_fonts').value;
+      const guideVal = document.getElementById('bk_guideLink').value;
+      const notesVal = document.getElementById('bk_notes').value;
+      colors.push({hex:'#3E6FF0', label:''});
+      renderBody();
+      document.getElementById('bk_fonts').value = fontsVal;
+      document.getElementById('bk_guideLink').value = guideVal;
+      document.getElementById('bk_notes').value = notesVal;
+    });
+    document.querySelectorAll('[data-remove-color]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{ colors.splice(Number(btn.dataset.removeColor),1); renderBody(); });
+    });
+    document.querySelectorAll('[data-color-hex]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{ colors[Number(inp.dataset.colorHex)].hex = inp.value; });
+    });
+    document.querySelectorAll('[data-color-label]').forEach(inp=>{
+      inp.addEventListener('input', ()=>{ colors[Number(inp.dataset.colorLabel)].label = inp.value; });
+    });
+    document.getElementById('bk_saveBtn').addEventListener('click', ()=>{
+      c.brand = {
+        logo_url: brand.logo_url || '',
+        colors: colors.filter(col=>col.hex),
+        fonts: document.getElementById('bk_fonts').value.trim(),
+        guide_link: document.getElementById('bk_guideLink').value.trim(),
+        notes: document.getElementById('bk_notes').value.trim(),
+      };
+      saveState(state);
+      closeModal('itemModalOverlay');
+      openBrandKitDetail(id);
+    });
+  }
+
+  renderBody();
+  openModal('itemModalOverlay');
 }
 
 function syncContractValue(clientId){
