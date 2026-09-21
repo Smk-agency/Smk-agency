@@ -2110,21 +2110,21 @@ function openClientDetail(id){
     ${tasks.map(t=>`<div class="task-card" data-task-id="${t.id}" style="padding:10px 12px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;"><span>${t.title}</span>${statusBadgeHTML(t.status)}</div>`).join('') || '<div class="empty">Sem demandas ainda.</div>'}
     <div class="modal-foot">
       ${canEditClients()?`
-      ${c.status!=='encerrado' ? `<button class="btn ghost danger" id="archiveClientBtn">Excluir cliente</button>` : `<button class="btn ghost" id="reactivateClientBtn">Reativar cliente</button>`}
+      ${c.status!=='encerrado' ? `<button class="btn ghost danger" id="archiveClientBtn">Encerrar cliente</button>` : `<button class="btn ghost" id="reactivateClientBtn">Reativar cliente</button>`}
       <button class="btn" id="editClientBtn">Editar dados do cliente</button>
       `:''}
     </div>
   `;
   document.getElementById('editClientBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openClientModal(c); });
   document.getElementById('archiveClientBtn')?.addEventListener('click', ()=>{
-    document.getElementById('itemModalTitle').textContent = 'Excluir cliente';
+    document.getElementById('itemModalTitle').textContent = 'Encerrar cliente';
     document.getElementById('itemModalBody').innerHTML = `
       <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:18px;">
         ${c.name} vai sair da lista de clientes ativos e ir pra "Encerrados". Nada é apagado — serviços, custos, contrato e histórico de demandas continuam salvos, e dá pra reativar quando quiser.
       </div>
       <div class="modal-foot">
         <button class="btn ghost" data-close="itemModalOverlay">Cancelar</button>
-        <button class="btn danger" id="confirmArchiveBtn">Excluir cliente</button>
+        <button class="btn danger" id="confirmArchiveBtn">Encerrar cliente</button>
       </div>
     `;
     document.getElementById('confirmArchiveBtn').addEventListener('click', ()=>{
