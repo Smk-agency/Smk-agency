@@ -247,7 +247,7 @@ tr:last-child td{border-bottom:none;}
 /* kanban */
 .kanban{display:flex;gap:14px;overflow-x:auto;padding-bottom:10px;cursor:grab;}
 .kanban.panning{cursor:grabbing;user-select:none;}
-.kanban-col{min-width:var(--kanban-col-w, 250px);flex-shrink:0;}
+.kanban-col{width:var(--kanban-col-w, 250px);min-width:0;flex-shrink:0;}
 .kanban-col-head{display:flex;align-items:center;justify-content:space-between;padding:0 4px 10px;font-size:12px;font-weight:600;color:var(--text-muted);}
 .kanban-col-head .cnt{background:var(--surface-3);padding:1px 7px;border-radius:100px;font-size:10.5px;}
 .kanban-cards{display:flex;flex-direction:column;gap:8px;min-height:60px;border-radius:10px;transition:background-color .15s ease;}
@@ -262,7 +262,7 @@ tr:last-child td{border-bottom:none;}
 .task-card .tdue{font-size:10.5px;color:var(--text-faint);}
 .prio-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px;}
 @media(max-width:860px){
-  .kanban-col{min-width:min(var(--kanban-col-w, 250px), 82vw);}
+  .kanban-col{width:min(var(--kanban-col-w, 250px), 82vw);min-width:0;}
   .kanban-cards{gap:6px;}
   .kanban-col-head{padding:0 2px 6px;font-size:11px;}
   .task-card{padding:8px 10px;border-radius:8px;}
