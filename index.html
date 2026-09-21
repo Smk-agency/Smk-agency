@@ -260,6 +260,7 @@ tr:last-child td{border-bottom:none;}
 .task-card .ttitle{font-size:12.5px;font-weight:600;margin-bottom:8px;line-height:1.35;}
 .task-card .tmeta{display:flex;align-items:center;justify-content:space-between;}
 .task-card .tdue{font-size:10.5px;color:var(--text-faint);}
+.task-card .tcreator{font-size:9.5px;color:var(--text-faint);opacity:.7;margin-top:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .prio-dot{width:6px;height:6px;border-radius:50%;display:inline-block;margin-right:5px;}
 @media(max-width:860px){
   .kanban-col{width:min(var(--kanban-col-w, 250px), 82vw);min-width:0;}
@@ -270,6 +271,7 @@ tr:last-child td{border-bottom:none;}
   .task-card .ttitle{font-size:11.5px;margin-bottom:4px;line-height:1.25;}
   .task-card .tmeta{font-size:10px;}
   .task-card .tdue{font-size:9.5px;}
+  .task-card .tcreator{font-size:9px;margin-top:4px;}
   .task-card .badge{padding:2px 7px;font-size:9.5px;}
 }
 
@@ -2775,6 +2777,7 @@ function taskHasImage(t){ return state.task_comments.some(c=>c.task_id===t.id &&
 function demandaListItemHTML(t){
   const c = clientById(t.client_id);
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
+  const creator = t.created_by ? userById(t.created_by) : null;
   const isLate = isTaskLate(t);
   return `<div class="task-card" data-id="${t.id}" draggable="true" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
@@ -2788,6 +2791,7 @@ function demandaListItemHTML(t){
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
       <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
     </div>
+    ${creator?`<div class="tcreator">criado por ${creator.full_name}</div>`:''}
   </div>`;
 }
 
