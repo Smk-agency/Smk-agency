@@ -3293,6 +3293,7 @@ function openTaskModal(id){
     {id:'tf_sub', label:'Sub', rows:2, value:t?.briefing?.sub},
     {id:'tf_ref', label:'Referência', rows:3, value:t?.briefing?.referencia},
     {id:'tf_legenda', label:'Legenda', rows:3, value:t?.briefing?.legenda},
+    {id:'tf_files', label:'Arquivos', rows:2, value:t?.briefing?.arquivos},
   ];
   const fieldOpenState = {};
   OPTIONAL_TASK_FIELDS.forEach(f=>{ fieldOpenState[f.id] = !!f.value; });
@@ -3412,7 +3413,7 @@ function openTaskModal(id){
     document.getElementById('trelloPasteText').value = '';
   });
 
-  ['tf_brief','tf_head','tf_sub','tf_ref','tf_legenda'].forEach(fid=>{
+  ['tf_brief','tf_head','tf_sub','tf_ref','tf_legenda','tf_files'].forEach(fid=>{
     const el = document.getElementById(fid);
     // o modal ainda tá com display:none aqui (só fica visível no openModal() lá embaixo),
     // e nesse estado scrollHeight vem errado — por isso o resize inicial espera o modal abrir.
@@ -3500,7 +3501,8 @@ function openTaskModal(id){
         head:document.getElementById('tf_head').value,
         sub:document.getElementById('tf_sub').value,
         referencia:document.getElementById('tf_ref').value,
-        legenda:document.getElementById('tf_legenda').value
+        legenda:document.getElementById('tf_legenda').value,
+        arquivos:document.getElementById('tf_files').value
       },
       delivery_link:document.getElementById('tf_delivery').value.trim(),
       assignee_id: ownerId
@@ -4085,6 +4087,7 @@ function openArchivedTaskView(t){
     ${t.briefing?.sub?`<div class="field"><label>Sub</label><div class="card" style="font-size:12.5px;">${escapeHTML(t.briefing.sub)}</div></div>`:''}
     ${t.briefing?.referencia?`<div class="field"><label>Referência</label><div class="card" style="font-size:12.5px;">${linkify(t.briefing.referencia)}</div></div>`:''}
     ${t.briefing?.legenda?`<div class="field"><label>Legenda</label><div class="card" style="font-size:12.5px;">${escapeHTML(t.briefing.legenda)}</div></div>`:''}
+    ${t.briefing?.arquivos?`<div class="field"><label>Arquivos</label><div class="card" style="font-size:12.5px;">${linkify(t.briefing.arquivos)}</div></div>`:''}
     ${t.delivery_link?`<div style="margin-top:10px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12.5px;">↗ Abrir entrega</a>
       ${t.delivery_link_updated_at?`<span style="color:var(--text-faint);font-size:11px;">Atualizado em ${new Date(t.delivery_link_updated_at).toLocaleString('pt-BR')}</span>`:''}
