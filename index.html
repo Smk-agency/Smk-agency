@@ -194,6 +194,62 @@ button{font-family:inherit;cursor:pointer;}
 .kpi-value.neg{color:var(--red);}
 .kpi-sub{font-size:11px;color:var(--text-faint);margin-top:4px;}
 
+/* avatar com iniciais */
+.u-avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;border:1px solid;flex-shrink:0;letter-spacing:0;line-height:1;font-family:var(--font-body);}
+
+/* hero da Minha Mesa */
+.mesa-hero{position:relative;overflow:hidden;border-radius:16px;border:1px solid var(--border);padding:22px;margin-bottom:22px;
+  background:radial-gradient(120% 140% at 0% 0%, rgba(31,169,124,.16), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgba(76,126,255,.14), transparent 60%), var(--surface);
+  box-shadow:0 1px 0 0 rgba(255,255,255,.06) inset,0 18px 36px -24px rgba(0,0,0,.7);}
+.mesa-hero::after{content:'';position:absolute;right:-60px;top:-70px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle, rgba(143,227,192,.16), transparent 70%);pointer-events:none;}
+.mesa-hero-top{display:flex;align-items:center;gap:14px;margin-bottom:18px;position:relative;z-index:1;}
+.mesa-hero-date{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px;}
+.mesa-hero-title{font-family:var(--font-display);font-size:21px;font-weight:700;line-height:1.2;}
+.mesa-hero-sub{font-size:12.5px;color:var(--text-muted);margin-top:4px;}
+.mesa-stats{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;position:relative;z-index:1;}
+.mesa-stat{background:rgba(255,255,255,.035);border:1px solid var(--border);border-radius:11px;padding:11px 12px;}
+.mesa-stat .n{font-family:var(--font-mono);font-size:22px;font-weight:700;line-height:1;}
+.mesa-stat .l{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--text-muted);margin-top:7px;}
+.mesa-stat .l i{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+@media(max-width:860px){ .mesa-stats{grid-template-columns:repeat(3,minmax(0,1fr));} .mesa-hero{padding:16px;} .mesa-hero-title{font-size:18px;} }
+
+/* gráficos do Dashboard */
+.chart-row{display:grid;grid-template-columns:3fr 2fr;gap:12px;margin-bottom:26px;}
+@media(max-width:860px){ .chart-row{grid-template-columns:1fr;} }
+.chart-card{position:relative;background:linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,0) 42%), var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;min-width:0;}
+.chart-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:14px;}
+.chart-title{font-size:13px;font-weight:600;}
+.chart-legend{display:flex;gap:12px;font-size:11px;color:var(--text-muted);}
+.chart-legend span{display:inline-flex;align-items:center;gap:5px;}
+.chart-legend i{width:8px;height:8px;border-radius:2px;}
+.bars{position:relative;height:170px;margin-left:44px;}
+.bars-grid{position:absolute;inset:0;pointer-events:none;}
+.bars-grid div{position:absolute;left:0;right:0;border-top:1px solid rgba(255,255,255,.06);}
+.bars-grid span{position:absolute;right:calc(100% + 8px);top:-7px;font-size:10px;color:var(--text-faint);font-family:var(--font-mono);white-space:nowrap;}
+.bars-cols{position:absolute;inset:0;display:flex;align-items:flex-end;}
+.bar-col{flex:1;height:100%;display:flex;align-items:flex-end;justify-content:center;gap:2px;cursor:default;border-radius:6px;transition:background-color .15s;}
+.bar-col:hover{background:rgba(255,255,255,.035);}
+.bar{width:100%;max-width:20px;border-radius:4px 4px 0 0;transform-origin:bottom;min-height:2px;}
+.bars-x{display:flex;margin-left:44px;margin-top:7px;}
+.bars-x div{flex:1;text-align:center;font-size:10.5px;color:var(--text-faint);text-transform:capitalize;}
+.donut-wrap{display:flex;align-items:center;gap:18px;flex-wrap:wrap;}
+.donut-wrap svg{flex-shrink:0;}
+.donut-seg{transition:opacity .15s;cursor:default;}
+.donut-legend{flex:1;min-width:130px;display:flex;flex-direction:column;gap:6px;}
+.donut-legend div{display:flex;align-items:center;gap:8px;font-size:11.5px;color:var(--text-muted);padding:2px 4px;border-radius:5px;}
+.donut-legend div:hover{background:rgba(255,255,255,.04);}
+.donut-legend i{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.donut-legend b{margin-left:auto;font-family:var(--font-mono);color:var(--text);font-weight:600;}
+.chart-tip{position:absolute;z-index:20;pointer-events:none;background:var(--surface-3);border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-size:11.5px;line-height:1.5;white-space:nowrap;box-shadow:0 10px 24px -10px rgba(0,0,0,.7);opacity:0;transition:opacity .12s;}
+.chart-tip.show{opacity:1;}
+
+/* micro-animações de entrada (só quando a tela é aberta, não a cada sync do Firestore) */
+@keyframes riseIn{from{opacity:0;transform:translateY(10px);}to{opacity:1;transform:none;}}
+@keyframes growUp{from{transform:scaleY(0);}to{transform:scaleY(1);}}
+.view-enter .kpi-card,.view-enter .mesa-hero,.view-enter .mesa-stat,.view-enter .chart-card,.view-enter .task-card,.view-enter .client-card{animation:riseIn .5s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(var(--i,0) * 40ms);}
+.view-enter .bar{animation:growUp .7s cubic-bezier(.22,1,.36,1) backwards;animation-delay:calc(var(--i,0) * 40ms + 150ms);}
+@media (prefers-reduced-motion: reduce){ .view-enter *{animation:none!important;} }
+
 .section-title{font-size:14.5px;font-weight:600;margin:28px 0 12px;display:flex;align-items:center;justify-content:space-between;}
 .section-title .hint{font-size:11.5px;color:var(--text-faint);font-weight:400;}
 
@@ -592,7 +648,7 @@ const STATUS_FLOW = ['a_fazer','em_revisao','alteracao_solicitada','aprovado','c
 const STATUS_LABEL = {a_fazer:'A Fazer', em_revisao:'Em Revisão', alteracao_solicitada:'Alteração Solicitada', aprovado:'Aprovado', concluido:'Concluído',
   backlog:'A Fazer',briefing:'A Fazer',aguardando_producao:'A Fazer',em_producao:'A Fazer',primeira_versao:'A Fazer',
   pausado:'Pausado',cancelado:'Cancelado'};
-const STATUS_COLOR = {a_fazer:'#4C7EFF', em_revisao:'#E0A62D', alteracao_solicitada:'#F2794A', aprovado:'#1FA97C', concluido:'#14B8A6', pausado:'#8C93A3', cancelado:'#E0553D'};
+const STATUS_COLOR = {a_fazer:'#4C7EFF', em_revisao:'#E0A62D', alteracao_solicitada:'#F2794A', aprovado:'#1FA97C', concluido:'#9B7BEA', pausado:'#8C93A3', cancelado:'#E0553D'};
 const DONE_STATUSES = ['aprovado','concluido','cancelado'];
 // só conta como atrasada quem nem começou a ser feita ainda — assim que entra em revisão
 // (ou qualquer status depois disso), some o alerta de atraso mesmo se passou do prazo original
@@ -637,11 +693,40 @@ const KPI_ICONS = {
 function kpiIconHTML(icon, color){
   return `<div class="kpi-icon" style="background:${color}1F;color:${color};"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${KPI_ICONS[icon]||KPI_ICONS.dollar}</svg></div>`;
 }
-function kpiCardHTML({icon, color='var(--blue)', label, value, valueClass='', valueStyle='', sub='', style=''}){
+function userAvatarHTML(u, size=18){
+  if(!u) return '';
+  const col = u.avatar_color || ROLE_COLOR[u.role] || '#8C93A3';
+  return `<span class="u-avatar" title="${escapeHTML(u.full_name)}" style="width:${size}px;height:${size}px;font-size:${Math.max(8,Math.round(size*0.4))}px;background:${col}26;color:${col};border-color:${col}55;">${initials(u.full_name)}</span>`;
+}
+
+// data-count + data-fmt num elemento = número que "conta" de 0 até o valor quando a tela abre
+function countAttrs(n, fmt){ return `data-count="${Number(n)||0}" data-fmt="${fmt}"`; }
+function fmtCount(n, fmt){
+  if(fmt==='money') return fmtMoney(n);
+  if(fmt==='pct') return n.toFixed(1)+'%';
+  return String(Math.round(n));
+}
+function runCountUps(root){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  root.querySelectorAll('[data-count]').forEach(el=>{
+    const target = Number(el.dataset.count), fmt = el.dataset.fmt;
+    const start = performance.now(), dur = 800;
+    const step = now=>{
+      const p = Math.min(1, (now-start)/dur);
+      const eased = 1 - Math.pow(1-p, 3);
+      el.textContent = fmtCount(target*eased, fmt);
+      if(p<1) requestAnimationFrame(step);
+    };
+    el.textContent = fmtCount(0, fmt);
+    requestAnimationFrame(step);
+  });
+}
+
+function kpiCardHTML({icon, color='var(--blue)', label, value, valueClass='', valueStyle='', sub='', style='', count=null, fmt='int'}){
   return `<div class="kpi-card" style="${style}">
     ${kpiIconHTML(icon, color)}
     <div class="kpi-label">${label}</div>
-    <div class="kpi-value ${valueClass}" style="${valueStyle}">${value}</div>
+    <div class="kpi-value ${valueClass}" style="${valueStyle}" ${count!==null?countAttrs(count, fmt):''}>${value}</div>
     ${sub?`<div class="kpi-sub">${sub}</div>`:''}
   </div>`;
 }
@@ -1416,6 +1501,20 @@ function render(){
     el.innerHTML = `<div class="locked-box"><div class="ic">🔒</div><div>Essa área é exclusiva do Dono.<br>Sua conta (${ROLE_LABEL[currentUser().role]}) não tem acesso a esses dados.</div></div>`;
     return;
   }
+  // anima só quando a pessoa entra na tela — re-renders vindos do Firestore não repetem a animação
+  const isViewEntry = currentView !== lastRenderedView;
+  lastRenderedView = currentView;
+  el.classList.toggle('view-enter', isViewEntry);
+  renderView(el);
+  if(isViewEntry){
+    el.querySelectorAll('.kpi-card,.mesa-hero,.mesa-stat,.chart-card,.task-card,.client-card').forEach((c,i)=>c.style.setProperty('--i', Math.min(i,14)));
+    el.querySelectorAll('.bar').forEach((b,i)=>b.style.setProperty('--i', Math.min(i,14)));
+    runCountUps(el);
+  }
+}
+var lastRenderedView = null;
+
+function renderView(el){
   if(currentView==='mesa') return renderMesa(el);
   if(currentView==='dashboard') return renderDashboard(el);
   if(currentView==='clientes') return renderClientes(el);
@@ -1458,16 +1557,31 @@ function renderMesa(el){
       <button class="btn small ${mesaTab==='agency'?'primary':''}" id="tabAgency">Agência (todas)</button>
     </div>
     `:''}
-    <div class="card" style="margin-bottom:20px;">
-      <div style="font-size:15px;font-weight:600;margin-bottom:4px;">${mesaTab==='mine' ? `Bom trabalho, ${u.full_name.split(' ')[0]}.` : 'Visão geral da agência'}</div>
-      <div style="color:var(--text-muted);font-size:12.5px;">${mesaTab==='mine' ? 'Hoje você tem:' : 'No momento, todo mundo tem:'}</div>
-      <div style="display:flex;gap:18px;margin-top:12px;flex-wrap:wrap;">
-        <span>🔴 ${urgent.length} urgentes</span>
-        <span>⏰ ${late.length} atrasadas</span>
-        <span>🔵 ${aFazer.length} a fazer</span>
-        <span>🟡 ${review.length} em revisão</span>
-        <span>🟠 ${changeReq.length} c/ alteração</span>
-        <span>🟢 ${done.length} aprovadas</span>
+    <div class="mesa-hero">
+      <div class="mesa-hero-top">
+        ${userAvatarHTML(u, 46)}
+        <div style="min-width:0;">
+          <div class="mesa-hero-date">${new Date().toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'})}</div>
+          <div class="mesa-hero-title">${mesaTab==='mine' ? `${greetingByHour()}, ${escapeHTML(u.full_name.split(' ')[0])}!` : 'Visão geral da agência'}</div>
+          <div class="mesa-hero-sub">${
+            late.length ? `${mesaTab==='mine'?'Você tem':'A agência tem'} ${late.length} demanda${late.length>1?'s':''} atrasada${late.length>1?'s':''} — bora zerar isso.`
+            : aFazer.length ? `${aFazer.length} demanda${aFazer.length>1?'s':''} na fila, tudo dentro do prazo.`
+            : 'Tudo em dia por aqui. ✨'
+          }</div>
+        </div>
+      </div>
+      <div class="mesa-stats">
+        ${[
+          ['Urgentes', urgent.length, '#E0553D'],
+          ['Atrasadas', late.length, '#E0709A'],
+          ['A fazer', aFazer.length, STATUS_COLOR.a_fazer],
+          ['Em revisão', review.length, STATUS_COLOR.em_revisao],
+          ['C/ alteração', changeReq.length, STATUS_COLOR.alteracao_solicitada],
+          ['Aprovadas', done.length, STATUS_COLOR.aprovado],
+        ].map(([label, n, color])=>`<div class="mesa-stat">
+          <div class="n" ${countAttrs(n,'int')}>${n}</div>
+          <div class="l"><i style="background:${color};"></i>${label}</div>
+        </div>`).join('')}
       </div>
     </div>
     ${mesaTab==='agency' && late.length>0 ? `
@@ -1491,11 +1605,14 @@ function agencyTaskCardHTML(t){
   const owner = t.assignee_id ? userById(t.assignee_id) : null;
   const isLate = isTaskLate(t);
   return `<div class="task-card" data-id="${t.id}">
-    <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span> · ${owner?owner.full_name:'sem responsável'}</div>
+    <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span>${owner?'':' · sem responsável'}</div>
     <div class="ttitle">${t.title}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${STATUS_LABEL[t.status]}</span>
-      <span class="tdue" style="${isLate?'color:var(--red)':''}">${fmtDate(t.due_date)}</span>
+      <span style="display:flex;align-items:center;gap:7px;">
+        <span class="tdue" style="${isLate?'color:var(--red)':''}">${fmtDate(t.due_date)}</span>
+        ${owner?userAvatarHTML(owner, 20):''}
+      </span>
     </div>
   </div>`;
 }
@@ -1532,15 +1649,20 @@ function renderDashboard(el){
     </div>
 
     <div class="kpi-grid" style="margin-top:22px;">
-      ${kpiCardHTML({icon:'trendUp', color:'#5B8CFF', label:'Faturamento do mês', value:fmtMoney(faturamento), valueClass:'mono'})}
-      ${kpiCardHTML({icon:'check', color:'#1FA97C', label:'Recebido', value:fmtMoney(recebido), valueClass:'pos'})}
-      ${kpiCardHTML({icon:'clock', color:'#E0A62D', label:'A receber', value:fmtMoney(aReceber)})}
-      ${kpiCardHTML({icon:'alert', color:'#E0553D', label:'Em atraso', value:fmtMoney(atrasado), valueClass:atrasado>0?'neg':''})}
-      ${kpiCardHTML({icon:'trendDown', color:'#E0553D', label:'Despesas + folha da equipe', value:fmtMoney(despesas+folhaEquipe)})}
-      ${kpiCardHTML({icon:'trendUp', color:lucro>=0?'#1FA97C':'#E0553D', label:'Lucro estimado', value:fmtMoney(lucro), valueClass:lucro>=0?'pos':'neg'})}
-      ${kpiCardHTML({icon:'percent', color:'#B983F0', label:'Margem média', value:margem.toFixed(1)+'%'})}
-      ${kpiCardHTML({icon:'users', color:'#5B8CFF', label:'Clientes ativos', value:clientesAtivos})}
-      ${kpiCardHTML({icon:'listChecks', color:'#E0A62D', label:'Demandas abertas', value:abertas, sub:atrasadas+' atrasada(s)'})}
+      ${kpiCardHTML({icon:'trendUp', color:'#5B8CFF', label:'Faturamento do mês', value:fmtMoney(faturamento), valueClass:'mono', count:faturamento, fmt:'money'})}
+      ${kpiCardHTML({icon:'check', color:'#1FA97C', label:'Recebido', value:fmtMoney(recebido), valueClass:'pos', count:recebido, fmt:'money'})}
+      ${kpiCardHTML({icon:'clock', color:'#E0A62D', label:'A receber', value:fmtMoney(aReceber), count:aReceber, fmt:'money'})}
+      ${kpiCardHTML({icon:'alert', color:'#E0553D', label:'Em atraso', value:fmtMoney(atrasado), valueClass:atrasado>0?'neg':'', count:atrasado, fmt:'money'})}
+      ${kpiCardHTML({icon:'trendDown', color:'#E0553D', label:'Despesas + folha da equipe', value:fmtMoney(despesas+folhaEquipe), count:despesas+folhaEquipe, fmt:'money'})}
+      ${kpiCardHTML({icon:'trendUp', color:lucro>=0?'#1FA97C':'#E0553D', label:'Lucro estimado', value:fmtMoney(lucro), valueClass:lucro>=0?'pos':'neg', count:lucro, fmt:'money'})}
+      ${kpiCardHTML({icon:'percent', color:'#B983F0', label:'Margem média', value:margem.toFixed(1)+'%', count:margem, fmt:'pct'})}
+      ${kpiCardHTML({icon:'users', color:'#5B8CFF', label:'Clientes ativos', value:clientesAtivos, count:clientesAtivos})}
+      ${kpiCardHTML({icon:'listChecks', color:'#E0A62D', label:'Demandas abertas', value:abertas, sub:atrasadas+' atrasada(s)', count:abertas})}
+    </div>
+
+    <div class="chart-row">
+      ${revenueChartHTML()}
+      ${statusDonutHTML()}
     </div>
 
     <div class="section-title">Alertas <span class="hint">${alerts.length} no momento</span></div>
@@ -1550,6 +1672,129 @@ function renderDashboard(el){
   `;
   el.querySelectorAll('[data-alert-idx]').forEach(row=>{
     row.addEventListener('click', ()=>goToAlertTarget(alerts[Number(row.dataset.alertIdx)].action));
+  });
+  wireChartTooltips(el);
+}
+
+const CHART_REVENUE_COLOR = '#5B8CFF';
+const CHART_EXPENSE_COLOR = '#D9772E';
+
+// receita x despesa por mês: junta o que está ativo com o que já foi arquivado
+function financeByMonth(){
+  const months = {};
+  const bucket = m => (months[m] = months[m] || {rev:0, exp:0, team:null});
+  const archived = state.archived_financeiro || {};
+  Object.entries(archived).forEach(([m, d])=>{
+    (d.payments||[]).forEach(p=>{ if(p.status!=='cancelado') bucket(m).rev += Number(p.value)||0; });
+    (d.expenses||[]).forEach(e=>{ bucket(m).exp += Number(e.value)||0; });
+    bucket(m).team = Number(d.team_cost_snapshot)||0;
+  });
+  (state.payments||[]).forEach(p=>{
+    const m = (p.due_date||'').slice(0,7);
+    if(m && p.status!=='cancelado') bucket(m).rev += Number(p.value)||0;
+  });
+  (state.expenses||[]).forEach(e=>{
+    const m = (e.expense_date||'').slice(0,7);
+    if(m) bucket(m).exp += Number(e.value)||0;
+  });
+  const currentMonth = todayISO().slice(0,7);
+  const folha = (state.team_costs||[]).reduce((a,t)=>a+Number(t.monthly_cost||0),0);
+  return Object.keys(months).filter(m=>m<=currentMonth).sort().slice(-6).map(m=>({
+    month:m, rev:months[m].rev, exp:months[m].exp + (months[m].team!==null ? months[m].team : (m===currentMonth ? folha : 0))
+  }));
+}
+
+function fmtMoneyShort(n){
+  if(n>=1000) return 'R$ '+(n/1000).toLocaleString('pt-BR',{maximumFractionDigits:1})+'k';
+  return 'R$ '+Math.round(n);
+}
+
+function revenueChartHTML(){
+  const data = financeByMonth();
+  if(!data.length) return `<div class="chart-card"><div class="chart-title">Receita x despesas</div><div class="empty">Ainda não tem movimentação registrada.</div></div>`;
+  const rawMax = Math.max(...data.map(d=>Math.max(d.rev, d.exp)), 1);
+  const stepBase = Math.pow(10, Math.floor(Math.log10(rawMax/4)));
+  const step = [1,2,2.5,5,10].map(k=>k*stepBase).find(s=>s*4>=rawMax);
+  const max = step*4;
+  const monthName = m => new Date(Number(m.slice(0,4)), Number(m.slice(5,7))-1, 1).toLocaleDateString('pt-BR',{month:'short'}).replace('.','');
+  return `<div class="chart-card">
+    <div class="chart-head">
+      <div class="chart-title">Receita x despesas <span class="hint">por mês</span></div>
+      <div class="chart-legend"><span><i style="background:${CHART_REVENUE_COLOR};"></i>Receita</span><span><i style="background:${CHART_EXPENSE_COLOR};"></i>Despesas + folha</span></div>
+    </div>
+    <div class="bars">
+      <div class="bars-grid">${[0,1,2,3,4].map(k=>`<div style="bottom:${k*25}%;"><span>${fmtMoneyShort(step*k)}</span></div>`).join('')}</div>
+      <div class="bars-cols">
+        ${data.map(d=>`<div class="bar-col" data-tip="<b>${monthName(d.month)} ${d.month.slice(0,4)}</b><br>Receita: ${fmtMoney(d.rev)}<br>Despesas + folha: ${fmtMoney(d.exp)}<br>Saldo: ${fmtMoney(d.rev-d.exp)}">
+          <div class="bar" style="height:${d.rev/max*100}%;background:${CHART_REVENUE_COLOR};"></div>
+          <div class="bar" style="height:${d.exp/max*100}%;background:${CHART_EXPENSE_COLOR};"></div>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="bars-x">${data.map(d=>`<div>${monthName(d.month)}</div>`).join('')}</div>
+  </div>`;
+}
+
+function statusDonutHTML(){
+  // ordem da rosca separa âmbar (em revisão) de laranja (alteração) — lado a lado ficam indistinguíveis
+  const statuses = ['a_fazer','em_revisao','aprovado','alteracao_solicitada','concluido','pausado','cancelado'];
+  const counts = statuses.map(s=>({s, n:state.tasks.filter(t=>t.status===s).length})).filter(x=>x.n>0);
+  const total = counts.reduce((a,x)=>a+x.n,0);
+  if(!total) return `<div class="chart-card"><div class="chart-title">Demandas por status</div><div class="empty">Nenhuma demanda ainda.</div></div>`;
+  const r = 52, C = 2*Math.PI*r, gap = counts.length>1 ? 2 : 0;
+  let offset = 0;
+  const segs = counts.map(x=>{
+    const len = x.n/total*C;
+    const seg = `<circle class="donut-seg" data-status="${x.s}" data-tip="<b>${STATUS_LABEL[x.s]}</b><br>${x.n} demanda${x.n>1?'s':''} · ${(x.n/total*100).toFixed(0)}%" cx="70" cy="70" r="${r}" fill="none" stroke="${STATUS_COLOR[x.s]}" stroke-width="16"
+      stroke-dasharray="${Math.max(0,len-gap)} ${C}" stroke-dashoffset="${-offset}" transform="rotate(-90 70 70)"></circle>`;
+    offset += len;
+    return seg;
+  }).join('');
+  return `<div class="chart-card">
+    <div class="chart-head"><div class="chart-title">Demandas por status</div></div>
+    <div class="donut-wrap">
+      <svg width="140" height="140" viewBox="0 0 140 140" role="img" aria-label="Demandas por status">
+        <circle cx="70" cy="70" r="${r}" fill="none" stroke="var(--surface-2)" stroke-width="16"></circle>
+        ${segs}
+        <text x="70" y="68" text-anchor="middle" fill="var(--text)" style="font-family:var(--font-mono);font-size:24px;font-weight:700;">${total}</text>
+        <text x="70" y="86" text-anchor="middle" fill="var(--text-faint)" style="font-size:10px;">demandas</text>
+      </svg>
+      <div class="donut-legend">
+        ${counts.map(x=>`<div data-status="${x.s}"><i style="background:${STATUS_COLOR[x.s]};"></i>${STATUS_LABEL[x.s]}<b>${x.n}</b></div>`).join('')}
+      </div>
+    </div>
+  </div>`;
+}
+
+function wireChartTooltips(root){
+  root.querySelectorAll('.chart-card').forEach(card=>{
+    const tip = document.createElement('div');
+    tip.className = 'chart-tip';
+    card.appendChild(tip);
+    const show = (target, html)=>{
+      tip.innerHTML = html;
+      tip.classList.add('show');
+      const anchor = target.classList.contains('bar-col')
+        ? [...target.querySelectorAll('.bar')].sort((a,b)=>a.getBoundingClientRect().top - b.getBoundingClientRect().top)[0]
+        : target;
+      const cr = card.getBoundingClientRect(), tr = anchor.getBoundingClientRect();
+      let left = tr.left - cr.left + tr.width/2 - tip.offsetWidth/2;
+      left = Math.max(6, Math.min(left, cr.width - tip.offsetWidth - 6));
+      let top = tr.top - cr.top - tip.offsetHeight - 8;
+      if(top < 4) top = tr.bottom - cr.top + 8;
+      tip.style.left = left+'px';
+      tip.style.top = top+'px';
+    };
+    const hide = ()=>tip.classList.remove('show');
+    card.querySelectorAll('[data-tip]').forEach(t=>{
+      t.addEventListener('mouseenter', ()=>show(t, t.dataset.tip));
+      t.addEventListener('mouseleave', hide);
+    });
+    // passar o mouse na legenda da rosca destaca o pedaço correspondente
+    card.querySelectorAll('.donut-legend [data-status]').forEach(row=>{
+      row.addEventListener('mouseenter', ()=>card.querySelectorAll('.donut-seg').forEach(s=>s.style.opacity = s.dataset.status===row.dataset.status ? '1' : '.3'));
+      row.addEventListener('mouseleave', ()=>card.querySelectorAll('.donut-seg').forEach(s=>s.style.opacity = '1'));
+    });
   });
 }
 
@@ -2787,14 +3032,17 @@ function demandaListItemHTML(t){
   return `<div class="task-card" data-id="${t.id}" draggable="true" style="${isLate?'border-color:rgba(224,85,61,0.4);':''}">
     <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
       <div style="min-width:0;">
-        <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span>${owner?' · '+owner.full_name:''}</div>
+        <div class="tclient"><span style="color:${clientColor(t.client_id)}">${c?.name||'—'}</span></div>
         <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
       </div>
       <span style="flex-shrink:0;">${statusBadgeHTML(t.status)}</span>
     </div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
-      <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
+      <span style="display:flex;align-items:center;gap:7px;">
+        <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
+        ${owner?userAvatarHTML(owner, 20):''}
+      </span>
     </div>
     ${creator?`<div class="tcreator">criado por ${creator.full_name}</div>`:''}
   </div>`;
