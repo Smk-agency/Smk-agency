@@ -521,6 +521,77 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .sidebar-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;}
 .sidebar-backdrop.open{display:block;}
 
+/* ============ ACABAMENTO VISUAL (tipografia, menu/topo, modais/formulários) ============
+   Fica no fim da folha de propósito: sobrescreve os estilos base por ordem de cascata. */
+
+/* tipografia e hierarquia */
+.topbar h1{font-family:var(--font-display);font-size:21px;font-weight:700;letter-spacing:-.01em;line-height:1.2;}
+.topbar .topbar-sub{font-size:12.5px;margin-top:3px;}
+.section-title{position:relative;padding-left:13px;font-family:var(--font-display);font-size:15.5px;font-weight:700;letter-spacing:-.005em;}
+.section-title::before{content:'';position:absolute;left:0;top:50%;transform:translateY(-50%);width:4px;height:15px;border-radius:3px;background:linear-gradient(180deg,var(--accent),var(--blue));}
+.section-title .hint{font-family:var(--font-body);letter-spacing:0;}
+.kpi-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.6px;font-weight:600;color:var(--text-faint);}
+.kpi-value{font-size:23px;letter-spacing:-.01em;}
+.content{padding-top:28px;}
+.empty{border:1px dashed var(--border);border-radius:12px;background:rgba(255,255,255,.015);}
+
+/* menu lateral */
+.sidebar-brand{padding-bottom:22px;position:relative;}
+.sidebar-brand::after{content:'';position:absolute;left:8px;right:8px;bottom:-1px;height:1px;background:linear-gradient(90deg,transparent,rgba(143,227,192,.35),rgba(76,126,255,.35),transparent);}
+.nav-label{display:flex;align-items:center;gap:8px;font-weight:600;letter-spacing:1.2px;}
+.nav-label::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,rgba(255,255,255,.08),transparent);}
+.nav-item{padding:7px 9px;gap:11px;}
+.nav-item .ic{width:28px;height:28px;border-radius:8px;opacity:1;background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.06);color:var(--text-faint);transition:background-color .2s ease,border-color .2s ease,color .2s ease;}
+.nav-item .ic svg{width:15px;height:15px;}
+.nav-item:hover .ic{color:var(--text);background:rgba(255,255,255,.06);}
+.nav-item.active .ic{background:rgba(76,126,255,.2);border-color:rgba(76,126,255,.4);color:#B7CBFF;box-shadow:0 0 14px -4px rgba(76,126,255,.8);}
+.sidebar-user{border-radius:12px;}
+.sidebar-user .profile-avatar{border-radius:50%;box-shadow:0 0 0 2px var(--surface-2),0 0 0 3.5px currentColor,0 0 16px -4px currentColor;}
+
+/* topo */
+.topbar{background:linear-gradient(180deg,rgba(11,14,18,.92),rgba(11,14,18,.78));border-bottom-color:transparent;}
+.topbar::after{content:'';position:absolute;left:0;right:0;bottom:0;height:1px;background:linear-gradient(90deg,transparent,rgba(255,255,255,.09) 20%,rgba(255,255,255,.09) 80%,transparent);}
+.search-input{border-radius:10px;padding:9px 12px 9px 34px;background:rgba(255,255,255,.035) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236B7488' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='m20 20-3.5-3.5'/%3E%3C/svg%3E") no-repeat 11px center/15px;}
+.search-input:hover{border-color:rgba(255,255,255,.14);}
+.search-input:focus{border-color:var(--blue);box-shadow:0 0 0 3px rgba(76,126,255,.18);background-color:rgba(255,255,255,.05);}
+
+/* botões */
+.btn{border-radius:9px;}
+.btn.primary{position:relative;overflow:hidden;background:linear-gradient(135deg,#34C492,var(--accent) 55%,#17906A);box-shadow:0 1px 0 0 rgba(255,255,255,.25) inset,0 6px 16px -8px rgba(31,169,124,.8);}
+.btn.primary:hover{background:linear-gradient(135deg,#43D3A1,#25B887 55%,#1A9C73);}
+.btn.primary::after{content:'';position:absolute;top:0;left:-70%;width:45%;height:100%;background:linear-gradient(100deg,transparent,rgba(255,255,255,.4),transparent);transform:skewX(-20deg);transition:left .6s ease;pointer-events:none;}
+.btn.primary:hover::after{left:130%;}
+
+/* janelas (modais) */
+.modal-overlay{background:rgba(5,7,10,.72);backdrop-filter:blur(7px);}
+.modal{border-radius:18px;position:relative;box-shadow:0 1px 0 0 rgba(255,255,255,.07) inset,0 30px 80px -20px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.02);}
+.modal::after{content:'';position:absolute;left:24px;right:24px;top:0;height:1px;background:linear-gradient(90deg,transparent,rgba(143,227,192,.55),rgba(76,126,255,.55),transparent);pointer-events:none;}
+.modal-head{padding-bottom:14px;margin-bottom:20px;border-bottom:1px solid rgba(255,255,255,.06);}
+.modal-head h3{font-family:var(--font-display);font-size:18px;font-weight:700;letter-spacing:-.01em;}
+.modal-close{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;transition:background-color .15s,color .15s;}
+.modal-close:hover{background:rgba(255,255,255,.07);color:var(--text);}
+.modal-foot{padding-top:16px;border-top:1px solid rgba(255,255,255,.05);}
+
+/* formulários */
+select,input[type=text],input[type=number],input[type=date],input[type=password],textarea{
+  border-radius:9px;padding:9px 12px;background-color:rgba(255,255,255,.03);border-color:rgba(255,255,255,.09);
+  transition:border-color .15s ease,box-shadow .15s ease,background-color .15s ease;}
+select:hover,input[type=text]:hover,input[type=number]:hover,input[type=date]:hover,textarea:hover{border-color:rgba(255,255,255,.16);}
+select:focus,input:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(31,169,124,.18);background-color:rgba(255,255,255,.045);}
+select{appearance:none;-webkit-appearance:none;padding-right:32px;cursor:pointer;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B95AC' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 11px center;background-size:14px;}
+select option{background:var(--surface-2);color:var(--text);}
+input[type=date]{color-scheme:dark;}
+label{font-weight:600;color:var(--text-muted);}
+.field-row{row-gap:0;}
+
+@media(max-width:860px){
+  .topbar h1{font-size:18px;}
+  .modal{border-radius:18px 18px 0 0;}
+  .search-input{padding-left:34px;}
+}
+
 /* imprime só o orçamento (sem o resto do app) quando a pessoa manda imprimir/salvar em PDF —
    e força o navegador a manter as cores de fundo (por padrão ele tira pra economizar tinta) */
 @media print {
@@ -530,6 +601,7 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
   #genericModalOverlay { display:block !important; position:static !important; background:#0A1128 !important; padding:0 !important; backdrop-filter:none !important; }
   #genericModalOverlay .modal { max-width:none !important; width:100% !important; margin:0 !important; padding:24px !important; border:none !important; background:#0A1128 !important; box-shadow:none !important; max-height:none !important; overflow:visible !important; border-radius:0 !important; }
   #genericModalOverlay .modal-head,
+  #genericModalOverlay .modal::after,
   #genericModalBody > div:not(.printable-card) { display:none !important; }
   .printable-card, .printable-card * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
