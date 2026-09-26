@@ -195,6 +195,8 @@ button{font-family:inherit;cursor:pointer;}
 .kpi-sub{font-size:11px;color:var(--text-faint);margin-top:4px;}
 
 /* avatar com iniciais */
+.card-quick{width:100%;justify-content:center;margin-top:9px;font-weight:600;}
+.card-quick:hover{filter:brightness(1.2);}
 .u-avatar{display:inline-flex;align-items:center;justify-content:center;border-radius:50%;font-weight:700;border:1px solid;flex-shrink:0;letter-spacing:0;line-height:1;font-family:var(--font-body);}
 
 /* hero da Minha Mesa */
@@ -3003,6 +3005,13 @@ function drawKanbanBoard(board){
   const endPan = ()=>{ isPanning = false; kanbanEl.classList.remove('panning'); };
   kanbanEl.addEventListener('pointerup', endPan);
   kanbanEl.addEventListener('pointercancel', endPan);
+  board.querySelectorAll('[data-quick-status]').forEach(btn=>{
+    btn.addEventListener('click', e=>{
+      e.stopPropagation();
+      changeTaskStatus(btn.dataset.task, btn.dataset.quickStatus);
+      drawDemandas();
+    });
+  });
   board.querySelectorAll('.task-card').forEach(c=>{
     c.addEventListener('click', ()=>openTaskModal(c.dataset.id));
     c.addEventListener('dragstart', e=>{
@@ -3048,7 +3057,18 @@ function demandaListItemHTML(t){
       </span>
     </div>
     ${creator?`<div class="tcreator">criado por ${creator.full_name}</div>`:''}
+    ${quickStatusButtonHTML(t)}
   </div>`;
+}
+
+// atalho no card: em revisão → aprovar, aprovado → concluir. Só pra quem revisa
+// (quem executa não aprova o próprio trabalho).
+const QUICK_NEXT_STATUS = {em_revisao:['aprovado','✓ Aprovar'], aprovado:['concluido','✓ Concluir']};
+function quickStatusButtonHTML(t){
+  const next = QUICK_NEXT_STATUS[t.status];
+  if(!next || EXECUTOR_ROLES.includes(currentUser().role)) return '';
+  const color = STATUS_COLOR[next[0]];
+  return `<button type="button" class="btn small card-quick" data-quick-status="${next[0]}" data-task="${t.id}" style="color:${color};border-color:${color}55;background:${color}14;">${next[1]}</button>`;
 }
 
 function drawCalendar(board){
