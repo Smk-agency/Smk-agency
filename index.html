@@ -657,12 +657,13 @@ function isTaskLate(t){ return t.status==='a_fazer' && !!t.due_date && t.due_dat
 // (concluído só existe depois de passar por aprovado); tarefas concluídas de meses
 // anteriores já saem de state.tasks (vão pro arquivo), então isso naturalmente fica só com o mês corrente
 const VIDEO_TASK_TYPES = ['Vídeo', 'Reels'];
-function videosApprovedListThisMonth(userId){
+function approvedListThisMonth(userId, types){
   const currentMonth = todayISO().slice(0,7);
-  return state.tasks.filter(t=>t.assignee_id===userId && VIDEO_TASK_TYPES.includes(t.task_type)
+  return state.tasks.filter(t=>t.assignee_id===userId && types.includes(t.task_type)
     && (t.status==='aprovado' || (t.status==='concluido' && t.completed_month===currentMonth))
   );
 }
+function videosApprovedListThisMonth(userId){ return approvedListThisMonth(userId, VIDEO_TASK_TYPES); }
 function videosApprovedThisMonth(userId){
   return videosApprovedListThisMonth(userId).length;
 }
@@ -1678,6 +1679,8 @@ function renderDashboard(el){
 
 const CHART_REVENUE_COLOR = '#5B8CFF';
 const CHART_EXPENSE_COLOR = '#D9772E';
+const ART_COLOR = '#9B7BEA';
+const CAROUSEL_COLOR = '#D9772E';
 
 // receita x despesa por mês: junta o que está ativo com o que já foi arquivado
 function financeByMonth(){
@@ -4366,8 +4369,40 @@ function renderEquipe(el){
       `).join('')}
     </div>
   ` : '';
+
+  const designers = state.users.filter(u=>['designer','designer_editor'].includes(u.role) && u.status!=='disabled')
+    .map(u=>{
+      const artes = approvedListThisMonth(u.id, ['Arte']).length;
+      const carrosseis = approvedListThisMonth(u.id, ['Carrossel']).length;
+      return {u, artes, carrosseis, total: artes+carrosseis};
+    })
+    .sort((a,b)=>b.total-a.total);
+  const maxArt = Math.max(1, ...designers.map(d=>d.total));
+  const artRankingHTML = designers.length ? `
+    <div class="section-title" style="margin-top:0;flex-wrap:wrap;gap:8px;">
+      <span>🎨 Artes do mês <span class="hint">aprovadas em ${monthLabel}</span></span>
+      <span class="chart-legend" style="font-weight:400;"><span><i style="background:${ART_COLOR};"></i>Artes</span><span><i style="background:${CAROUSEL_COLOR};"></i>Carrosséis</span></span>
+    </div>
+    <div class="card" style="margin-bottom:24px;">
+      ${designers.map((r,i)=>`
+        <div class="ranking-row" data-show-arts="${r.u.id}" style="display:flex;align-items:center;gap:14px;padding:9px 6px;margin:0 -6px;border-radius:8px;cursor:pointer;transition:background-color .15s ease;${i<designers.length-1?'border-bottom:1px solid var(--border);':''}">
+          <div style="width:24px;text-align:center;font-family:var(--font-mono);font-size:13px;font-weight:700;color:${i===0&&r.total>0?'var(--amber)':'var(--text-faint)'};">${i===0&&r.total>0?'🏆':(i+1)+'º'}</div>
+          <div style="width:120px;flex-shrink:0;font-size:13px;font-weight:600;">${r.u.full_name}</div>
+          <div style="flex:1;background:var(--surface-2);border-radius:6px;height:18px;overflow:hidden;display:flex;gap:2px;">
+            ${r.artes?`<div style="height:100%;width:${r.artes/maxArt*100}%;background:${ART_COLOR};border-radius:6px 0 0 6px;${r.carrosseis?'':'border-radius:6px;'}"></div>`:''}
+            ${r.carrosseis?`<div style="height:100%;width:${r.carrosseis/maxArt*100}%;background:${CAROUSEL_COLOR};border-radius:${r.artes?'0 6px 6px 0':'6px'};"></div>`:''}
+          </div>
+          <div style="flex-shrink:0;text-align:right;font-size:11.5px;color:var(--text-muted);white-space:nowrap;">
+            <b style="font-family:var(--font-mono);color:var(--text);font-size:13px;">${r.artes}</b> ${r.artes===1?'arte':'artes'} · <b style="font-family:var(--font-mono);color:var(--text);font-size:13px;">${r.carrosseis}</b> ${r.carrosseis===1?'carrossel':'carrosséis'}
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  ` : '';
+
   el.innerHTML = `
     ${rankingHTML}
+    ${artRankingHTML}
     <div class="section-title" style="margin-top:0;">Usuários <button class="btn small primary" id="addUserBtn">+ Novo usuário</button></div>
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
@@ -4411,6 +4446,9 @@ function renderEquipe(el){
   document.getElementById('addUserBtn').addEventListener('click', ()=>openUserModal());
   el.querySelectorAll('[data-show-videos]').forEach(el2=>{
     el2.addEventListener('click', ()=>openApprovedVideosModal(el2.dataset.showVideos));
+  });
+  el.querySelectorAll('[data-show-arts]').forEach(el2=>{
+    el2.addEventListener('click', ()=>openApprovedArtsModal(el2.dataset.showArts));
   });
   el.querySelectorAll('[data-edit-cost]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -4472,6 +4510,27 @@ function openApprovedVideosModal(userId){
       <div class="ttitle">${t.title}</div>
       ${statusBadgeHTML(t.status)}
     </div>`).join('') || '<div class="empty">Nenhum vídeo aprovado este mês.</div>'}
+    <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Fechar</button></div>
+  `;
+  document.querySelectorAll('#itemModalBody [data-id]').forEach(row=>{
+    row.addEventListener('click', ()=>{ closeModal('itemModalOverlay'); openTaskModal(row.dataset.id); });
+  });
+  openModal('itemModalOverlay');
+}
+
+function openApprovedArtsModal(userId){
+  const user = userById(userId);
+  const groups = [['Artes', approvedListThisMonth(userId, ['Arte']), ART_COLOR], ['Carrosséis', approvedListThisMonth(userId, ['Carrossel']), CAROUSEL_COLOR]];
+  document.getElementById('itemModalTitle').textContent = `Artes aprovadas — ${user.full_name}`;
+  document.getElementById('itemModalBody').innerHTML = `
+    ${groups.map(([label, items, color])=>`
+      <div class="section-title" style="margin-top:4px;"><span style="display:flex;align-items:center;gap:8px;"><i style="width:9px;height:9px;border-radius:2px;background:${color};display:inline-block;"></i>${label}</span><span class="hint">${items.length}</span></div>
+      ${items.map(t=>`<div class="task-card" data-id="${t.id}" style="margin-bottom:8px;cursor:pointer;">
+        <div class="tclient"><span style="color:${clientColor(t.client_id)}">${clientById(t.client_id)?.name||'—'}</span></div>
+        <div class="ttitle">${t.title}</div>
+        ${statusBadgeHTML(t.status)}
+      </div>`).join('') || `<div class="empty" style="margin-bottom:10px;">Nenhum(a) aprovado(a) este mês.</div>`}
+    `).join('')}
     <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Fechar</button></div>
   `;
   document.querySelectorAll('#itemModalBody [data-id]').forEach(row=>{
