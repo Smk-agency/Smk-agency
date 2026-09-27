@@ -673,6 +673,79 @@ label{font-weight:600;color:var(--text-muted);}
 .today-meta{font-size:11.5px;color:var(--text-faint);margin-top:2px;}
 .today-sub{font-size:11px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px;font-weight:600;margin:6px 0 2px;}
 
+/* ============ MARCA AZUL ============
+   Azul é a cor de destaque da SMK. Verde fica só onde carrega significado
+   (aprovado, valores positivos, sucesso, "no ritmo") — por isso .pos, .badge.green,
+   passcode.success e checklist concluído continuam verdes. */
+:root{--brand:#3E6FF0;--brand-bright:#5B8CFF;--brand-light:#8FB0FF;--brand-deep:#2A52C9;--brand-dim:rgba(62,111,240,.16);}
+.btn.primary{background:linear-gradient(135deg,var(--brand-bright),var(--brand) 55%,var(--brand-deep));border-color:var(--brand);color:#fff;box-shadow:0 1px 0 0 rgba(255,255,255,.25) inset,0 6px 18px -8px rgba(62,111,240,.9);}
+.btn.primary:hover{background:linear-gradient(135deg,#7AA2FF,#4C7EFF 55%,#3060E0);}
+.seg-control button.active{background:linear-gradient(135deg,var(--brand-bright),var(--brand));color:#fff;}
+.status-tab.active{background:var(--brand-dim);border-color:var(--brand);color:var(--brand-light);}
+.status-tab.active .cnt{background:rgba(143,176,255,.18);}
+select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-shadow:0 0 0 3px rgba(62,111,240,.22);}
+.profile-btn:hover,.client-card:hover,.task-card:hover{border-color:var(--brand-bright);}
+.kpi-card:hover,.mesa-stat:hover,.today-commit.clickable:hover{border-color:rgba(91,140,255,.4);}
+.kpi-card::after,.mesa-stat::after,.task-card::after,.client-card::after,.chart-card::after{background:radial-gradient(240px circle at var(--mx,50%) var(--my,50%), rgba(120,160,255,.11), transparent 60%);}
+.section-title::before{background:linear-gradient(180deg,var(--brand-light),var(--brand));}
+.sidebar-brand::after,.modal::after,.login-card::before{background:linear-gradient(90deg,transparent,rgba(143,176,255,.6),rgba(62,111,240,.6),transparent);}
+.mesa-hero{background:radial-gradient(120% 140% at 0% 0%, rgba(62,111,240,.2), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgba(155,123,234,.12), transparent 60%), var(--surface);}
+.mesa-hero::after{background:radial-gradient(circle, rgba(143,176,255,.16), transparent 70%);}
+.aurora span:nth-child(1){background:radial-gradient(circle, rgba(62,111,240,.15), transparent 62%);}
+.aurora span:nth-child(2){background:radial-gradient(circle, rgba(123,97,255,.10), transparent 62%);}
+.aurora span:nth-child(3){background:radial-gradient(circle, rgba(31,169,124,.06), transparent 62%);}
+.cal-day:hover,.agcal-day:hover{border-color:var(--brand-bright);}
+.cal-day.sel,.agcal-day.sel{border-color:var(--brand-bright);background:var(--brand-dim);}
+.cal-day.today .cal-daynum{color:var(--brand-light);}
+.agcal-day.today{border-color:rgba(91,140,255,.4);}
+.agcal-day.today .agcal-daynum{background:var(--brand);color:#fff;}
+.agcal-day::before{background:radial-gradient(120% 100% at 25% 0%, rgba(120,160,255,.22), rgba(123,97,255,.10) 45%, transparent 78%);}
+.sk-caption i{background:var(--brand-bright);--pulse-c:rgba(62,111,240,.6);}
+
+/* ============ LOGIN CRIATIVO ============
+   camadas: chão em grade (acende perto do cursor) · "SMK" gigante em contorno com brilho
+   percorrendo · mockup 3D do painel que inclina com o mouse */
+#loginScreen{background:radial-gradient(circle at 20% 15%, rgba(62,111,240,.16), transparent 42%), radial-gradient(circle at 85% 90%, rgba(123,97,255,.10), transparent 45%), var(--bg);}
+.login-aurora span:nth-child(1){background:radial-gradient(circle,rgba(62,111,240,.22),transparent 62%);}
+.login-aurora span:nth-child(2){background:radial-gradient(circle,rgba(123,97,255,.14),transparent 62%);}
+.login-spot{position:absolute;inset:0;pointer-events:none;background:radial-gradient(520px circle at var(--lx,70%) var(--ly,40%), rgba(91,140,255,.14), transparent 60%);transition:background .1s;}
+.login-floor{position:absolute;left:-10%;right:-10%;bottom:0;height:58%;perspective:520px;pointer-events:none;
+  -webkit-mask-image:radial-gradient(460px circle at var(--fx,50%) var(--fy,20%), #000, rgba(0,0,0,.28) 70%);mask-image:radial-gradient(460px circle at var(--fx,50%) var(--fy,20%), #000, rgba(0,0,0,.28) 70%);}
+.login-floor div{position:absolute;left:0;right:0;bottom:0;height:220%;transform-origin:50% 100%;transform:rotateX(64deg);
+  background-image:linear-gradient(rgba(91,140,255,.35) 1px, transparent 1px),linear-gradient(90deg, rgba(91,140,255,.35) 1px, transparent 1px);background-size:56px 56px;
+  animation:floorMove 6s linear infinite;
+  -webkit-mask-image:linear-gradient(to top, #000 10%, transparent 60%);mask-image:linear-gradient(to top, #000 10%, transparent 60%);}
+@keyframes floorMove{to{background-position:0 56px, 0 56px;}}
+.login-bigword{position:absolute;left:50%;top:50%;transform:translate(-50%,-46%);font-family:var(--font-display);font-weight:700;font-size:34vw;line-height:1;letter-spacing:-.04em;pointer-events:none;white-space:nowrap;}
+.login-bigword span{display:block;color:transparent;-webkit-text-stroke:1.5px rgba(91,140,255,.13);}
+.login-bigword .shine{position:absolute;inset:0;-webkit-text-stroke:1.5px var(--brand-light);
+  -webkit-mask-image:linear-gradient(100deg, transparent 42%, #000 50%, transparent 58%);mask-image:linear-gradient(100deg, transparent 42%, #000 50%, transparent 58%);
+  -webkit-mask-size:300% 100%;mask-size:300% 100%;animation:strokeShine 7s ease-in-out infinite;}
+@keyframes strokeShine{0%{-webkit-mask-position:100% 0;mask-position:100% 0;}100%{-webkit-mask-position:0 0;mask-position:0 0;}}
+.login-headline em{background:linear-gradient(90deg,var(--brand-light),var(--brand-bright) 45%,#9B7BEA);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.login-eyebrow{color:var(--brand-light);display:inline-flex;align-items:center;gap:8px;}
+.login-eyebrow::before{content:'';width:18px;height:1px;background:var(--brand-light);}
+/* mockup 3D */
+.login-mockup{position:relative;max-width:420px;transform-style:preserve-3d;transform:perspective(1100px) rotateX(var(--rx,8deg)) rotateY(var(--ry,-14deg));transition:transform .25s ease-out;}
+.mock-win{border-radius:16px;border:1px solid rgba(255,255,255,.1);background:linear-gradient(160deg,rgba(255,255,255,.08),rgba(255,255,255,.02) 50%),rgba(17,21,28,.78);backdrop-filter:blur(10px);padding:14px;box-shadow:0 40px 70px -30px rgba(0,0,0,.9),0 0 60px -20px rgba(62,111,240,.5);}
+.mock-bar{display:flex;gap:5px;margin-bottom:12px;}
+.mock-bar i{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,.15);}
+.mock-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-bottom:9px;}
+.mock-stat{border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:8px 9px;background:rgba(255,255,255,.03);}
+.mock-stat b{display:block;font-family:var(--font-mono);font-size:17px;}
+.mock-stat span{font-size:9.5px;color:var(--text-faint);}
+.mock-row{display:flex;align-items:center;gap:8px;border:1px solid rgba(255,255,255,.07);border-radius:9px;padding:8px 10px;font-size:10.5px;margin-bottom:7px;background:rgba(255,255,255,.02);}
+.mock-row .t{font-family:var(--font-mono);color:var(--brand-light);}
+.mock-bars{display:flex;align-items:flex-end;gap:5px;height:46px;padding:0 4px;}
+.mock-bars i{flex:1;border-radius:3px 3px 0 0;background:linear-gradient(180deg,var(--brand-bright),rgba(62,111,240,.35));animation:mockBar 3.2s ease-in-out infinite alternate;transform-origin:bottom;}
+@keyframes mockBar{from{transform:scaleY(.55);}to{transform:scaleY(1);}}
+.mock-float{position:absolute;border-radius:12px;border:1px solid rgba(255,255,255,.1);background:rgba(20,26,38,.92);padding:9px 12px;font-size:10.5px;display:flex;align-items:center;gap:8px;box-shadow:0 20px 40px -20px rgba(0,0,0,.9);transform:translateZ(60px);}
+.mock-float.a{right:-34px;top:38px;}
+.mock-float.b{left:-10px;bottom:26px;transform:translateZ(90px);}
+.mock-float .dot{width:22px;height:22px;border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:11px;}
+@media(max-width:860px){ .login-bigword{font-size:52vw;top:30%;} }
+@media (prefers-reduced-motion: reduce){ .login-floor div,.login-bigword .shine,.mock-bars i{animation:none!important;} .login-mockup{transition:none;} }
+
 /* imprime só o orçamento (sem o resto do app) quando a pessoa manda imprimir/salvar em PDF —
    e força o navegador a manter as cores de fundo (por padrão ele tira pra economizar tinta) */
 @media print {
@@ -723,15 +796,29 @@ label{font-weight:600;color:var(--text-muted);}
 <!-- ============ LOGIN ============ -->
 <div id="loginScreen">
   <div class="login-aurora" aria-hidden="true"><span></span><span></span></div>
+  <div class="login-bigword" aria-hidden="true"><span>SMK</span><span class="shine">SMK</span></div>
+  <div class="login-floor" id="loginFloor" aria-hidden="true"><div></div></div>
+  <div class="login-spot" aria-hidden="true"></div>
   <div class="login-shell">
   <div class="login-showcase">
     <div class="login-eyebrow">SMK OS</div>
     <div class="login-headline">Tudo da agência<br><em>em um só lugar.</em></div>
     <div class="login-tagline">Demandas, gravações, clientes e entregas do time — organizados num painel só, do briefing à aprovação.</div>
-    <div class="login-chips" aria-hidden="true">
-      <div class="login-chip"><div class="ic" style="background:rgba(155,123,234,.18);">🎬</div><div><b>Pauta da gravação</b><span>horários, professoras e turmas</span></div></div>
-      <div class="login-chip"><div class="ic" style="background:rgba(31,169,124,.18);">✓</div><div><b>Aprovar com um clique</b><span>direto no card da demanda</span></div></div>
-      <div class="login-chip"><div class="ic" style="background:rgba(76,126,255,.18);">📊</div><div><b>Entregas do mês</b><span>relatório pronto pro cliente</span></div></div>
+    <!-- prévia ilustrativa do painel: números fictícios (nada de dado real antes do login) -->
+    <div class="login-mockup" id="loginMockup" aria-hidden="true">
+      <div class="mock-win">
+        <div class="mock-bar"><i></i><i></i><i></i></div>
+        <div class="mock-stats">
+          <div class="mock-stat"><b style="color:var(--brand-light);">12</b><span>A fazer</span></div>
+          <div class="mock-stat"><b style="color:#E0A62D;">4</b><span>Em revisão</span></div>
+          <div class="mock-stat"><b style="color:#5EDBA8;">21</b><span>Aprovadas</span></div>
+        </div>
+        <div class="mock-row"><span class="t">08:40</span><b>Gravação</b><span style="color:var(--text-faint);">· 4 vídeos</span><span style="margin-left:auto;color:#5EDBA8;">2/4 ✓</span></div>
+        <div class="mock-row"><span class="t">14:00</span><b>Reunião de pauta</b><span style="margin-left:auto;color:var(--text-faint);">3 pessoas</span></div>
+        <div class="mock-bars"><i style="height:45%"></i><i style="height:70%;animation-delay:-.6s"></i><i style="height:55%;animation-delay:-1.2s"></i><i style="height:85%;animation-delay:-1.8s"></i><i style="height:65%;animation-delay:-2.4s"></i><i style="height:95%;animation-delay:-3s"></i><i style="height:75%;animation-delay:-.3s"></i></div>
+      </div>
+      <div class="mock-float a"><span class="dot" style="background:rgba(62,111,240,.25);">📊</span><div><b>Relatório pronto</b><br><span style="color:var(--text-faint);">entregas do mês</span></div></div>
+      <div class="mock-float b"><span class="dot" style="background:rgba(155,123,234,.25);">✓</span><div><b>Aprovado</b><br><span style="color:var(--text-faint);">com um clique</span></div></div>
     </div>
   </div>
   <div class="login-card">
@@ -1555,6 +1642,27 @@ function shakePasscode(){
   updatePasscodeDots();
   document.getElementById('loginCode').focus();
 }
+// decoração do login: spotlight + chão em grade + mockup reagem ao mouse
+(function initLoginDecor(){
+  const screen = document.getElementById('loginScreen');
+  const floor = document.getElementById('loginFloor');
+  const mock = document.getElementById('loginMockup');
+  if(!screen) return;
+  screen.addEventListener('pointermove', e=>{
+    if(e.pointerType==='touch') return;
+    screen.style.setProperty('--lx', e.clientX+'px');
+    screen.style.setProperty('--ly', e.clientY+'px');
+    const fr = floor.getBoundingClientRect();
+    floor.style.setProperty('--fx', (e.clientX-fr.left)+'px');
+    floor.style.setProperty('--fy', (e.clientY-fr.top)+'px');
+    if(mock){
+      const px = e.clientX/window.innerWidth - .5, py = e.clientY/window.innerHeight - .5;
+      mock.style.setProperty('--ry', (-14 + px*16).toFixed(1)+'deg');
+      mock.style.setProperty('--rx', (8 - py*12).toFixed(1)+'deg');
+    }
+  }, {passive:true});
+})();
+
 function renderLogin(){
   document.getElementById('loginTitle').textContent = `${greetingByHour()}! 👋`;
   document.getElementById('loginName').value = '';
