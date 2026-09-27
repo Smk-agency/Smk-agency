@@ -582,8 +582,25 @@ select{appearance:none;-webkit-appearance:none;padding-right:32px;cursor:pointer
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B95AC' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
   background-repeat:no-repeat;background-position:right 11px center;background-size:14px;}
 select option{background:var(--surface-2);color:var(--text);}
-input[type=date]{color-scheme:dark;}
+input[type=date],input[type=time]{color-scheme:dark;}
+input[type=time]{background-color:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.09);color:var(--text);border-radius:9px;padding:9px 12px;font-size:12.5px;font-family:inherit;width:100%;transition:border-color .15s ease,box-shadow .15s ease;}
 label{font-weight:600;color:var(--text-muted);}
+
+/* pauta da gravação */
+.shot-row{display:grid;grid-template-columns:20px 96px 1fr 1.4fr 30px;gap:6px;align-items:center;margin-bottom:6px;}
+.shot-row .shot-n{font-family:var(--font-mono);font-size:11px;color:var(--text-faint);text-align:center;}
+.shot-row input{padding:7px 9px;}
+@media(max-width:860px){ .shot-row{grid-template-columns:20px 84px 1fr 30px;} .shot-row .shot-detail{grid-column:2 / 4;grid-row:2;} }
+.shot-list{margin-top:10px;border:1px solid var(--border);border-radius:10px;background:rgba(255,255,255,.02);padding:8px 10px;cursor:default;}
+.shot-list-head{display:flex;justify-content:space-between;font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px;}
+.shot-list-head .all-done{color:var(--accent-soft);}
+.shot-item{display:flex;align-items:baseline;gap:9px;padding:6px 2px;margin:0;font-size:12px;font-weight:500;color:var(--text);cursor:pointer;border-top:1px solid rgba(255,255,255,.05);}
+.shot-item:first-of-type{border-top:none;}
+.shot-item input{width:auto;accent-color:var(--accent);transform:translateY(2px);flex-shrink:0;}
+.shot-item .t{font-family:var(--font-mono);color:#7FA0FF;min-width:40px;font-size:11.5px;}
+.shot-item .w{font-weight:700;}
+.shot-item .d{color:var(--text-muted);}
+.shot-item.done .w,.shot-item.done .d,.shot-item.done .t{text-decoration:line-through;opacity:.5;}
 .field-row{row-gap:0;}
 
 @media(max-width:860px){
@@ -875,6 +892,11 @@ function gravacaoClientMessage(c, clientName){
   let msg = `Oi, ${firstName}! Passando pra confirmar os detalhes da gravação:\n\n📅 Data: ${fmtDate(c.date)}`;
   if(c.time) msg += `\n🕐 Horário: ${c.time}`;
   if(c.location) msg += `\n📍 Local: ${c.location}`;
+  const shots = c.shot_list || [];
+  if(shots.length){
+    msg += `\n\n🎬 Pauta (${shots.length} vídeo${shots.length>1?'s':''}):`;
+    shots.forEach(s=>{ msg += `\n• ${[s.time, s.who, s.detail].filter(Boolean).join(' — ')}`; });
+  }
   msg += `\n\nQualquer dúvida, é só chamar!`;
   return msg;
 }
@@ -3524,6 +3546,7 @@ function openAgendaDayModal(iso){
           <div class="ttitle">${c.title}${client?` · ${client.name}`:''}</div>
           ${c.location?`<div style="font-size:11.5px;margin-top:4px;"><a href="${mapsUrl}" target="_blank" rel="noopener" class="cm-inner-link" style="color:var(--accent-soft);">📍 ${c.location}</a></div>`:''}
           ${c.notes?`<div style="font-size:11.5px;color:var(--text-faint);margin-top:4px;">${c.notes}</div>`:''}
+          ${shotListHTML(c)}
           <div style="margin-top:8px;display:flex;gap:8px;flex-wrap:wrap;">
             ${waUrl?`<a href="${waUrl}" target="_blank" rel="noopener" class="btn small cm-inner-link">Enviar detalhes pro cliente</a>`:''}
             <button type="button" class="btn small ghost cm-inner-link" data-commitment-card="${c.id}">🖼️ Ver cartão</button>
@@ -3547,6 +3570,14 @@ function openAgendaDayModal(iso){
   body.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click',()=>{ closeModal('genericModalOverlay'); openTaskModal(c.dataset.id); }));
   body.querySelectorAll('.cm-inner-link').forEach(el=>el.addEventListener('click', e=>e.stopPropagation()));
   body.querySelectorAll('[data-commitment-card]').forEach(el=>el.addEventListener('click', e=>{ e.stopPropagation(); openCommitmentCard(el.dataset.commitmentCard); }));
+  body.querySelectorAll('[data-shot-toggle]').forEach(cb=>cb.addEventListener('change', ()=>{
+    const c = state.commitments.find(x=>x.id===cb.dataset.shotToggle);
+    const s = c?.shot_list?.find(x=>x.id===cb.dataset.shotId);
+    if(!s) return;
+    s.done = cb.checked;
+    saveState(state);
+    openAgendaDayModal(iso);
+  }));
   if(isDono()){
     body.querySelectorAll('.task-card[data-commitment-id]').forEach(c=>c.addEventListener('click',()=>{ closeModal('genericModalOverlay'); openCommitmentModal(state.commitments.find(x=>x.id===c.dataset.commitmentId)); }));
   }
@@ -3582,6 +3613,22 @@ async function copyElementAsImage(elId, btnEl){
   }
 }
 
+// pauta da gravação no detalhe do dia: checklist dos vídeos, marcável por quem está gravando
+function shotListHTML(c){
+  const shots = c.shot_list || [];
+  if(!shots.length) return '';
+  const done = shots.filter(s=>s.done).length;
+  return `<div class="shot-list cm-inner-link">
+    <div class="shot-list-head"><span>🎬 Pauta</span><span class="${done===shots.length?'all-done':''}">${done}/${shots.length} gravado${shots.length>1?'s':''}</span></div>
+    ${shots.map(s=>`<label class="shot-item${s.done?' done':''}">
+      <input type="checkbox" data-shot-toggle="${c.id}" data-shot-id="${s.id}" ${s.done?'checked':''}>
+      <span class="t">${s.time||'—'}</span>
+      <span class="w">${escapeHTML(s.who||'')}</span>
+      <span class="d">${escapeHTML(s.detail||'')}</span>
+    </label>`).join('')}
+  </div>`;
+}
+
 function openCommitmentCard(id){
   const c = state.commitments.find(x=>x.id===id);
   if(!c) return;
@@ -3610,6 +3657,14 @@ function openCommitmentCard(id){
           <div><div style="font-size:11px;color:#8B95AC;">Local</div><div style="font-size:14px;font-weight:600;color:#5B8CFF;">${escapeHTML(c.location)}</div></div>
         </a>`:''}
       </div>
+      ${(c.shot_list||[]).length?`<div style="margin-top:14px;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
+        <div style="font-size:11px;color:#8B95AC;margin-bottom:8px;">🎬 Pauta da gravação · ${c.shot_list.length} vídeo${c.shot_list.length>1?'s':''}</div>
+        ${c.shot_list.map((s,i)=>`<div style="display:flex;gap:12px;align-items:baseline;padding:7px 0;${i<c.shot_list.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13.5px;">
+          <span style="font-family:'IBM Plex Mono',monospace;color:#5B8CFF;font-weight:600;min-width:44px;">${s.time||'—'}</span>
+          <span style="font-weight:700;">${escapeHTML(s.who||'')}</span>
+          <span style="color:#AEB9DC;">${escapeHTML(s.detail||'')}</span>
+        </div>`).join('')}
+      </div>`:''}
       ${c.notes?`<div style="margin-top:14px;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
         <div style="font-size:11px;color:#8B95AC;margin-bottom:4px;">Observações</div>
         <div style="font-size:13.5px;line-height:1.5;white-space:pre-line;">${escapeHTML(c.notes)}</div>
@@ -3641,6 +3696,11 @@ function openCommitmentModal(existing, prefillDate){
       <label>Cliente <span class="hint">pra poder enviar os detalhes por WhatsApp</span></label>
       <select id="cm_client"><option value="">— nenhum —</option>${state.clients.filter(c=>c.status!=='encerrado').map(c=>`<option value="${c.id}" ${existing?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
     </div>
+    <div class="field" id="cm_shotsField" style="${(existing?.type||'gravacao')==='gravacao'?'':'display:none;'}">
+      <label>Pauta da gravação <span class="hint">um item por vídeo — horário, quem e o que gravar</span></label>
+      <div id="cm_shots"></div>
+      <button type="button" class="btn small ghost" id="cm_addShot">+ Adicionar vídeo</button>
+    </div>
     <div class="field"><label>Pessoas <span class="hint">pode marcar mais de uma</span></label>
       <div style="display:flex;flex-direction:column;gap:6px;max-height:160px;overflow-y:auto;padding:8px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:7px;">
         ${state.users.filter(u=>u.status!=='disabled').map(u=>`
@@ -3661,6 +3721,28 @@ function openCommitmentModal(existing, prefillDate){
   `;
   document.getElementById('cm_type').addEventListener('change', (e)=>{
     document.getElementById('cm_clientField').style.display = e.target.value==='gravacao' ? '' : 'none';
+    document.getElementById('cm_shotsField').style.display = e.target.value==='gravacao' ? '' : 'none';
+  });
+
+  // pauta fica numa lista local até clicar em Salvar (uma gravação só no Firestore)
+  const shots = (existing?.shot_list||[]).map(s=>({...s}));
+  function renderShots(focusLast){
+    const wrap = document.getElementById('cm_shots');
+    wrap.innerHTML = shots.map((s,i)=>`<div class="shot-row">
+      <span class="shot-n">${i+1}</span>
+      <input type="time" data-shot="${i}" data-k="time" value="${s.time||''}">
+      <input type="text" data-shot="${i}" data-k="who" value="${escapeHTML(s.who||'')}" placeholder="Quem (ex: Prof. Paula)">
+      <input type="text" data-shot="${i}" data-k="detail" class="shot-detail" value="${escapeHTML(s.detail||'')}" placeholder="O quê (ex: 9º ano — frações)">
+      <button type="button" class="btn ghost small danger" data-remove-shot="${i}" title="Remover">×</button>
+    </div>`).join('');
+    wrap.querySelectorAll('[data-shot]').forEach(inp=>inp.addEventListener('input', ()=>{ shots[Number(inp.dataset.shot)][inp.dataset.k] = inp.value; }));
+    wrap.querySelectorAll('[data-remove-shot]').forEach(btn=>btn.addEventListener('click', ()=>{ shots.splice(Number(btn.dataset.removeShot),1); renderShots(); }));
+    if(focusLast) wrap.querySelector('.shot-row:last-child [data-k="who"]')?.focus();
+  }
+  renderShots();
+  document.getElementById('cm_addShot').addEventListener('click', ()=>{
+    shots.push({id:uid(), time:'', who:'', detail:'', done:false});
+    renderShots(true);
   });
   document.getElementById('saveCommitmentBtn').addEventListener('click', ()=>{
     const title = document.getElementById('cm_title').value.trim();
@@ -3680,6 +3762,11 @@ function openCommitmentModal(existing, prefillDate){
       client_id: type==='gravacao' ? (document.getElementById('cm_client').value || null) : null,
       user_ids,
       notes: document.getElementById('cm_notes').value.trim(),
+      shot_list: type==='gravacao'
+        ? shots.map(s=>({...s, who:(s.who||'').trim(), detail:(s.detail||'').trim()}))
+            .filter(s=>s.time || s.who || s.detail)
+            .sort((a,b)=>(a.time||'99:99').localeCompare(b.time||'99:99'))
+        : [],
     };
     if(existing){
       Object.assign(existing, data);
