@@ -949,6 +949,11 @@ const FIREBASE_CONFIG = {
 };
 const AGENCY_ID = 'smk'; // uma agência por enquanto — dá pra virar multi-tenant depois
 const SESSION_KEY = 'smkos_session_v1';
+// data no fuso do aparelho (todayISO() é UTC e vira às 21h no Brasil)
+function localDayKey(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function markLoginDay(){
+  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({currentUserId:state.currentUserId||null, loginDay:localDayKey()})); }catch(e){}
+}
 let db, agencyDocRef;
 
 /* ================= DATA / SEED ================= */
@@ -1166,7 +1171,10 @@ function seed(){
 // `state` guarda tudo (dados compartilhados vindos do Firestore + currentUserId, que é local/por dispositivo).
 function saveState(s){
   // sessão (quem tá logado neste navegador) fica só localmente
-  try{ localStorage.setItem(SESSION_KEY, JSON.stringify({currentUserId:s.currentUserId||null})); }catch(e){}
+  try{
+    const prev = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
+    localStorage.setItem(SESSION_KEY, JSON.stringify({currentUserId:s.currentUserId||null, loginDay:prev.loginDay||null}));
+  }catch(e){}
   // resto dos dados vai pro Firestore, compartilhado com todo mundo
   if(!agencyDocRef) return;
   const {currentUserId, ...shared} = s;
@@ -1338,7 +1346,8 @@ async function initApp(){
 
     try{
       const sess = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}');
-      state.currentUserId = sess.currentUserId || null;
+      // login vale só no dia em que foi feito — virou o dia, pede o código de novo
+      state.currentUserId = sess.loginDay===localDayKey() ? (sess.currentUserId || null) : null;
     }catch(e){}
 
     const snap = await agencyDocRef.get();
@@ -1691,6 +1700,7 @@ function attemptLogin(){
     return;
   }
   state.currentUserId = user.id;
+  markLoginDay();
   document.getElementById('loginCode').disabled = true;
   document.getElementById('loginBtn').disabled = true;
   const dots = document.querySelectorAll('.passcode-dot');
@@ -1741,6 +1751,16 @@ document.getElementById('logoutBtn').addEventListener('click', ()=>{
   renderLogin();
 });
 document.getElementById('openProfileBtn').addEventListener('click', ()=>openProfileModal());
+
+// app aberto de um dia pro outro (aba esquecida, PWA em segundo plano): virou o dia, desloga
+function expireSessionIfNewDay(){
+  if(!state.currentUserId || document.getElementById('app').style.display!=='block') return;
+  let day = null;
+  try{ day = JSON.parse(localStorage.getItem(SESSION_KEY) || '{}').loginDay; }catch(e){}
+  if(day !== localDayKey()) document.getElementById('logoutBtn').click();
+}
+document.addEventListener('visibilitychange', ()=>{ if(document.visibilityState==='visible') expireSessionIfNewDay(); });
+setInterval(expireSessionIfNewDay, 60000);
 
 function openProfileModal(){
   const u = currentUser();
