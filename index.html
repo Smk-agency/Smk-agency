@@ -2344,7 +2344,7 @@ function openShowcaseLogosModal(pending){
       const file = e.target.files[0];
       if(!file) return;
       try{
-        const dataUrl = await compressImageToDataURL(file, 240, 0.9, 'image/png');
+        const dataUrl = await compressLogoToDataURL(file, 240);
         logos.push({id:uid(), data_url:dataUrl});
         openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value});
       }catch(err){
@@ -3040,7 +3040,7 @@ function openBrandKitEditModal(id){
       const file = e.target.files[0];
       if(!file) return;
       try{
-        const dataUrl = await compressImageToDataURL(file, 400, 0.9, 'image/png');
+        const dataUrl = await compressLogoToDataURL(file, 320);
         brand.logo_url = dataUrl;
         renderBody();
       }catch(err){
@@ -4395,6 +4395,31 @@ function openTaskModal(id){
   });
 
   openModal('taskModalOverlay');
+}
+
+// logo leve pro banco (tudo mora num documento só de 1MB): PNG se ficar pequeno (mantém
+// transparência); senão WebP; senão JPEG com fundo branco — as logos sempre aparecem em caixa branca.
+// PNG não tem "qualidade": logo com degradê/textura em PNG chegava a 200KB.
+async function compressLogoToDataURL(source, maxWidth=320){
+  const src = typeof source==='string' ? source : await new Promise((res,rej)=>{ const r=new FileReader(); r.onload=e=>res(e.target.result); r.onerror=rej; r.readAsDataURL(source); });
+  const img = await new Promise((res,rej)=>{ const i=new Image(); i.onload=()=>res(i); i.onerror=()=>rej(new Error('Não consegui ler essa imagem (arquivo corrompido ou formato não suportado).')); i.src=src; });
+  const scale = Math.min(1, maxWidth/img.width);
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.max(1, Math.round(img.width*scale));
+  canvas.height = Math.max(1, Math.round(img.height*scale));
+  canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+  const LIMIT = 45000;
+  const png = canvas.toDataURL('image/png');
+  if(png.length <= LIMIT) return png;
+  const webp = canvas.toDataURL('image/webp', 0.85);
+  const hasWebp = webp.startsWith('data:image/webp');
+  if(hasWebp && webp.length <= LIMIT) return webp;
+  const flat = document.createElement('canvas');
+  flat.width = canvas.width; flat.height = canvas.height;
+  const f = flat.getContext('2d');
+  f.fillStyle = '#fff'; f.fillRect(0, 0, flat.width, flat.height); f.drawImage(canvas, 0, 0);
+  const jpg = flat.toDataURL('image/jpeg', 0.85);
+  return [png, hasWebp ? webp : null, jpg].filter(Boolean).sort((a,b)=>a.length-b.length)[0];
 }
 
 function compressImageToDataURL(file, maxWidth, quality, format){
