@@ -702,6 +702,26 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .agcal-day::before{background:radial-gradient(120% 100% at 25% 0%, rgba(120,160,255,.22), rgba(123,97,255,.10) 45%, transparent 78%);}
 .sk-caption i{background:var(--brand-bright);--pulse-c:rgba(62,111,240,.6);}
 
+/* logo do menu: reflexo de luz azul passando (máscara com o próprio logo, então o brilho só aparece nas letras) */
+.logo-shine{position:relative;display:inline-block;line-height:0;}
+.logo-shine::after{content:'';position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(110deg, transparent 36%, rgba(62,111,240,.9) 45%, #8FB0FF 50%, rgba(62,111,240,.9) 55%, transparent 64%);background-size:300% 100%;background-repeat:no-repeat;
+  -webkit-mask-image:var(--logo-url);mask-image:var(--logo-url);-webkit-mask-size:100% 100%;mask-size:100% 100%;
+  animation:logoShine 6s ease-in-out infinite;}
+@keyframes logoShine{0%,65%{background-position:100% 0;}100%{background-position:0 0;}}
+
+/* borda de luz girando nos cards (só roda no hover, pra não pesar com dezenas de cards na tela) */
+@property --ang{syntax:'<angle>';inherits:false;initial-value:0deg;}
+.kpi-card::before,.mesa-stat::before,.task-card::before,.client-card::before,.chart-card::before{
+  content:'';position:absolute;inset:-1px;border-radius:inherit;padding:1.5px;pointer-events:none;z-index:2;
+  background:conic-gradient(from var(--ang), transparent 0 55%, rgba(143,176,255,.35) 68%, #B7CBFF 82%, #5B8CFF 90%, transparent 100%);
+  -webkit-mask:linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude;
+  opacity:0;transition:opacity .35s ease;animation:borderSpin 2.6s linear infinite;animation-play-state:paused;}
+.kpi-card:hover::before,.mesa-stat:hover::before,.task-card:hover::before,.client-card:hover::before,.chart-card:hover::before{opacity:1;animation-play-state:running;}
+@keyframes borderSpin{to{--ang:360deg;}}
+.kpi-card:hover,.mesa-stat:hover,.task-card:hover,.client-card:hover,.chart-card:hover{border-color:rgba(91,140,255,.22);}
+@media (prefers-reduced-motion: reduce){ .logo-shine::after{animation:none;opacity:0;} .kpi-card::before,.mesa-stat::before,.task-card::before,.client-card::before,.chart-card::before{animation:none;} }
+
 /* ============ LOGIN CRIATIVO ============
    camadas: chão em grade (acende perto do cursor) · "SMK" gigante em contorno com brilho
    percorrendo · mockup 3D do painel que inclina com o mouse */
@@ -1651,6 +1671,17 @@ function shakePasscode(){
   updatePasscodeDots();
   document.getElementById('loginCode').focus();
 }
+// logo do menu: embrulha o <img> e usa ele mesmo como máscara do reflexo
+(function initLogoShine(){
+  const img = document.querySelector('.sidebar-brand .brand-logo-sm');
+  if(!img || img.parentElement.classList.contains('logo-shine')) return;
+  const wrap = document.createElement('span');
+  wrap.className = 'logo-shine';
+  img.parentNode.insertBefore(wrap, img);
+  wrap.appendChild(img);
+  wrap.style.setProperty('--logo-url', `url("${img.src}")`);
+})();
+
 // decoração do login: spotlight + chão em grade + mockup reagem ao mouse
 (function initLoginDecor(){
   const screen = document.getElementById('loginScreen');
