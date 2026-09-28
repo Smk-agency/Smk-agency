@@ -2128,6 +2128,25 @@ function renderDashboard(el){
       ${statusDonutHTML()}
     </div>
 
+    ${(()=>{
+      const withPkg = state.clients.filter(c=>c.status!=='encerrado').map(c=>({c, p:clientPackageProgress(c.id)})).filter(x=>x.p.hasPackage)
+        .sort((a,b)=>(a.p.pct-a.p.monthPct)-(b.p.pct-b.p.monthPct));
+      if(!withPkg.length) return '';
+      const behind = withPkg.filter(x=>x.p.pct < x.p.monthPct-0.15 && x.p.done<x.p.goal).length;
+      return `<div class="section-title">📦 Pacotes do mês <span class="hint">${behind?`${behind} atrás do ritmo · `:''}${Math.round(withPkg[0].p.monthPct*100)}% do mês passou</span></div>
+      <div class="card" style="margin-bottom:26px;">
+        ${withPkg.map(({c,p},i)=>{ const color = packagePaceColor(p.done,p.goal,p.monthPct);
+          return `<div class="ranking-row" data-pkg-client="${c.id}" style="display:flex;align-items:center;gap:14px;padding:9px 6px;margin:0 -6px;border-radius:8px;cursor:pointer;${i<withPkg.length-1?'border-bottom:1px solid var(--border);':''}">
+            <div style="width:150px;flex-shrink:0;font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escapeHTML(c.name)}</div>
+            <div style="flex:1;min-width:0;">
+              <div class="mp-track" style="height:8px;"><div class="mp-fill" style="width:${Math.min(100,p.pct*100)}%;background:${color};"></div></div>
+              <div style="font-size:10.5px;color:var(--text-faint);margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${p.rows.map(r=>`${escapeHTML(r.type)} ${r.done}/${r.goal}`).join(' · ')}</div>
+            </div>
+            <div style="width:52px;text-align:right;font-family:var(--font-mono);font-weight:700;font-size:13px;color:${color};">${p.done}/${p.goal}</div>
+          </div>`; }).join('')}
+      </div>`;
+    })()}
+
     <div class="section-title">Alertas <span class="hint">${alerts.length} no momento</span></div>
     <div class="alert-list">
       ${alerts.length ? alerts.map((a,i)=>`<div class="alert-item ${a.level}" data-alert-idx="${i}" style="${a.action?'cursor:pointer;':''}"><span class="ic">${a.icon}</span><span>${a.text}</span></div>`).join('') : '<div class="empty">Tudo tranquilo por aqui.</div>'}
@@ -2137,6 +2156,7 @@ function renderDashboard(el){
     row.addEventListener('click', ()=>goToAlertTarget(alerts[Number(row.dataset.alertIdx)].action));
   });
   wireChartTooltips(el);
+  el.querySelectorAll('[data-pkg-client]').forEach(r=>r.addEventListener('click', ()=>openClientDetail(r.dataset.pkgClient)));
 }
 
 const CHART_REVENUE_COLOR = '#5B8CFF';
@@ -2652,6 +2672,10 @@ function renderClientes(el){
       </div>
       ${isDono()?`<div class="crow"><span class="l">Receita mensal</span><span class="v mono">${fmtMoney(receita)}</span></div>`:''}
       <div class="crow"><span class="l">Demandas abertas</span><span class="v">${openTasks}</span></div>
+      ${(()=>{ const p = clientPackageProgress(c.id); if(!p.hasPackage) return '';
+        const color = packagePaceColor(p.done, p.goal, p.monthPct);
+        return `<div class="crow"><span class="l">Pacote do mês</span><span class="v mono" style="color:${color};">${p.done}/${p.goal}</span></div>
+          <div class="mp-track" style="margin-top:6px;"><div class="mp-fill" style="width:${Math.min(100,p.pct*100)}%;background:${color};"></div></div>`; })()}
       ${isDono()?`<div class="crow"><span class="l">Margem</span><span class="v" style="color:${margemClass(clientMargem(c.id)).hex}">${clientMargem(c.id).toFixed(1)}%</span></div>`:''}
     </div>`;
   }).join('');
@@ -2749,6 +2773,14 @@ function openClientDetail(id){
   body.innerHTML = `
     <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;">${c.company_name||''} · ${c.whatsapp||''} · ${c.instagram||''}${c.birthday?` · 🎂 ${c.birthday.slice(8,10)}/${c.birthday.slice(5,7)}`:''}</div>
     <button type="button" class="btn small" id="clientReportBtn" style="margin-bottom:8px;">📊 Relatório de entregas do mês</button>
+    ${(()=>{
+      const p = clientPackageProgress(id);
+      const monthName = new Date().toLocaleDateString('pt-BR',{month:'long'});
+      return `<div class="section-title">📦 Pacote do mês ${p.hasPackage?`<span class="hint">${p.done}/${p.goal} entregues em ${monthName}</span>`:''}
+        ${canEditClients()?`<button class="btn small" id="editPackageBtn">${p.hasPackage?'Editar pacote':'Definir pacote'}</button>`:''}</div>
+      ${p.hasPackage ? `<div class="card">${packageBarsHTML(p, false)}</div>`
+        : `<div class="empty" style="padding:16px;">Sem pacote definido. Ex: 8 Reels + 12 Artes por mês.</div>`}`;
+    })()}
 
     <div class="section-title" style="margin-top:0;">Serviços contratados ${isDono()?`<button class="btn small" id="addServiceBtn">+ Serviço</button> <button class="btn small ghost" id="updateContractBtn">Atualizar contrato</button>`:''}</div>
     <div class="table-wrap"><table>
@@ -2829,6 +2861,7 @@ function openClientDetail(id){
   `;
   document.getElementById('editClientBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openClientModal(c); });
   document.getElementById('clientReportBtn').addEventListener('click', ()=>openClientMonthReport(id));
+  document.getElementById('editPackageBtn')?.addEventListener('click', ()=>openPackageModal(id));
   document.getElementById('archiveClientBtn')?.addEventListener('click', ()=>{
     document.getElementById('itemModalTitle').textContent = 'Encerrar cliente';
     document.getElementById('itemModalBody').innerHTML = `
@@ -3086,6 +3119,77 @@ function openBrandKitEditModal(id){
   openModal('itemModalOverlay');
 }
 
+/* ---------- PACOTE MENSAL DO CLIENTE (meta de peças por tipo de demanda) ---------- */
+// entregue no mês = aprovado, ou concluído neste mês (mesma regra dos rankings e do relatório)
+function clientPackageProgress(clientId){
+  const c = clientById(clientId);
+  const pkg = c?.package || {};
+  const monthKey = todayISO().slice(0,7);
+  const mine = state.tasks.filter(t=>t.client_id===clientId);
+  const delivered = mine.filter(t=>t.status==='aprovado' || (t.status==='concluido' && t.completed_month===monthKey));
+  const doing = mine.filter(t=>!['aprovado','concluido','cancelado'].includes(t.status) && (t.due_date||'').startsWith(monthKey));
+  const rows = Object.entries(pkg).filter(([,q])=>Number(q)>0).map(([type,goal])=>({
+    type, goal:Number(goal),
+    done: delivered.filter(t=>t.task_type===type).length,
+    doing: doing.filter(t=>t.task_type===type).length,
+  }));
+  const goal = rows.reduce((a,r)=>a+r.goal,0);
+  const done = rows.reduce((a,r)=>a+Math.min(r.done,r.goal),0);
+  const now = new Date();
+  const monthPct = now.getDate() / new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  return {rows, goal, done, pct: goal ? done/goal : 0, monthPct, hasPackage: rows.length>0};
+}
+// cor do andamento: concluído = verde (sucesso), no ritmo = azul (marca), atrás = âmbar
+function packagePaceColor(done, goal, monthPct){
+  if(goal && done>=goal) return '#1FA97C';
+  return (goal ? done/goal : 0) >= monthPct - 0.15 ? '#5B8CFF' : '#E0A62D';
+}
+function packageBarsHTML(p, compact){
+  return p.rows.map(r=>{
+    const color = packagePaceColor(r.done, r.goal, p.monthPct);
+    return `<div style="margin-bottom:${compact?6:10}px;">
+      <div style="display:flex;justify-content:space-between;font-size:${compact?11:12}px;margin-bottom:4px;">
+        <span>${escapeHTML(r.type)}${!compact && r.doing?` <span style="color:var(--text-faint);">· ${r.doing} em produção</span>`:''}</span>
+        <b style="font-family:var(--font-mono);color:${color};">${r.done}/${r.goal}</b>
+      </div>
+      <div class="mp-track"><div class="mp-fill" style="width:${Math.min(100,r.done/r.goal*100)}%;background:${color};"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function openPackageModal(clientId){
+  const c = clientById(clientId);
+  const rows = Object.entries(c.package||{}).map(([type,qty])=>({type, qty:Number(qty)}));
+  if(!rows.length) rows.push({type:'Reels', qty:4});
+  document.getElementById('itemModalTitle').textContent = `Pacote mensal — ${c.name}`;
+  function draw(){
+    document.getElementById('itemModalBody').innerHTML = `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:14px;">Quantas peças de cada tipo esse cliente tem por mês. O app acompanha quantas já foram aprovadas/concluídas no mês.</div>
+      <div id="pkgRows">${rows.map((r,i)=>`<div style="display:grid;grid-template-columns:1fr 90px 30px;gap:8px;margin-bottom:8px;align-items:center;">
+        <select data-pkg-type="${i}">${TASK_TYPES.map(ty=>`<option ${ty===r.type?'selected':''}>${ty}</option>`).join('')}</select>
+        <input type="number" min="1" data-pkg-qty="${i}" value="${r.qty}">
+        <button type="button" class="btn ghost small danger" data-pkg-del="${i}">×</button>
+      </div>`).join('') || '<div class="empty" style="padding:14px;">Sem pacote definido.</div>'}</div>
+      <button type="button" class="btn small ghost" id="pkgAdd">+ Tipo</button>
+      <div id="pkgErr" style="display:none;color:var(--red);font-size:11.5px;margin-top:8px;">Tem tipo repetido — junta numa linha só.</div>
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="pkgSave">Salvar pacote</button></div>`;
+    document.querySelectorAll('[data-pkg-type]').forEach(s=>s.addEventListener('change', ()=>{ rows[s.dataset.pkgType].type = s.value; }));
+    document.querySelectorAll('[data-pkg-qty]').forEach(s=>s.addEventListener('input', ()=>{ rows[s.dataset.pkgQty].qty = Number(s.value)||0; }));
+    document.querySelectorAll('[data-pkg-del]').forEach(b=>b.addEventListener('click', ()=>{ rows.splice(Number(b.dataset.pkgDel),1); draw(); }));
+    document.getElementById('pkgAdd').addEventListener('click', ()=>{ const used = rows.map(r=>r.type); rows.push({type: TASK_TYPES.find(t=>!used.includes(t))||'Outro', qty:1}); draw(); });
+    document.getElementById('pkgSave').addEventListener('click', ()=>{
+      const types = rows.map(r=>r.type);
+      if(new Set(types).size !== types.length){ document.getElementById('pkgErr').style.display='block'; return; }
+      c.package = Object.fromEntries(rows.filter(r=>r.qty>0).map(r=>[r.type, r.qty]));
+      saveState(state);
+      closeModal('itemModalOverlay');
+      openClientDetail(clientId);
+    });
+  }
+  draw();
+  openModal('itemModalOverlay');
+}
+
 // relatório de entregas do mês pro cliente (cartão pra copiar como imagem + resumo pro WhatsApp).
 // "Entregue" = aprovado, ou concluído neste mês — mesma regra dos rankings da Equipe.
 function openClientMonthReport(id){
@@ -3101,6 +3205,7 @@ function openClientMonthReport(id){
     ['Outros', '✨', '#1FA97C', delivered.filter(t=>![...VIDEO_TASK_TYPES,'Arte','Carrossel'].includes(t.task_type))],
   ];
   const grav = (state.commitments||[]).filter(x=>x.type==='gravacao' && x.client_id===id && (x.date||'').startsWith(monthKey));
+  const pkg = clientPackageProgress(id);
   const tile = (label, n, color) => `<div style="background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
     <div style="font-size:26px;font-weight:800;color:${color};font-family:'IBM Plex Mono',monospace;line-height:1;">${n}</div>
     <div style="font-size:11.5px;color:#8B95AC;margin-top:6px;">${label}</div></div>`;
@@ -3114,7 +3219,8 @@ function openClientMonthReport(id){
         <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">Relatório de entregas</div>
       </div>
       <div style="font-size:26px;font-weight:800;line-height:1.2;position:relative;">${escapeHTML(c.name)}</div>
-      <div style="font-size:13px;color:#8B95AC;margin-bottom:24px;">${monthLabel} · ${delivered.length} entrega${delivered.length===1?'':'s'}</div>
+      <div style="font-size:13px;color:#8B95AC;margin-bottom:${pkg.hasPackage?'10px':'24px'};">${monthLabel} · ${delivered.length} entrega${delivered.length===1?'':'s'}</div>
+      ${pkg.hasPackage?`<div style="display:inline-flex;align-items:center;gap:8px;background:rgba(91,140,255,.14);border:1px solid rgba(91,140,255,.35);color:#B7CBFF;border-radius:100px;padding:5px 12px;font-size:12px;font-weight:600;margin-bottom:22px;">📦 Pacote do mês: ${pkg.done}/${pkg.goal} peças · ${pkg.rows.map(r=>`${r.type} ${r.done}/${r.goal}`).join(' · ')}</div>`:''}
       ${(()=>{
         const tiles = groups.filter(g=>g[3].length).map(([label,,color,items])=>tile(label, items.length, color));
         if(grav.length) tiles.push(tile('Gravações', grav.length, '#E0A62D'));
@@ -3140,6 +3246,7 @@ function openClientMonthReport(id){
   const summary = `Oi, ${firstName}! Passando o resumo das entregas de ${monthLabel.toLowerCase()} 📊\n\n`
     + groups.filter(g=>g[3].length).map(([label,icon,,items])=>`${icon} ${label}: ${items.length}`).join('\n')
     + (grav.length?`\n🎥 Gravações: ${grav.length}`:'')
+    + (pkg.hasPackage?`\n\n📦 Pacote do mês: ${pkg.done}/${pkg.goal} peças entregues`:'')
     + `\n\nTotal: ${delivered.length} entrega${delivered.length===1?'':'s'} no mês. Obrigado pela parceria! 🤝`;
   const wa = document.getElementById('reportWaBtn');
   if(wa) wa.href = waLink(c.whatsapp, summary);
