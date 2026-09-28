@@ -773,6 +773,23 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
   background:radial-gradient(120% 200% at 0% 0%, rgba(62,111,240,.35), transparent 60%),radial-gradient(80% 200% at 100% 100%, rgba(123,97,255,.22), transparent 60%),var(--surface);transition:border-color .2s,transform .2s;}
 .wr-launch:hover{border-color:rgba(143,176,255,.7);transform:translateY(-1px);}
 .wr-launch-ic{font-size:22px;}
+.wr-launch.is-new{border-color:rgba(143,176,255,.75);animation:wrNudge 2.4s ease-in-out infinite;}
+.wr-launch.is-new .wr-launch-ic{animation:wrGift 2.4s ease-in-out infinite;}
+.wr-launch.is-locked{border-style:dashed;border-color:rgba(143,176,255,.3);}
+.wr-launch.is-locked .wr-launch-go{color:var(--text-muted);font-weight:500;}
+.wr-lock-pop{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,16,.6);backdrop-filter:blur(6px);animation:wrPopIn .2s ease;}
+.wr-lock-card{max-width:360px;width:100%;text-align:center;padding:26px 22px 20px;border-radius:18px;border:1px solid rgba(143,176,255,.35);
+  background:radial-gradient(120% 100% at 50% 0%, rgba(62,111,240,.28), transparent 60%), var(--surface);box-shadow:0 24px 60px -20px rgba(0,0,0,.7);}
+.wr-lock-card .wr-lock-ic{font-size:38px;margin-bottom:8px;animation:wrGift 2.4s ease-in-out infinite;}
+.wr-lock-card b{display:block;font-family:var(--font-display);font-size:17px;line-height:1.25;margin-bottom:8px;}
+.wr-lock-card p{font-size:13.5px;color:var(--text-muted);line-height:1.5;margin:0 0 16px;}
+.wr-lock-card strong{color:var(--brand-light);font-weight:600;}
+@keyframes wrPopIn{from{opacity:0;}to{opacity:1;}}
+.wr-new-chip{margin-left:auto;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--brand);color:#fff;}
+.wr-new-chip + .wr-launch-go{margin-left:10px;}
+@keyframes wrNudge{0%,100%{box-shadow:0 0 0 0 rgba(91,140,255,.0);}50%{box-shadow:0 0 0 5px rgba(91,140,255,.18), 0 8px 30px -8px rgba(62,111,240,.6);}}
+@keyframes wrGift{0%,70%,100%{transform:none;}78%{transform:rotate(-14deg) scale(1.12);}86%{transform:rotate(12deg) scale(1.12);}94%{transform:rotate(-6deg);}}
+@media (prefers-reduced-motion: reduce){ .wr-launch.is-new,.wr-launch.is-new .wr-launch-ic{animation:none;} }
 .wr-launch b{display:block;font-family:var(--font-display);font-size:14.5px;}
 .wr-launch span span,.wr-launch > span:nth-child(2) > span{font-size:12px;color:var(--text-muted);}
 .wr-launch-go{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--brand-light);white-space:nowrap;}
@@ -1610,6 +1627,11 @@ function getNotificationsForUser(u){
     if(!(c.user_ids||[]).includes(u.id)) return;
     items.push({id:'ag_'+c.id, text:`Você foi adicionado a "${c.title}" (${COMMITMENT_TYPES[c.type]||c.type}) em ${fmtDate(c.date)}`, timestamp:c.created_at||0, action:{type:'agenda', date:c.date}});
   });
+  if(isWrappedDay()){
+    const n = new Date(), m = localDayKey().slice(0,7);
+    items.push({id:'wr_'+m, text:`🎁 Chegou a Retrospectiva de ${wrappedMonthName(m).toLowerCase()}! Toca aqui pra ver o mês da SMK.`,
+      timestamp:new Date(n.getFullYear(), n.getMonth(), n.getDate()).getTime(), action:{type:'wrapped'}});
+  }
   return items.sort((a,b)=>b.timestamp-a.timestamp).slice(0,30);
 }
 
@@ -1617,6 +1639,7 @@ function goToNotifTarget(action){
   document.getElementById('notifDropdown').classList.remove('open');
   if(!action) return;
   if(action.type==='task'){ openTaskModal(action.id); }
+  else if(action.type==='wrapped'){ openWrapped(); render(); }
   else if(action.type==='agenda'){
     currentView='agenda'; agendaTab='mine'; agendaSelectedDay=action.date; agendaCalCursor=new Date(action.date+'T00:00:00');
     setActiveNav(); render();
@@ -2045,6 +2068,7 @@ function renderMesa(el){
   const monthName = now.toLocaleDateString('pt-BR',{month:'long'});
 
   el.innerHTML = `
+    <div style="margin:-8px 0 18px;">${wrappedLauncherHTML()}</div>
     ${canSeeAgencyOverview()?`
     <div class="filter-bar">
       <button class="btn small ${mesaTab==='mine'?'primary':''}" id="tabMine">Minhas demandas</button>
@@ -2098,6 +2122,7 @@ function renderMesa(el){
     <div class="kanban-cards" id="mesaList"></div>
   `;
   document.getElementById('tabMine')?.addEventListener('click', ()=>{ mesaTab='mine'; render(); });
+  document.getElementById('openWrappedBtn')?.addEventListener('click', handleWrappedLaunch);
   document.getElementById('tabAgency')?.addEventListener('click', ()=>{ mesaTab='agency'; render(); });
   el.querySelectorAll('.cm-inner-link').forEach(x=>x.addEventListener('click', e=>e.stopPropagation()));
   el.querySelectorAll('[data-shot-toggle]').forEach(cb=>cb.addEventListener('change', ()=>{
@@ -2200,11 +2225,7 @@ function renderDashboard(el){
       <span><span class="dot" style="background:#E0553D"></span>Crítico</span>
     </div>
 
-    <button type="button" class="wr-launch" id="openWrappedBtn">
-      <span class="wr-launch-ic">🎁</span>
-      <span><b>Wrapped de ${wrappedMonthName(todayISO().slice(0,7)).toLowerCase()}</b><span>o mês da SMK em stories, pronto pro Instagram</span></span>
-      <span class="wr-launch-go">Abrir →</span>
-    </button>
+    ${wrappedLauncherHTML()}
     <div class="kpi-grid" style="margin-top:14px;">
       ${kpiCardHTML({icon:'trendUp', color:'#5B8CFF', label:'Faturamento do mês', value:fmtMoney(faturamento), valueClass:'mono', count:faturamento, fmt:'money'})}
       ${kpiCardHTML({icon:'check', color:'#1FA97C', label:'Recebido', value:fmtMoney(recebido), valueClass:'pos', count:recebido, fmt:'money'})}
@@ -2250,7 +2271,7 @@ function renderDashboard(el){
     row.addEventListener('click', ()=>goToAlertTarget(alerts[Number(row.dataset.alertIdx)].action));
   });
   wireChartTooltips(el);
-  document.getElementById('openWrappedBtn')?.addEventListener('click', ()=>openWrapped());
+  document.getElementById('openWrappedBtn')?.addEventListener('click', handleWrappedLaunch);
   el.querySelectorAll('[data-pkg-client]').forEach(r=>r.addEventListener('click', ()=>openClientDetail(r.dataset.pkgClient)));
 }
 
@@ -3215,8 +3236,54 @@ function openBrandKitEditModal(id){
 }
 
 /* ---------- WRAPPED DO MÊS (stories pro Instagram da agência — sem dado financeiro) ---------- */
+// libera no último dia do mês (horário local). O Smurk (u_dono) pode abrir a qualquer momento pra conferir.
+function isWrappedDay(){ const n=new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()+1).getDate()===1; }
+function canOpenWrapped(){ return currentUser()?.id==='u_dono' || isWrappedDay(); }
+function wrappedSeenKey(){ return `smkos_wrapped_seen_${currentUser()?.id}_${localDayKey().slice(0,7)}`; }
+function wrappedSeen(){ try{ return localStorage.getItem(wrappedSeenKey())==='1'; }catch(e){ return false; } }
+function markWrappedSeen(){ try{ localStorage.setItem(wrappedSeenKey(),'1'); }catch(e){} }
+function wrappedReleaseDate(){ const n=new Date(); return new Date(n.getFullYear(), n.getMonth()+1, 0); }
+// banner da tela inicial: sempre visível. Antes do último dia fica "trancado" (clique explica quando libera);
+// no último dia vira notificação até a pessoa abrir.
+function wrappedLauncherHTML(){
+  const mes = wrappedMonthName(localDayKey().slice(0,7)).toLowerCase();
+  if(!canOpenWrapped()){
+    const left = wrappedReleaseDate().getDate() - new Date().getDate();
+    return `<button type="button" class="wr-launch is-locked" id="openWrappedBtn">
+      <span class="wr-launch-ic">🎁</span>
+      <span><b>Retrospectiva de ${mes}</b><span>o mês da SMK em stories — libera no último dia do mês</span></span>
+      <span class="wr-launch-go">🔒 ${left===1?'falta 1 dia':`faltam ${left} dias`}</span>
+    </button>`;
+  }
+  const fresh = isWrappedDay() && !wrappedSeen();
+  return `<button type="button" class="wr-launch ${fresh?'is-new':''}" id="openWrappedBtn">
+      <span class="wr-launch-ic">🎁</span>
+      <span><b>${fresh?`Chegou a Retrospectiva de ${mes}!`:`Retrospectiva de ${mes}`}</b><span>${fresh?'o mês da SMK em stories — abre pra ver o seu resultado':'o mês da SMK em stories, pronto pro Instagram'}</span></span>
+      ${fresh?'<span class="wr-new-chip">Novo</span>':''}
+      <span class="wr-launch-go">Abrir →</span>
+    </button>`;
+}
+function handleWrappedLaunch(){
+  if(canOpenWrapped()){ openWrapped(); render(); return; }
+  document.getElementById('wrLockPop')?.remove();
+  const d = wrappedReleaseDate(), mes = wrappedMonthName(localDayKey().slice(0,7)).toLowerCase();
+  const left = d.getDate() - new Date().getDate();
+  const pop = document.createElement('div');
+  pop.className = 'wr-lock-pop'; pop.id = 'wrLockPop';
+  pop.innerHTML = `<div class="wr-lock-card">
+      <div class="wr-lock-ic">🎁</div>
+      <b>A Retrospectiva de ${mes} ainda tá sendo preparada</b>
+      <p>Ela libera no último dia do mês: <strong>${d.toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'})}</strong>${left===1?' (amanhã!)':` (faltam ${left} dias)`}. Nesse dia você recebe um aviso aqui no app. 💙</p>
+      <button type="button" class="btn primary small" id="wrLockOk">Beleza</button>
+    </div>`;
+  document.body.appendChild(pop);
+  const close = () => pop.remove();
+  pop.addEventListener('click', e=>{ if(e.target===pop) close(); });
+  pop.querySelector('#wrLockOk').addEventListener('click', close);
+}
 function wrappedMonths(){
-  const cur = todayISO().slice(0,7);
+  const cur = localDayKey().slice(0,7);
+  if(currentUser()?.id!=='u_dono') return [cur];
   return [cur, ...Object.keys(state.archived_tasks||{}).filter(m=>m!==cur).sort().reverse()];
 }
 function wrappedMonthName(m){
@@ -3225,10 +3292,11 @@ function wrappedMonthName(m){
 }
 // mês corrente: aprovadas + concluídas no mês; meses passados: concluídas arquivadas daquele mês
 function wrappedData(m){
-  const cur = todayISO().slice(0,7);
-  const delivered = m===cur
-    ? state.tasks.filter(t=>t.status==='aprovado' || (t.status==='concluido' && t.completed_month===m))
-    : (state.archived_tasks?.[m] || []);
+  const cur = localDayKey().slice(0,7);
+  // arquivadas do mês + concluídas que ainda estão no quadro (o arquivamento vira o mês em UTC, 21h no Brasil)
+  const archived = state.archived_tasks?.[m] || [];
+  const delivered = [...archived, ...state.tasks.filter(t=>!archived.some(x=>x.id===t.id)
+    && ((t.status==='concluido' && t.completed_month===m) || (m===cur && t.status==='aprovado')))];
   const videos = delivered.filter(t=>VIDEO_TASK_TYPES.includes(t.task_type));
   const artes = delivered.filter(t=>t.task_type==='Arte');
   const carrosseis = delivered.filter(t=>t.task_type==='Carrossel');
@@ -3265,10 +3333,10 @@ function buildWrappedSlides(d){
   const logo = document.querySelector('.brand-logo-sm')?.src || '';
   const frame = (inner) => `<div class="wr-slide"><div class="wr-grid"></div><div class="wr-word">SMK</div>
     <img class="wr-logo" src="${logo}" alt="SMK">${inner}
-    <div class="wr-foot"><span>SMK Agency</span><span>Wrapped · ${mes.slice(0,3)} ${ano}</span></div></div>`;
+    <div class="wr-foot"><span>SMK Agency</span><span>Retrospectiva · ${mes.slice(0,3)} ${ano}</span></div></div>`;
   const avatar = (u) => { const col = u.avatar_color || ROLE_COLOR[u.role] || '#8FB0FF'; return `<div class="wr-avatar wr-anim" style="background:${col}33;color:${col};">${initials(u.full_name)}</div>`; };
   const slides = [];
-  slides.push(frame(`<div class="wr-kicker wr-anim">Wrapped · ${ano}</div>
+  slides.push(frame(`<div class="wr-kicker wr-anim">Retrospectiva · ${ano}</div>
     <div class="wr-title wr-anim" style="--d:.15s;font-size:15cqw;">${mes}<br><em>na SMK.</em></div>
     <div class="wr-sub wr-anim" style="--d:.35s;">O mês da agência em números →</div>`));
   if(d.delivered.length){
@@ -3321,8 +3389,10 @@ function buildWrappedSlides(d){
   return slides;
 }
 function openWrapped(month){
+  if(!canOpenWrapped()) return;
   document.getElementById('wrOverlay')?.remove();
-  month = month || todayISO().slice(0,7);
+  month = month || localDayKey().slice(0,7);
+  markWrappedSeen();
   const slides = buildWrappedSlides(wrappedData(month));
   const ov = document.createElement('div');
   ov.className = 'wr-overlay'; ov.id = 'wrOverlay';
@@ -3381,7 +3451,7 @@ function openWrapped(month){
       const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
       canvas.getContext('2d').drawImage(raw, 0, 0, 1080, 1920);
       const a = document.createElement('a');
-      a.download = `smk-wrapped-${month}-${String(idx+1).padStart(2,'0')}.png`;
+      a.download = `smk-retrospectiva-${month}-${String(idx+1).padStart(2,'0')}.png`;
       a.href = canvas.toDataURL('image/png');
       a.click();
     } finally {
