@@ -754,6 +754,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .wr-row .fill{height:100%;border-radius:2cqw;transform-origin:left;}
 .wr-avatar{width:30cqw;height:30cqw;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11cqw;font-weight:700;margin-bottom:6cqw;position:relative;border:1.1cqw solid currentColor;box-shadow:0 0 14cqw -2cqw currentColor;}
 .wr-name{font-size:11cqw;font-weight:700;line-height:1;letter-spacing:-.02em;position:relative;}
+.wr-award-avatars{display:flex;gap:4cqw;position:relative;}
 .wr-duo{display:grid;grid-template-columns:1fr 1fr;gap:3.4cqw;margin-top:7cqw;position:relative;}
 .wr-duo>div{padding:4.5cqw 4cqw;border-radius:4cqw;background:rgba(255,255,255,.06);border:.3cqw solid rgba(255,255,255,.1);}
 .wr-duo>div:last-child{background:rgba(62,111,240,.25);border-color:rgba(143,176,255,.5);}
@@ -3389,7 +3390,29 @@ function wrappedData(m){
     designer: topDesigner ? {u:userById(topDesigner[0]), artes: artes.filter(t=>t.assignee_id===topDesigner[0]).length, carrosseis: carrosseis.filter(t=>t.assignee_id===topDesigner[0]).length} : null,
     clients: clients.map(([id,n])=>({c:clientById(id), n})).filter(x=>x.c),
     creators,
+    award: machineOfMonth(m, delivered),
   };
+}
+// 🏆 Máquina do mês: quem da execução (editores/designer) mais entregou no mês. Começa em outubro/2026.
+// A conta de editor do Smurk fica de fora — o prêmio é pro time.
+const AWARDS_FROM = '2026-10';
+const AWARD_EXCLUDED_USERS = ['qplvp3dq'];
+function machineOfMonth(m, delivered){
+  if(m < AWARDS_FROM) return null;
+  const by = {};
+  delivered.forEach(t=>{
+    const u = t.assignee_id && userById(t.assignee_id);
+    if(!u || !EXECUTOR_ROLES.includes(u.role) || AWARD_EXCLUDED_USERS.includes(u.id)) return;
+    (by[u.id] = by[u.id] || {u, total:0, videos:0, artes:0, carrosseis:0, outros:0}).total++;
+    const r = by[u.id];
+    if(VIDEO_TASK_TYPES.includes(t.task_type)) r.videos++;
+    else if(t.task_type==='Arte') r.artes++;
+    else if(t.task_type==='Carrossel') r.carrosseis++;
+    else r.outros++;
+  });
+  const ranking = Object.values(by).sort((a,b)=>b.total-a.total);
+  if(!ranking.length) return null;
+  return {winners: ranking.filter(r=>r.total===ranking[0].total), ranking};
 }
 function buildWrappedSlides(d){
   const mes = wrappedMonthName(d.m), ano = d.m.slice(0,4);
@@ -3446,6 +3469,18 @@ function buildWrappedSlides(d){
       <div class="wr-big wr-anim" style="--d:.1s;" data-count="${d.clients.length}">${d.clients.length}</div>
       <div class="wr-sub wr-anim" style="--d:.25s;">${d.clients.length===1?'cliente atendido':'clientes atendidos'}</div>
       <div class="wr-podium">${d.clients.slice(0,3).map((x,i)=>`<div class="wr-anim" style="--d:${.4+i*.12}s;"><span class="pos">${i+1}º</span>${escapeHTML(x.c.name)}<span class="n">${x.n}</span></div>`).join('')}</div>`));
+  }
+  if(d.award){
+    const w = d.award.winners, top = w[0];
+    const parts = r => [[r.videos,'vídeo','vídeos'],[r.artes,'arte','artes'],[r.carrosseis,'carrossel','carrosséis'],[r.outros,'outra','outras']]
+      .filter(([n])=>n).map(([n,a,b])=>`${n} ${n===1?a:b}`).join(' · ');
+    slides.push(frame(`<div class="wr-kicker wr-anim">Premiação 🏆</div>
+      <div class="wr-title wr-anim" style="--d:.1s;font-size:11cqw;margin-bottom:6cqw;">Máquina<br><em>do mês.</em></div>
+      <div class="wr-award-avatars">${w.map(r=>avatar(r.u)).join('')}</div>
+      <div class="wr-name wr-anim" style="--d:.25s;">${w.map(r=>escapeHTML(r.u.full_name)).join(' & ')}</div>
+      <div class="wr-sub wr-anim" style="--d:.4s;"><b data-count="${top.total}">${top.total}</b> entregas${w.length>1?' cada — empate!':''}</div>
+      ${w.length===1?`<div class="wr-sub wr-anim" style="--d:.5s;font-size:4cqw;color:#8FB0FF;">${parts(top)}</div>`:''}
+      ${d.award.ranking.length>w.length?`<div class="wr-podium">${d.award.ranking.slice(w.length, w.length+2).map((r,i)=>`<div class="wr-anim" style="--d:${.6+i*.12}s;"><span class="pos">${w.length+i+1}º</span>${escapeHTML(r.u.full_name)}<span class="n">${r.total}</span></div>`).join('')}</div>`:''}`));
   }
   slides.push(frame(`<div class="wr-kicker wr-anim">Fechou ${mes.toLowerCase()}</div>
     <div class="wr-title wr-anim" style="--d:.15s;font-size:15cqw;">Obrigado,<br><em>time.</em> 💙</div>
