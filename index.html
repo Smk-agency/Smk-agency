@@ -776,6 +776,19 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .wr-launch-ic{font-size:22px;}
 .wr-launch.is-new{border-color:rgba(143,176,255,.75);animation:wrNudge 2.4s ease-in-out infinite;}
 .wr-launch.is-new .wr-launch-ic{animation:wrGift 2.4s ease-in-out infinite;}
+.fp-card{background:radial-gradient(90% 140% at 0% 0%, rgba(62,111,240,.14), transparent 60%), var(--surface);border-color:rgba(91,140,255,.28);}
+.fp-chip{margin-left:10px;margin-right:auto;font-family:var(--font-body, inherit);font-size:11px;font-weight:600;padding:3px 9px;border-radius:99px;background:rgba(62,111,240,.18);color:var(--brand-light);border:1px solid rgba(91,140,255,.35);}
+.fp-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;}
+.fp-stat{padding:12px 14px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);min-width:0;}
+.fp-stat .l{font-size:11.5px;color:var(--text-muted);margin-bottom:6px;}
+.fp-stat .v{font-size:17px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fp-stat:first-child .v{color:var(--brand-light);}
+.fp-stat .v.pos{color:var(--accent-soft);} .fp-stat .v.neg{color:var(--red);}
+.fp-note{font-size:11.5px;color:var(--text-faint);margin-top:12px;}
+.fp-details{margin-top:12px;}
+.fp-details summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--brand-light);}
+.fp-details .table-wrap{margin-top:10px;}
+@media(max-width:860px){ .fp-stats{grid-template-columns:repeat(2,minmax(0,1fr));} }
 .wr-launch.is-locked{border-style:dashed;border-color:rgba(143,176,255,.3);}
 .wr-launch.is-locked .wr-launch-go{color:var(--text-muted);font-weight:500;}
 .wr-lock-pop{position:fixed;inset:0;z-index:1200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(5,8,16,.6);backdrop-filter:blur(6px);animation:wrPopIn .2s ease;}
@@ -5007,6 +5020,56 @@ function openFinanceReportModal(faturamento, despesasSoltas, folha, despesasTota
   openModal('genericModalOverlay');
 }
 
+/* ---------- PRÉVIA DO PRÓXIMO MÊS (aparece nos últimos 7 dias do mês) ---------- */
+// Mesma regra das rotinas automáticas: cobrança de cada cliente não encerrado (serviços ativos no mês que vem,
+// respeitando a forma de pagamento) + gastos fixos ativos + folha da equipe.
+function nextMonthPreview(){
+  const n = new Date();
+  const daysLeft = new Date(n.getFullYear(), n.getMonth()+1, 0).getDate() - n.getDate();
+  if(daysLeft > 7) return null;
+  const nx = new Date(n.getFullYear(), n.getMonth()+1, 1);
+  const nm = `${nx.getFullYear()}-${String(nx.getMonth()+1).padStart(2,'0')}`;
+  const lastDay = new Date(nx.getFullYear(), nx.getMonth()+1, 0).getDate();
+  const receitas = [];
+  state.clients.filter(c=>c.status!=='encerrado').forEach(c=>{
+    const total = activeServicesInMonth(c.id, nm).reduce((a,sv)=>a+Number(sv.contracted_value||0),0);
+    if(total<=0) return;
+    const schedule = c.payment_days && c.payment_days.length ? c.payment_days : [{day:null, percent:100}];
+    schedule.forEach(item=>{
+      const day = item.day ? Math.min(item.day, lastDay) : lastDay;
+      receitas.push({c, value: total*(item.percent/100), due:`${nm}-${String(day).padStart(2,'0')}`});
+    });
+  });
+  receitas.sort((a,b)=>a.due.localeCompare(b.due) || a.c.name.localeCompare(b.c.name));
+  const receita = receitas.reduce((a,r)=>a+r.value,0);
+  const fixos = (state.fixed_expenses||[]).filter(fe=>fe.status!=='pausado').reduce((a,fe)=>a+Number(fe.value||0),0);
+  const folha = state.team_costs.reduce((a,t)=>a+Number(t.monthly_cost||0),0);
+  const lucro = receita - fixos - folha;
+  const emAberto = state.payments.filter(p=>p.status==='pendente'||p.status==='atrasado').reduce((a,p)=>a+Number(p.value),0);
+  return {nm, daysLeft, receitas, receita, fixos, folha, lucro, margem: receita>0 ? lucro/receita*100 : 0,
+    clientes: new Set(receitas.map(r=>r.c.id)).size, emAberto};
+}
+function nextMonthPreviewHTML(){
+  const f = nextMonthPreview();
+  if(!f) return '';
+  const mes = wrappedMonthName(f.nm).toLowerCase();
+  const stat = (label, value, cls='') => `<div class="fp-stat"><div class="l">${label}</div><div class="v mono ${cls}">${value}</div></div>`;
+  return `<div class="section-title">Prévia de ${mes} <span class="fp-chip">${f.daysLeft===0?'último dia do mês':f.daysLeft===1?'falta 1 dia':`faltam ${f.daysLeft} dias`}</span></div>
+    <div class="card fp-card" style="margin-bottom:24px;">
+      <div class="fp-stats">
+        ${stat('Receita prevista', fmtMoney(f.receita))}
+        ${stat('Gastos fixos + folha', fmtMoney(f.fixos+f.folha), 'neg')}
+        ${stat('Lucro previsto', fmtMoney(f.lucro), f.lucro>=0?'pos':'neg')}
+        ${stat('Margem prevista', f.margem.toFixed(0)+'%')}
+      </div>
+      <div class="fp-note">${f.clientes} ${f.clientes===1?'cliente':'clientes'} na conta · gastos fixos ${fmtMoney(f.fixos)} · folha ${fmtMoney(f.folha)}${f.emAberto>0?` · ainda falta receber ${fmtMoney(f.emAberto)} deste mês (fora da prévia)`:''}</div>
+      ${f.receitas.length?`<details class="fp-details"><summary>Ver cobranças previstas (${f.receitas.length})</summary>
+        <div class="table-wrap"><table>
+          <tr><th>Cliente</th><th>Valor</th><th>Vencimento</th></tr>
+          ${f.receitas.map(r=>`<tr><td>${escapeHTML(r.c.name)}</td><td class="mono">${fmtMoney(r.value)}</td><td>${fmtDate(r.due)}</td></tr>`).join('')}
+        </table></div></details>`:''}
+    </div>`;
+}
 function renderFinanceiro(el){
   const sortedPayments = [...state.payments].sort((a,b)=>{
     const rank = s=> s==='atrasado'?0 : s==='pendente'?1 : s==='pago'?2 : 3;
@@ -5031,6 +5094,7 @@ function renderFinanceiro(el){
       ${donutChartHTML(faturamento, despesasTotais, lucro)}
     </div>
 
+    ${nextMonthPreviewHTML()}
     <div class="section-title">Receitas <button class="btn small primary" id="addPaymentBtn">+ Receita</button></div>
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
