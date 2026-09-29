@@ -810,6 +810,15 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .wr-launch-go{margin-left:auto;font-size:12.5px;font-weight:600;color:var(--brand-light);white-space:nowrap;}
 .wr-toolbar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
 .wr-toolbar select{width:auto;}
+.wr-save{position:absolute;inset:0;z-index:5;display:flex;align-items:flex-end;justify-content:center;padding:16px;background:rgba(5,8,16,.55);}
+.wr-save-card{width:100%;max-width:420px;max-height:80vh;overflow:auto;text-align:center;padding:20px 18px 14px;border-radius:18px;border:1px solid rgba(143,176,255,.35);
+  background:radial-gradient(120% 100% at 50% 0%, rgba(62,111,240,.28), transparent 60%), var(--surface);display:flex;flex-direction:column;gap:10px;align-items:center;}
+.wr-save-card b{font-family:var(--font-display);font-size:16px;}
+.wr-save-card p{font-size:13px;color:var(--text-muted);margin:0;line-height:1.45;}
+.wr-save-card strong{color:var(--brand-light);}
+.wr-save-card .btn.primary{width:100%;justify-content:center;padding:12px;}
+.wr-save-imgs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%;}
+.wr-save-imgs img{width:100%;border-radius:8px;display:block;-webkit-touch-callout:default;}
 @media (prefers-reduced-motion: reduce){ .wr-slide.active .wr-anim,.wr-slide.active .wr-row .fill{animation:none;} }
 
 /* ============ LOGIN CRIATIVO ============
@@ -3539,8 +3548,8 @@ function openWrapped(month){
     clearTimeout(timer);
     if(!paused && i<els.length-1) timer = setTimeout(()=>show(i+1), DUR);
   }
-  async function exportSlide(slide, idx){
-    if(!window.html2canvas){ alert('Não consegui carregar o gerador de imagem. Confere a internet e tenta de novo.'); return; }
+  // gera o PNG 1080x1920 de uma tela
+  async function slideFile(slide, idx){
     stage.classList.add('wr-capture');
     const wasActive = slide.classList.contains('active');
     slide.classList.add('active');
@@ -3549,14 +3558,59 @@ function openWrapped(month){
       const raw = await html2canvas(slide, {backgroundColor:'#0A1128', scale:1080/slide.offsetWidth, logging:false});
       const canvas = document.createElement('canvas'); canvas.width = 1080; canvas.height = 1920;
       canvas.getContext('2d').drawImage(raw, 0, 0, 1080, 1920);
-      const a = document.createElement('a');
-      a.download = `smk-retrospectiva-${month}-${String(idx+1).padStart(2,'0')}.png`;
-      a.href = canvas.toDataURL('image/png');
-      a.click();
+      const blob = await new Promise(r=>canvas.toBlob(r, 'image/png'));
+      return new File([blob], `smk-retrospectiva-${month}-${String(idx+1).padStart(2,'0')}.png`, {type:'image/png'});
     } finally {
       if(!wasActive) slide.classList.remove('active');
       stage.classList.remove('wr-capture');
     }
+  }
+  // computador: baixa os arquivos. Celular: navegador não deixa baixar direto (principalmente iPhone),
+  // então abre o compartilhar do sistema (Salvar imagens / Instagram) num toque novo; sem isso, mostra as imagens pra segurar e salvar.
+  async function saveSlides(indexes, btn){
+    if(!window.html2canvas){ alert('Não consegui carregar o gerador de imagem. Confere a internet e tenta de novo.'); return; }
+    setPaused(true);
+    const label = btn.textContent; btn.disabled = true;
+    const files = [];
+    try{
+      for(let k=0;k<indexes.length;k++){
+        if(indexes.length>1) btn.textContent = `Gerando ${k+1}/${indexes.length}...`; else btn.textContent = 'Gerando...';
+        files.push(await slideFile(els[indexes[k]], indexes[k]));
+      }
+    } finally { btn.textContent = label; btn.disabled = false; }
+    const isTouch = window.matchMedia('(pointer: coarse)').matches;
+    if(!isTouch){
+      files.forEach((f,k)=>setTimeout(()=>{
+        const url = URL.createObjectURL(f), a = document.createElement('a');
+        a.href = url; a.download = f.name; document.body.appendChild(a); a.click(); a.remove();
+        setTimeout(()=>URL.revokeObjectURL(url), 4000);
+      }, k*250));
+      return;
+    }
+    showSaveSheet(files);
+  }
+  function showSaveSheet(files){
+    ov.querySelector('.wr-save')?.remove();
+    const canShare = navigator.canShare?.({files});
+    const sheet = document.createElement('div');
+    sheet.className = 'wr-save';
+    sheet.innerHTML = `<div class="wr-save-card">
+        <b>✓ ${files.length===1?'Imagem pronta':`${files.length} imagens prontas`}</b>
+        ${canShare
+          ? `<p>Toque abaixo e escolha <strong>Salvar ${files.length===1?'imagem':'imagens'}</strong> (ou mande direto pro Instagram).</p>
+             <button type="button" class="btn primary" data-wr-share>📲 Salvar / compartilhar</button>`
+          : `<p>Segure o dedo em cada imagem e toque em <strong>Salvar imagem</strong>.</p>
+             <div class="wr-save-imgs">${files.map(f=>`<img src="${URL.createObjectURL(f)}" alt="${f.name}">`).join('')}</div>`}
+        <button type="button" class="btn ghost small" data-wr-save-close>Fechar</button>
+      </div>`;
+    ov.appendChild(sheet);
+    const closeSheet = () => { sheet.querySelectorAll('img').forEach(im=>URL.revokeObjectURL(im.src)); sheet.remove(); };
+    sheet.querySelector('[data-wr-save-close]').addEventListener('click', closeSheet);
+    sheet.addEventListener('click', e=>{ e.stopPropagation(); if(e.target===sheet) closeSheet(); });
+    sheet.querySelector('[data-wr-share]')?.addEventListener('click', async ()=>{
+      try{ await navigator.share({files}); closeSheet(); }
+      catch(e){ if(e.name!=='AbortError') alert('Não consegui abrir o compartilhar. Tenta de novo.'); }
+    });
   }
   ov.querySelector('.wr-tap.prev').addEventListener('click', ()=>show(i-1));
   ov.querySelector('.wr-tap.next').addEventListener('click', ()=>show(i+1));
@@ -3564,13 +3618,8 @@ function openWrapped(month){
   ov.querySelector('#wrClose').addEventListener('click', close);
   ov.addEventListener('click', e=>{ if(e.target===ov) close(); });
   ov.querySelector('#wrMonth').addEventListener('change', e=>{ close(); openWrapped(e.target.value); });
-  ov.querySelector('#wrDl').addEventListener('click', async ()=>{ setPaused(true); await exportSlide(els[i], i); });
-  ov.querySelector('#wrDlAll').addEventListener('click', async (e)=>{
-    setPaused(true);
-    const btn = e.currentTarget; btn.disabled = true;
-    for(let k=0;k<els.length;k++){ btn.textContent = `Gerando ${k+1}/${els.length}...`; await exportSlide(els[k], k); }
-    btn.textContent = '⬇ Baixar todas'; btn.disabled = false;
-  });
+  ov.querySelector('#wrDl').addEventListener('click', e=>saveSlides([i], e.currentTarget));
+  ov.querySelector('#wrDlAll').addEventListener('click', e=>saveSlides(els.map((_,k)=>k), e.currentTarget));
   document.addEventListener('keydown', onKey);
   show(0);
 }
