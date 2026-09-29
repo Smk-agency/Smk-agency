@@ -1195,6 +1195,21 @@ function gravacaoClientMessage(c, clientName){
   msg += `\n\nQualquer dúvida, é só chamar!`;
   return msg;
 }
+function gravacaoConfirmMessage(c, clientName){
+  const firstName = (clientName||'').trim().split(' ')[0];
+  let msg = `Oi${firstName?', '+firstName:''}! ${greetingByHour()}! Tudo certo pra nossa ${(COMMITMENT_TYPES[c.type]||'gravação').toLowerCase()}? 🎬
+
+📅 ${fmtDate(c.date)}`;
+  if(c.time) msg += `
+🕐 ${c.time}`;
+  if(c.location) msg += `
+📍 ${c.location}
+${mapsLink(c.location)}`;
+  msg += `
+
+Consegue me confirmar, por favor? 🙏`;
+  return msg;
+}
 function contractUpdateMessage(clientName, changes, oldTotal, newTotal, effectiveMonth){
   const firstName = (clientName||'').trim().split(' ')[0];
   const [y,m] = effectiveMonth.split('-');
@@ -4520,11 +4535,47 @@ function openCommitmentCard(id){
     </div>
     <div class="modal-foot">
       <button class="btn ghost" data-close="genericModalOverlay">Fechar</button>
-      <button type="button" class="btn primary" id="copyCommitCardBtn">📋 Copiar imagem</button>
+      <button type="button" class="btn" id="copyCommitCardBtn">📋 Copiar imagem</button>
+      <button type="button" class="btn primary" id="waCommitCardBtn">💬 Enviar no WhatsApp</button>
     </div>
+    <div id="waCommitHint" style="display:none;font-size:12px;color:var(--text-muted);text-align:right;margin-top:8px;"></div>
   `;
   document.getElementById('copyCommitCardBtn').addEventListener('click', function(){ copyElementAsImage('commitCard', this); });
   openModal('genericModalOverlay');
+  // gera a imagem já ao abrir, pra o clique no WhatsApp ser instantâneo (navegador só deixa compartilhar logo após o toque)
+  const cardBlob = new Promise(resolve=>{
+    if(!window.html2canvas) return resolve(null);
+    setTimeout(()=>html2canvas(document.getElementById('commitCard'), {backgroundColor:'#0A1128', scale:2})
+      .then(cv=>cv.toBlob(b=>resolve(b), 'image/png')).catch(()=>resolve(null)), 350);
+  });
+  document.getElementById('waCommitCardBtn').addEventListener('click', ()=>shareCommitCardWhatsApp(c, client, cardBlob));
+}
+
+// celular: abre o compartilhar do sistema com imagem + texto (escolhe WhatsApp e o contato).
+// computador: copia a imagem e abre a conversa do cliente com o texto pronto — é só colar (Ctrl+V) a imagem.
+async function shareCommitCardWhatsApp(c, client, cardBlob){
+  const btn = document.getElementById('waCommitCardBtn');
+  const hint = document.getElementById('waCommitHint');
+  const text = gravacaoConfirmMessage(c, client?.name||'');
+  const blob = await cardBlob;
+  const file = blob ? new File([blob], `gravacao-${c.date}.png`, {type:'image/png'}) : null;
+  const isTouch = window.matchMedia('(pointer: coarse)').matches;
+  if(isTouch && file && navigator.canShare?.({files:[file]})){
+    try{ await navigator.share({files:[file], text}); return; }
+    catch(e){ if(e.name==='AbortError') return; }
+  }
+  let copied = false;
+  if(blob && navigator.clipboard?.write && typeof ClipboardItem!=='undefined'){
+    try{ await navigator.clipboard.write([new ClipboardItem({'image/png': blob})]); copied = true; }catch(e){}
+  }
+  const link = waLink(client?.whatsapp, text) || `https://wa.me/?text=${encodeURIComponent(text)}`;
+  const win = window.open(link, '_blank');
+  if(win) win.opener = null;
+  hint.style.display = 'block';
+  hint.innerHTML = (copied ? '✓ Imagem copiada — na conversa, é só colar (Ctrl+V) e enviar.' : 'Não deu pra copiar a imagem sozinho — use “Copiar imagem” e cole na conversa.')
+    + (win ? '' : ` <a href="${link}" target="_blank" rel="noopener" style="color:var(--brand-light);">Abrir WhatsApp</a>`)
+    + (!client?.whatsapp ? ' (cliente sem WhatsApp cadastrado — escolha o contato)' : '');
+  btn.blur();
 }
 
 function openCommitmentModal(existing, prefillDate){
