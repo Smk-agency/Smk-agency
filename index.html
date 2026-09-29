@@ -1391,6 +1391,40 @@ function generateMonthlyFixedExpenses(){
   return changed;
 }
 
+// Pagamento dos editores: R$ 40 por vídeo (Vídeo/Reels) entregue. Na virada do mês lança uma despesa pendente
+// por editor, vencendo dia 10, com os vídeos do mês que passou. Cada vídeo pago ganha editor_paid_month,
+// então um vídeo aprovado num mês e concluído no outro nunca é pago duas vezes.
+const VIDEO_EDIT_RATE = 40;
+const EDITOR_PAY_DAY = 10;
+const EDITOR_PAYOUTS_FROM = '2026-09'; // agosto e antes foram lançados na mão
+function unpaidEditorVideos(tasks){
+  return tasks.filter(t=>VIDEO_TASK_TYPES.includes(t.task_type) && !t.editor_paid_month && t.assignee_id && userById(t.assignee_id));
+}
+function generateEditorPayouts(){
+  const currentMonth = todayISO().slice(0,7);
+  const d = new Date(Number(currentMonth.slice(0,4)), Number(currentMonth.slice(5,7))-2, 1);
+  const prevMonth = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  const allExpenses = [...state.expenses, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.expenses||[])];
+  if(prevMonth < EDITOR_PAYOUTS_FROM) return false;
+  if(allExpenses.some(e=>e.editor_payout_month===prevMonth)) return false;
+  const videos = unpaidEditorVideos([
+    ...(state.archived_tasks?.[prevMonth]||[]),
+    ...state.tasks.filter(t=>t.status==='aprovado' || (t.status==='concluido' && t.completed_month===prevMonth)),
+  ]);
+  if(!videos.length) return false;
+  const byEditor = {};
+  videos.forEach(t=>{ (byEditor[t.assignee_id] = byEditor[t.assignee_id] || []).push(t); });
+  const mes = wrappedMonthName(prevMonth);
+  Object.entries(byEditor).forEach(([uid_, list])=>{
+    const u = userById(uid_);
+    state.expenses.push({id:uid(), category:'Prestadores', description:`${u.full_name} editor - ${mes} (${list.length} ${list.length===1?'vídeo':'vídeos'})`,
+      value: list.length*VIDEO_EDIT_RATE, expense_date:`${currentMonth}-${String(EDITOR_PAY_DAY).padStart(2,'0')}`,
+      status:'pendente', paid_at:null, editor_id:uid_, editor_payout_month:prevMonth});
+    list.forEach(t=>{ t.editor_paid_month = prevMonth; });
+  });
+  return true;
+}
+
 // Fim de mês: receitas/despesas já resolvidas (pagas/canceladas ou despesas passadas) saem do Financeiro ativo
 // e vão pra Arquivadas > Financeiro, por mês. Pendências/atrasos de meses antigos continuam visíveis até resolver.
 function archiveOldFinance(){
@@ -1478,8 +1512,9 @@ async function initApp(){
       const m3 = updateOverduePayments();
       const m4 = generateMonthlyInvoices();
       const m4b = generateMonthlyFixedExpenses();
+      const m4c = generateEditorPayouts();
       const m5 = archiveOldFinance();
-      if(m1 || m2 || m3 || m4 || m4b || m5) saveState(state);
+      if(m1 || m2 || m3 || m4 || m4b || m4c || m5) saveState(state);
     }
 
     agencyDocRef.onSnapshot(docSnap=>{
@@ -5044,9 +5079,13 @@ function nextMonthPreview(){
   const receita = receitas.reduce((a,r)=>a+r.value,0);
   const fixos = (state.fixed_expenses||[]).filter(fe=>fe.status!=='pausado').reduce((a,fe)=>a+Number(fe.value||0),0);
   const folha = state.team_costs.reduce((a,t)=>a+Number(t.monthly_cost||0),0);
-  const lucro = receita - fixos - folha;
+  // editores: vídeos entregues neste mês que ainda não foram pagos (viram despesa no dia 1º)
+  const cur = todayISO().slice(0,7);
+  const editorVideos = unpaidEditorVideos(state.tasks.filter(t=>t.status==='aprovado' || (t.status==='concluido' && t.completed_month===cur)));
+  const editores = editorVideos.length*VIDEO_EDIT_RATE;
+  const lucro = receita - fixos - folha - editores;
   const emAberto = state.payments.filter(p=>p.status==='pendente'||p.status==='atrasado').reduce((a,p)=>a+Number(p.value),0);
-  return {nm, daysLeft, receitas, receita, fixos, folha, lucro, margem: receita>0 ? lucro/receita*100 : 0,
+  return {nm, daysLeft, receitas, receita, fixos, folha, editores, editorVideos:editorVideos.length, lucro, margem: receita>0 ? lucro/receita*100 : 0,
     clientes: new Set(receitas.map(r=>r.c.id)).size, emAberto};
 }
 function nextMonthPreviewHTML(){
@@ -5058,11 +5097,11 @@ function nextMonthPreviewHTML(){
     <div class="card fp-card" style="margin-bottom:24px;">
       <div class="fp-stats">
         ${stat('Receita prevista', fmtMoney(f.receita))}
-        ${stat('Gastos fixos + folha', fmtMoney(f.fixos+f.folha), 'neg')}
+        ${stat('Custos previstos', fmtMoney(f.fixos+f.folha+f.editores), 'neg')}
         ${stat('Lucro previsto', fmtMoney(f.lucro), f.lucro>=0?'pos':'neg')}
         ${stat('Margem prevista', f.margem.toFixed(0)+'%')}
       </div>
-      <div class="fp-note">${f.clientes} ${f.clientes===1?'cliente':'clientes'} na conta · gastos fixos ${fmtMoney(f.fixos)} · folha ${fmtMoney(f.folha)}${f.emAberto>0?` · ainda falta receber ${fmtMoney(f.emAberto)} deste mês (fora da prévia)`:''}</div>
+      <div class="fp-note">${f.clientes} ${f.clientes===1?'cliente':'clientes'} na conta · gastos fixos ${fmtMoney(f.fixos)} · folha ${fmtMoney(f.folha)} · editores ${fmtMoney(f.editores)} (${f.editorVideos} ${f.editorVideos===1?'vídeo':'vídeos'} até agora)${f.emAberto>0?` · ainda falta receber ${fmtMoney(f.emAberto)} deste mês (fora da prévia)`:''}</div>
       ${f.receitas.length?`<details class="fp-details"><summary>Ver cobranças previstas (${f.receitas.length})</summary>
         <div class="table-wrap"><table>
           <tr><th>Cliente</th><th>Valor</th><th>Vencimento</th></tr>
