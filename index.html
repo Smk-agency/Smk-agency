@@ -431,6 +431,7 @@ label{font-size:11.5px;color:var(--text-muted);display:block;margin-bottom:5px;f
 .modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;}
 
 .comment-item{position:relative;padding:10px 30px 10px 10px;background:var(--surface-2);border-radius:8px;margin-bottom:7px;font-size:12.5px;}
+.comment-item .ctext,.feed-item-image .cap{white-space:pre-wrap;overflow-wrap:anywhere;}
 .comment-item .cauthor{font-weight:600;font-size:11.5px;margin-bottom:3px;}
 .comment-item .cauthor span{color:var(--text-faint);font-weight:400;margin-left:6px;}
 
@@ -4602,7 +4603,7 @@ function feedItemHTML(c){
       </div>
     </div>`;
   }
-  return `<div class="comment-item">${delBtn}<div class="cauthor">${author}<span>${when}</span></div>${c.content}</div>`;
+  return `<div class="comment-item">${delBtn}<div class="cauthor">${author}<span>${when}</span></div><div class="ctext">${c.content}</div></div>`;
 }
 
 function openTaskModal(id){
