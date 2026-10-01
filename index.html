@@ -790,6 +790,87 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .fp-details summary{cursor:pointer;font-size:12.5px;font-weight:600;color:var(--brand-light);}
 .fp-details .table-wrap{margin-top:10px;}
 @media(max-width:860px){ .fp-stats{grid-template-columns:repeat(2,minmax(0,1fr));} }
+/* mural */
+.mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
+.mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
+  background:linear-gradient(135deg, rgba(62,111,240,.16), rgba(62,111,240,.04) 60%), var(--surface);}
+.mural-note.unseen{box-shadow:0 0 0 1px rgba(91,140,255,.35), 0 10px 30px -18px rgba(62,111,240,.9);}
+.mural-pin{font-size:18px;line-height:1.2;transform:rotate(-12deg);}
+.mural-text{font-size:13.5px;line-height:1.45;white-space:pre-wrap;overflow-wrap:anywhere;}
+.mural-meta{font-size:11px;color:var(--text-faint);margin-top:4px;}
+.mural-actions{display:flex;align-items:center;gap:6px;flex-shrink:0;}
+.mural-ok{font-size:11.5px;color:var(--text-faint);}
+.mural-del{background:none;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;line-height:1;padding:2px 4px;}
+.mural-del:hover{color:var(--red);}
+.mural-add{align-self:flex-start;background:none;border:1px dashed var(--border);color:var(--text-muted);font-size:12px;padding:6px 12px;border-radius:99px;cursor:pointer;}
+.mural-add:hover{border-color:rgba(143,176,255,.5);color:var(--brand-light);}
+/* meta do mês */
+.goal-card{margin:16px 0 4px;padding:16px 18px;border-radius:14px;border:1px solid rgba(91,140,255,.3);background:radial-gradient(100% 140% at 0% 0%, rgba(62,111,240,.18), transparent 60%), var(--surface);}
+.goal-card.hit{border-color:rgba(143,176,255,.6);box-shadow:0 14px 40px -22px rgba(62,111,240,1);}
+.goal-head{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.goal-label{font-size:12px;color:var(--text-muted);}
+.goal-num b{font-family:var(--font-display);font-size:30px;font-weight:700;color:var(--brand-light);}
+.goal-num span{font-size:13px;color:var(--text-muted);margin-left:6px;}
+.goal-side{display:flex;align-items:center;gap:8px;}
+.goal-status{font-size:12px;font-weight:600;padding:4px 10px;border-radius:99px;}
+.goal-status.ok{color:var(--brand-light);background:rgba(62,111,240,.16);}
+.goal-status.warn{color:#E0A62D;background:rgba(224,166,45,.13);}
+.goal-track{position:relative;height:12px;border-radius:8px;background:var(--surface-2);overflow:visible;}
+.goal-fill{height:100%;border-radius:8px;background:linear-gradient(90deg,var(--brand-deep),var(--brand-bright));box-shadow:0 0 18px -4px rgba(91,140,255,.8);transition:width .8s cubic-bezier(.2,.8,.2,1);}
+.goal-pace{position:absolute;top:-4px;bottom:-4px;width:2px;border-radius:2px;background:var(--text);opacity:.55;}
+.goal-foot{display:flex;justify-content:space-between;font-size:11px;color:var(--text-faint);margin-top:7px;}
+.goal-empty{width:100%;margin:16px 0 4px;display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-radius:14px;border:1px dashed rgba(91,140,255,.4);background:none;color:var(--brand-light);font-weight:600;font-size:13.5px;cursor:pointer;}
+.goal-empty:hover{background:rgba(62,111,240,.08);}
+.confetti-wrap{position:fixed;inset:0;pointer-events:none;z-index:2000;overflow:hidden;}
+.confetti-wrap i{position:absolute;top:-20px;border-radius:2px;animation-name:confettiFall;animation-timing-function:cubic-bezier(.3,.6,.5,1);animation-fill-mode:forwards;}
+@keyframes confettiFall{to{transform:translate(var(--dx),105vh) rotate(var(--r));opacity:.9;}}
+/* linha do tempo */
+.timeline{position:relative;padding-left:4px;}
+.tl-month{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint);margin:12px 0 6px 40px;}
+.tl-month:first-child{margin-top:2px;}
+.tl-item{position:relative;display:flex;gap:12px;align-items:flex-start;padding:6px 8px 6px 0;border-radius:8px;}
+.tl-item[data-tl-task]{cursor:pointer;}
+.tl-item[data-tl-task]:hover{background:var(--surface-2);}
+.tl-item::before{content:"";position:absolute;left:15px;top:30px;bottom:-8px;width:2px;background:var(--border);}
+.tl-item:last-child::before{display:none;}
+.tl-dot{width:30px;height:30px;flex-shrink:0;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;background:var(--surface-2);border:1px solid var(--border);position:relative;z-index:1;}
+.tl-item.ok .tl-dot{border-color:rgba(31,169,124,.45);}
+.tl-item.warn .tl-dot{border-color:rgba(242,121,74,.45);}
+.tl-item.rec .tl-dot{border-color:rgba(91,140,255,.5);}
+.tl-item.money .tl-dot{border-color:rgba(31,169,124,.45);}
+.tl-item.future{opacity:.8;}
+.tl-item.future .tl-dot{border-style:dashed;}
+.tl-text{font-size:12.5px;line-height:1.4;padding-top:5px;}
+.tl-when{font-size:11px;color:var(--text-faint);margin-top:1px;}
+/* ícones animados no menu */
+.nav-item .ic svg{transition:transform .2s;transform-origin:50% 50%;}
+.nav-item:hover .ic svg, .nav-item.ic-anim .ic svg{animation-duration:.7s;animation-timing-function:cubic-bezier(.3,1.4,.5,1);}
+.nav-item[data-view="mesa"]:hover .ic svg, .nav-item[data-view="mesa"].ic-anim .ic svg{animation-name:icDrop;}
+.nav-item[data-view="dashboard"]:hover .ic svg, .nav-item[data-view="dashboard"].ic-anim .ic svg{animation-name:icPulse;}
+.nav-item[data-view="clientes"]:hover .ic svg, .nav-item[data-view="clientes"].ic-anim .ic svg{animation-name:icWiggle;}
+.nav-item[data-view="identidade"]:hover .ic svg, .nav-item[data-view="identidade"].ic-anim .ic svg{animation-name:icDrip;transform-origin:50% 100%;}
+.nav-item[data-view="orcamentos"]:hover .ic svg, .nav-item[data-view="orcamentos"].ic-anim .ic svg{animation-name:icTilt;transform-origin:50% 100%;}
+.nav-item[data-view="demandas"]:hover .ic svg, .nav-item[data-view="demandas"].ic-anim .ic svg{animation-name:icSlide;}
+.nav-item[data-view="agenda"]:hover .ic svg, .nav-item[data-view="agenda"].ic-anim .ic svg{animation-name:icFlip;}
+.nav-item[data-view="financeiro"]:hover .ic svg, .nav-item[data-view="financeiro"].ic-anim .ic svg{animation-name:icSpin;animation-duration:.8s;}
+.nav-item[data-view="rentabilidade"]:hover .ic svg *, .nav-item[data-view="rentabilidade"].ic-anim .ic svg *{stroke-dasharray:40;animation:icDraw .8s ease both;}
+.nav-item[data-view="equipe"]:hover .ic svg, .nav-item[data-view="equipe"].ic-anim .ic svg{animation-name:icSwing;transform-origin:50% 0;}
+.nav-item[data-view="arquivadas"]:hover .ic svg rect, .nav-item[data-view="arquivadas"].ic-anim .ic svg rect{animation:icLid .7s cubic-bezier(.3,1.4,.5,1);}
+@keyframes icDrop{30%{transform:translateY(3px) scaleY(.9);}60%{transform:translateY(-2px);}}
+@keyframes icPulse{40%{transform:scale(1.18);}70%{transform:scale(.95);}}
+@keyframes icWiggle{25%{transform:rotate(-10deg);}50%{transform:rotate(8deg);}75%{transform:rotate(-4deg);}}
+@keyframes icDrip{30%{transform:scale(1.1,.85);}60%{transform:scale(.92,1.12) translateY(-2px);}}
+@keyframes icTilt{40%{transform:rotate(-12deg);}75%{transform:rotate(4deg);}}
+@keyframes icSlide{30%{transform:translateX(3px);}60%{transform:translateX(-2px);}}
+@keyframes icFlip{50%{transform:perspective(60px) rotateX(180deg);}100%{transform:perspective(60px) rotateX(360deg);}}
+@keyframes icSpin{to{transform:rotateY(360deg);}}
+@keyframes icDraw{from{stroke-dashoffset:40;}to{stroke-dashoffset:0;}}
+@keyframes icSwing{25%{transform:rotate(14deg);}50%{transform:rotate(-10deg);}75%{transform:rotate(5deg);}}
+@keyframes icLid{40%{transform:translateY(-3px) rotate(-6deg);}}
+#notifBellBtn:hover svg{animation:icBell .8s ease;transform-origin:50% 10%;}
+#notifBellBtn.has-unread svg{animation:icBell 1s ease 1s 2;transform-origin:50% 10%;}
+@keyframes icBell{15%{transform:rotate(16deg);}30%{transform:rotate(-14deg);}45%{transform:rotate(10deg);}60%{transform:rotate(-6deg);}75%{transform:rotate(3deg);}}
+@media (prefers-reduced-motion: reduce){ .nav-item .ic svg, .nav-item .ic svg *, #notifBellBtn svg{animation:none !important;} }
 /* demanda parada */
 .tstuck{margin-top:7px;font-size:11px;font-weight:600;color:#E0A62D;background:rgba(224,166,45,.1);border:1px solid rgba(224,166,45,.25);border-radius:6px;padding:3px 7px;display:inline-block;}
 /* resumo da semana */
@@ -977,6 +1058,68 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
   #genericModalBody > div:not(.printable-card) { display:none !important; }
   .printable-card, .printable-card * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 }
+
+/* ============ TEMA CLARO (por pessoa; tela de login continua escura) ============ */
+html[data-theme="light"]{
+  --bg:#F2F4F8; --surface:#FFFFFF; --surface-2:#F3F5F9; --surface-3:#E7EBF2; --border:#DDE2EB;
+  --text:#151B26; --text-muted:#566074; --text-faint:#8790A2;
+  --accent-dim:#DCF3EA; --accent-soft:#12875F; --blue-dim:#E3EBFF; --amber-dim:#FBF0D8; --red-dim:#FBE4DF;
+  --brand-light:#2F5FDB; --brand-dim:rgba(62,111,240,.12);
+  color-scheme:light;
+}
+html[data-theme="light"] body{background:radial-gradient(circle at 12% 0%, rgba(62,111,240,.10), transparent 38%), radial-gradient(circle at 88% 100%, rgba(155,123,234,.08), transparent 42%), var(--bg);}
+html[data-theme="light"] .aurora span:nth-child(1){background:radial-gradient(circle, rgba(62,111,240,.10), transparent 62%);}
+html[data-theme="light"] .aurora span:nth-child(2){background:radial-gradient(circle, rgba(91,140,255,.10), transparent 62%);}
+html[data-theme="light"] .aurora span:nth-child(3){background:radial-gradient(circle, rgba(155,123,234,.07), transparent 62%);}
+html[data-theme="light"] .sidebar{background:radial-gradient(circle at 25% 0%, rgba(62,111,240,.10), transparent 40%), #FFFFFF;}
+html[data-theme="light"] .topbar{background:linear-gradient(180deg,rgba(242,244,248,.94),rgba(242,244,248,.82));}
+html[data-theme="light"] .topbar::after{background:linear-gradient(90deg,transparent,rgba(21,27,38,.08) 20%,rgba(21,27,38,.08) 80%,transparent);}
+html[data-theme="light"] .nav-label::after{background:linear-gradient(90deg,rgba(21,27,38,.08),transparent);}
+html[data-theme="light"] .nav-item .ic{background:#F3F5F9;border-color:#E3E7EF;}
+html[data-theme="light"] .nav-item:hover .ic{background:#E9EEF7;}
+html[data-theme="light"] .nav-item.active{color:#2A52C9;}
+html[data-theme="light"] .nav-item.active .ic{background:rgba(62,111,240,.12);border-color:rgba(62,111,240,.35);color:#2A52C9;box-shadow:0 0 14px -6px rgba(62,111,240,.6);}
+html[data-theme="light"] .nav-indicator{background:rgba(62,111,240,.09);}
+html[data-theme="light"] .kpi-card, html[data-theme="light"] .card, html[data-theme="light"] .client-card, html[data-theme="light"] .task-card, html[data-theme="light"] .modal{box-shadow:0 1px 2px rgba(21,27,38,.04), 0 10px 26px -18px rgba(21,27,38,.25);}
+html[data-theme="light"] .modal-overlay{background:rgba(21,27,38,.35);}
+html[data-theme="light"] .modal-close:hover{background:rgba(21,27,38,.06);}
+html[data-theme="light"] .btn:not(.primary){background:#FFFFFF;box-shadow:0 1px 2px rgba(21,27,38,.06);}
+html[data-theme="light"] .btn:hover{border-color:#C3CAD6;}
+html[data-theme="light"] .btn.ghost:not(.primary){background:transparent;box-shadow:none;}
+html[data-theme="light"] .btn.primary{color:#fff;}
+html[data-theme="light"] select, html[data-theme="light"] input[type=text], html[data-theme="light"] input[type=number], html[data-theme="light"] input[type=date], html[data-theme="light"] input[type=password], html[data-theme="light"] input[type=time], html[data-theme="light"] textarea{background-color:#FFFFFF;border-color:var(--border);color:var(--text);}
+html[data-theme="light"] select:hover, html[data-theme="light"] input[type=text]:hover, html[data-theme="light"] input[type=number]:hover, html[data-theme="light"] input[type=date]:hover, html[data-theme="light"] textarea:hover{border-color:#C3CAD6;}
+html[data-theme="light"] input[type=date], html[data-theme="light"] input[type=time]{color-scheme:light;}
+html[data-theme="light"] .search-input{background-color:#FFFFFF;}
+html[data-theme="light"] .search-input:hover{border-color:#C3CAD6;}
+html[data-theme="light"] .badge.blue{color:#2A52C9;}
+html[data-theme="light"] .badge.amber{color:#9A6A07;}
+html[data-theme="light"] .badge.red{color:#C2391F;}
+html[data-theme="light"] .shot-list{background:#F7F9FC;}
+html[data-theme="light"] .shot-item{border-top-color:rgba(21,27,38,.06);}
+html[data-theme="light"] .mesa-hero{background:radial-gradient(120% 140% at 0% 0%, rgba(62,111,240,.14), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgba(155,123,234,.10), transparent 60%), #FFFFFF;}
+html[data-theme="light"] .mesa-stat{background:#F7F9FC;}
+html[data-theme="light"] .month-progress .mp-fill[style*="255,255,255"]{background:#B9C2D3 !important;}
+html[data-theme="light"] .mp-track{background:#E7EBF2;}
+html[data-theme="light"] .wr-launch{background:linear-gradient(135deg, rgba(62,111,240,.10), rgba(155,123,234,.06)), #FFFFFF;}
+html[data-theme="light"] .goal-pace{background:#151B26;}
+html[data-theme="light"] .streak-pill{color:#9A4A12;background:linear-gradient(90deg, rgba(242,121,74,.16), rgba(224,166,45,.12));}
+html[data-theme="light"] .streak-pill b{color:#C2410C;}
+html[data-theme="light"] .tmrw-ok{color:#12875F;}
+html[data-theme="light"] .tstuck{color:#9A6A07;}
+html[data-theme="light"] .approve-stamp span{background:rgba(255,255,255,.9);color:#2A52C9;}
+html[data-theme="light"] .season-decor span{opacity:.4;}
+html[data-theme="light"] .notif-dropdown{box-shadow:0 18px 40px -18px rgba(21,27,38,.35);}
+html[data-theme="light"] .sidebar-brand .brand-logo-sm, html[data-theme="light"] .sidebar-brand img{filter:invert(1) hue-rotate(180deg) brightness(.2);}
+html[data-theme="light"] ::-webkit-scrollbar-thumb{background:#CBD2DE;}
+html.theme-anim, html.theme-anim *{transition:background-color .35s ease, border-color .35s ease, color .25s ease !important;}
+.theme-toggle{width:34px;height:34px;border-radius:10px;border:1px solid var(--border);background:var(--surface-2);color:var(--text-muted);display:inline-flex;align-items:center;justify-content:center;cursor:pointer;margin-right:8px;flex-shrink:0;transition:color .15s,border-color .15s;}
+.theme-toggle:hover{color:var(--text);border-color:var(--text-faint);}
+.theme-toggle svg{width:17px;height:17px;transition:transform .5s cubic-bezier(.3,1.4,.5,1);}
+.theme-toggle:hover svg{transform:rotate(25deg);}
+.theme-toggle .moon{display:none;}
+html[data-theme="light"] .theme-toggle .moon{display:block;}
+html[data-theme="light"] .theme-toggle .sun{display:none;}
 </style>
 </head>
 <body>
@@ -1110,7 +1253,13 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
           <input type="text" id="globalSearch" class="search-input" placeholder="Buscar clientes, demandas..." autocomplete="off">
           <div class="search-dropdown" id="searchDropdown"></div>
         </div>
-        <button class="btn primary small" id="newTaskBtn">+ Nova demanda</button>
+        <div style="display:flex;align-items:center;">
+          <button type="button" class="theme-toggle" id="themeToggle" title="Alternar tema claro/escuro" aria-label="Alternar tema">
+            <svg class="sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+            <svg class="moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/></svg>
+          </button>
+          <button class="btn primary small" id="newTaskBtn">+ Nova demanda</button>
+        </div>
       </div>
       <div class="content" id="content"></div>
     </main>
@@ -1200,11 +1349,31 @@ function isTaskLate(t){ return t.status==='a_fazer' && !!t.due_date && t.due_dat
 // (concluído só existe depois de passar por aprovado); tarefas concluídas de meses
 // anteriores já saem de state.tasks (vão pro arquivo), então isso naturalmente fica só com o mês corrente
 const VIDEO_TASK_TYPES = ['Vídeo', 'Reels'];
+// Entrega pertence ao mês em que a demanda foi APROVADA (última aprovação). Concluída usa completed_month,
+// que já nasce com o mês da aprovação. Sem registro de aprovação (demandas antigas), vale o mês atual.
+function approvalMonthOf(t){
+  const ts = taskActivity().approvedLast[t.id];
+  return ts ? localKeyOf(ts).slice(0,7) : null;
+}
+function deliveredMonthOf(t){
+  if(t.status==='concluido') return t.completed_month || null;
+  if(t.status==='aprovado') return approvalMonthOf(t) || todayISO().slice(0,7);
+  return null;
+}
+function isDeliveredIn(t, m){ return deliveredMonthOf(t)===m; }
+// concluída de um mês anterior (aprovada lá atrás) vai pro arquivo daquele mês, não conta no mês atual
+function fixConcludedMonths(){
+  let changed = false;
+  state.tasks.forEach(t=>{
+    if(t.status!=='concluido' || !t.completed_month) return;
+    const am = approvalMonthOf(t);
+    if(am && am < t.completed_month){ t.completed_month = am; changed = true; }
+  });
+  return changed;
+}
 function approvedListThisMonth(userId, types){
   const currentMonth = todayISO().slice(0,7);
-  return state.tasks.filter(t=>t.assignee_id===userId && types.includes(t.task_type)
-    && (t.status==='aprovado' || (t.status==='concluido' && t.completed_month===currentMonth))
-  );
+  return state.tasks.filter(t=>t.assignee_id===userId && types.includes(t.task_type) && isDeliveredIn(t, currentMonth));
 }
 function videosApprovedListThisMonth(userId){ return approvedListThisMonth(userId, VIDEO_TASK_TYPES); }
 function videosApprovedThisMonth(userId){
@@ -1401,6 +1570,7 @@ function seed(){
     settings:{margin_thresholds:{excelente:40,saudavel:25,atencao:15}}, currentUserId:null};
 }
 
+const IS_LOCAL_TEST = ['localhost','127.0.0.1','[::1]'].includes(location.hostname) || location.protocol==='file:';
 // `state` guarda tudo (dados compartilhados vindos do Firestore + currentUserId, que é local/por dispositivo).
 function saveState(s){
   // sessão (quem tá logado neste navegador) fica só localmente
@@ -1410,6 +1580,8 @@ function saveState(s){
   }catch(e){}
   // resto dos dados vai pro Firestore, compartilhado com todo mundo
   if(!agencyDocRef) return;
+  // cópia de teste rodando no computador (localhost) nunca grava no banco de produção
+  if(IS_LOCAL_TEST){ console.warn('[teste local] gravação no Firestore bloqueada'); return; }
   const {currentUserId, ...shared} = s;
   agencyDocRef.set(shared).catch(err=>console.error('Erro ao salvar no Firestore:', err));
 }
@@ -1621,7 +1793,7 @@ async function initApp(){
     if(!snap.exists){
       const seedData = seed();
       const {currentUserId, ...shared} = seedData;
-      await agencyDocRef.set(shared);
+      if(!IS_LOCAL_TEST) await agencyDocRef.set(shared);
       Object.assign(state, shared);
     } else {
       Object.assign(state, snap.data());
@@ -1632,13 +1804,14 @@ async function initApp(){
       if(!state.fixed_expenses) state.fixed_expenses = [];
       if(!state.notification_reads) state.notification_reads = {};
       const m1 = migrateLegacyTasks();
+      const m1b = fixConcludedMonths();
       const m2 = archiveOldCompletedTasks();
       const m3 = updateOverduePayments();
       const m4 = generateMonthlyInvoices();
       const m4b = generateMonthlyFixedExpenses();
       const m4c = generateEditorPayouts();
       const m5 = archiveOldFinance();
-      if(m1 || m2 || m3 || m4 || m4b || m4c || m5) saveState(state);
+      if(m1 || m1b || m2 || m3 || m4 || m4b || m4c || m5) saveState(state);
     }
 
     agencyDocRef.onSnapshot(docSnap=>{
@@ -1651,6 +1824,7 @@ async function initApp(){
       if(!state.fixed_expenses) state.fixed_expenses = [];
       if(!state.notification_reads) state.notification_reads = {};
       migrateLegacyTasks();
+      fixConcludedMonths();
       archiveOldCompletedTasks();
       updateOverduePayments();
       const appVisible = document.getElementById('app').style.display !== 'none';
@@ -1806,6 +1980,11 @@ function getNotificationsForUser(u){
     if(!(c.user_ids||[]).includes(u.id)) return;
     items.push({id:'ag_'+c.id, text:`Você foi adicionado a "${c.title}" (${COMMITMENT_TYPES[c.type]||c.type}) em ${fmtDate(c.date)}`, timestamp:c.created_at||0, action:{type:'agenda', date:c.date}});
   });
+  (state.board_notes||[]).forEach(nt=>{
+    if(nt.created_by===u.id) return;
+    const a = userById(nt.created_by)?.full_name || 'Alguém';
+    items.push({id:'nt_'+nt.id, text:`📌 Recado de ${a}: ${nt.text.length>90?nt.text.slice(0,90)+'…':nt.text}`, timestamp:nt.created_at, action:{type:'mesa'}});
+  });
   if(isWrappedDay()){
     const n = new Date(), m = localDayKey().slice(0,7);
     items.push({id:'wr_'+m, text:`🎁 Chegou a Retrospectiva de ${wrappedMonthName(m).toLowerCase()}! Toca aqui pra ver o mês da SMK.`,
@@ -1819,6 +1998,7 @@ function goToNotifTarget(action){
   if(!action) return;
   if(action.type==='task'){ openTaskModal(action.id); }
   else if(action.type==='wrapped'){ openWrapped(); render(); }
+  else if(action.type==='mesa'){ currentView='mesa'; setActiveNav(); render(); }
   else if(action.type==='agenda'){
     currentView='agenda'; agendaTab='mine'; agendaSelectedDay=action.date; agendaCalCursor=new Date(action.date+'T00:00:00');
     setActiveNav(); render();
@@ -1835,6 +2015,7 @@ function renderNotifBell(){
   const badge = document.getElementById('notifBadge');
   badge.textContent = unread>9 ? '9+' : String(unread);
   badge.style.display = unread>0 ? 'flex' : 'none';
+  document.getElementById('notifBellBtn').classList.toggle('has-unread', unread>0);
 
   const dropdown = document.getElementById('notifDropdown');
   dropdown.innerHTML = `
@@ -2021,7 +2202,22 @@ function refreshSidebarProfile(){
   document.getElementById('sbRole').textContent = ROLE_LABEL[u.role];
 }
 
+// tema claro/escuro: escolha de cada pessoa, guardada neste aparelho
+function themeKey(){ return `smkos_theme_${state.currentUserId||'anon'}`; }
+function applyTheme(){
+  let t = 'dark';
+  try{ t = localStorage.getItem(themeKey()) || 'dark'; }catch(e){}
+  document.documentElement.dataset.theme = t;
+}
+document.getElementById('themeToggle').addEventListener('click', ()=>{
+  const next = document.documentElement.dataset.theme==='light' ? 'dark' : 'light';
+  try{ localStorage.setItem(themeKey(), next); }catch(e){}
+  document.documentElement.classList.add('theme-anim');
+  document.documentElement.dataset.theme = next;
+  setTimeout(()=>document.documentElement.classList.remove('theme-anim'), 450);
+});
 function enterApp(){
+  applyTheme();
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='block';
   refreshSidebarProfile();
@@ -2034,7 +2230,13 @@ function enterApp(){
   renderNotifBell();
 }
 
+// ícones do menu: animação também ao abrir a tela (além do hover)
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click', ()=>{
+  b.classList.remove('ic-anim'); void b.offsetWidth; b.classList.add('ic-anim');
+  setTimeout(()=>b.classList.remove('ic-anim'), 900);
+}));
 document.getElementById('logoutBtn').addEventListener('click', ()=>{
+  document.documentElement.removeAttribute('data-theme');
   state.currentUserId = null;
   try{ localStorage.setItem(SESSION_KEY, JSON.stringify({currentUserId:null})); }catch(e){}
   document.getElementById('app').style.display='none';
@@ -2247,6 +2449,7 @@ function renderMesa(el){
   const monthName = now.toLocaleDateString('pt-BR',{month:'long'});
 
   el.innerHTML = `
+    ${muralHTML()}
     <div style="margin:-8px 0 18px;">${wrappedLauncherHTML()}</div>
     ${canSeeAgencyOverview()?`
     <div class="filter-bar">
@@ -2294,6 +2497,11 @@ function renderMesa(el){
           <div class="mp-label"><span>Entregues (prazo no mês) · ${deliveredThisMonth.length}/${dueThisMonth.length}</span><b>${deliveryPct}%</b></div>
           <div class="mp-track"><div class="mp-fill" style="width:${deliveryPct}%;background:${deliveryPct>=monthPct ? STATUS_COLOR.aprovado : STATUS_COLOR.em_revisao};"></div></div>
         </div>
+        ${(()=>{ const g = monthGoalStatus(); if(!g.goal) return '';
+          return `<div class="mp-row">
+          <div class="mp-label"><span>🎯 Meta da agência · ${g.done}/${g.goal}</span><b>${Math.round(g.pct*100)}%</b></div>
+          <div class="mp-track"><div class="mp-fill" style="width:${Math.min(100,g.pct*100)}%;background:linear-gradient(90deg,var(--brand),var(--brand-bright));"></div></div>
+        </div>`; })()}
       </div>
     </div>
     ${marketingDatesHTML()}
@@ -2322,6 +2530,8 @@ function renderMesa(el){
     openCommitmentModal(state.commitments.find(x=>x.id===card.dataset.todayCommitment));
   }));
   el.querySelectorAll('[data-commitment-card]').forEach(b=>b.addEventListener('click', e=>{ e.stopPropagation(); openCommitmentCard(b.dataset.commitmentCard); }));
+  wireMural(el);
+  maybeCelebrateGoal();
   el.querySelectorAll('[data-toggle-confirm]').forEach(b=>b.addEventListener('click', e=>{
     e.stopPropagation();
     const c = state.commitments.find(x=>x.id===b.dataset.toggleConfirm); if(!c) return;
@@ -2336,21 +2546,191 @@ function renderMesa(el){
 }
 
 // "Hoje": compromissos do dia (com a pauta, se for gravação) + demandas que vencem hoje
+/* ---------- 📌 MURAL DA EQUIPE (recados fixados no topo da Mesa) ---------- */
+function canPostNotes(){ return canSeeAgencyOverview(); }
+function timeAgo(ts){
+  const m = Math.floor((Date.now()-ts)/60000);
+  if(m<1) return 'agora'; if(m<60) return `há ${m} min`;
+  const h = Math.floor(m/60); if(h<24) return `há ${h}h`;
+  const d = Math.floor(h/24); return d===1 ? 'ontem' : `há ${d} dias`;
+}
+function muralHTML(){
+  const me = currentUser();
+  const notes = [...(state.board_notes||[])].sort((a,b)=>b.created_at-a.created_at).slice(0,3);
+  if(!notes.length && !canPostNotes()) return '';
+  const team = state.users.filter(u=>u.status!=='disabled');
+  return `<div class="mural">
+    ${notes.map(n=>{
+      const author = userById(n.created_by);
+      const seen = n.seen_by||[];
+      const mine = n.created_by===me.id;
+      const audience = team.filter(u=>u.id!==n.created_by);
+      const seenNames = audience.filter(u=>seen.includes(u.id)).map(u=>u.full_name);
+      return `<div class="mural-note ${!mine && !seen.includes(me.id)?'unseen':''}">
+        <div class="mural-pin">📌</div>
+        <div style="min-width:0;flex:1;">
+          <div class="mural-text">${escapeHTML(n.text)}</div>
+          <div class="mural-meta">${author?escapeHTML(author.full_name):'—'} · ${timeAgo(n.created_at)}
+            ${mine || isDono() ? ` · <span title="${seenNames.join(', ')||'ninguém ainda'}">👁 visto por ${seenNames.length} de ${audience.length}</span>` : ''}</div>
+        </div>
+        <div class="mural-actions">
+          ${!mine ? (seen.includes(me.id) ? '<span class="mural-ok">✓ visto</span>' : `<button type="button" class="btn small" data-note-seen="${n.id}">👍 Visto</button>`) : ''}
+          ${mine || isDono() ? `<button type="button" class="mural-del" data-note-del="${n.id}" title="Tirar do mural">×</button>` : ''}
+        </div>
+      </div>`; }).join('')}
+    ${canPostNotes() ? `<button type="button" class="mural-add" id="newNoteBtn">📌 Fixar recado pro time</button>` : ''}
+  </div>`;
+}
+function wireMural(el){
+  el.querySelectorAll('[data-note-seen]').forEach(b=>b.addEventListener('click', ()=>{
+    const n = (state.board_notes||[]).find(x=>x.id===b.dataset.noteSeen); if(!n) return;
+    n.seen_by = [...new Set([...(n.seen_by||[]), currentUser().id])];
+    saveState(state); render();
+  }));
+  el.querySelectorAll('[data-note-del]').forEach(b=>b.addEventListener('click', ()=>{
+    if(!confirm('Tirar esse recado do mural?')) return;
+    state.board_notes = (state.board_notes||[]).filter(x=>x.id!==b.dataset.noteDel);
+    saveState(state); render();
+  }));
+  el.querySelector('#newNoteBtn')?.addEventListener('click', openNoteModal);
+}
+function openNoteModal(){
+  document.getElementById('itemModalTitle').textContent = '📌 Recado pro time';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div class="field"><label>Recado <span class="hint">aparece no topo da Mesa de todo mundo</span></label>
+      <textarea id="note_text" rows="4" maxlength="400" placeholder="Ex: Sexta tem reunião de pauta às 10h. Tragam ideias pro Dia das Crianças 🧸"></textarea></div>
+    <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="noteSave">Fixar no mural</button></div>`;
+  openModal('itemModalOverlay');
+  setTimeout(()=>document.getElementById('note_text')?.focus(), 50);
+  document.getElementById('noteSave').addEventListener('click', ()=>{
+    const text = document.getElementById('note_text').value.trim();
+    if(!text) return;
+    state.board_notes = state.board_notes || [];
+    state.board_notes.push({id:uid(), text, created_by:currentUser().id, created_at:Date.now(), seen_by:[]});
+    // mural mostra os 3 mais recentes; guarda no máximo 10 pra não pesar o banco
+    state.board_notes = state.board_notes.sort((a,b)=>b.created_at-a.created_at).slice(0,10);
+    saveState(state); closeModal('itemModalOverlay'); render();
+  });
+}
+
+/* ---------- 🎯 META DO MÊS DA AGÊNCIA ---------- */
+function monthGoalStatus(){
+  const m = todayISO().slice(0,7);
+  const goal = Number((state.monthly_goals||{})[m]) || 0;
+  const done = state.tasks.filter(t=>isDeliveredIn(t, m)).length;
+  const n = new Date(), monthPct = n.getDate()/new Date(n.getFullYear(), n.getMonth()+1, 0).getDate();
+  return {m, goal, done, pct: goal ? done/goal : 0, monthPct, expected: Math.round(goal*monthPct), hit: goal>0 && done>=goal};
+}
+function monthGoalCardHTML(){
+  const g = monthGoalStatus();
+  const mes = wrappedMonthName(g.m).toLowerCase();
+  if(!g.goal) return isDono() ? `<button type="button" class="goal-empty" id="editGoalBtn">🎯 Definir a meta de entregas de ${mes} <span>→</span></button>` : '';
+  const diff = g.done - g.expected;
+  const status = g.hit ? `🎉 Meta batida! ${g.done-g.goal>0?`+${g.done-g.goal} além da meta`:''}` : diff>=0 ? '✓ No ritmo' : `${-diff} abaixo do ritmo`;
+  return `<div class="goal-card ${g.hit?'hit':''}">
+    <div class="goal-head">
+      <div><div class="goal-label">🎯 Meta de ${mes}</div><div class="goal-num"><b ${countAttrs(g.done,'int')}>${g.done}</b><span>/ ${g.goal} entregas</span></div></div>
+      <div class="goal-side"><div class="goal-status ${g.hit?'ok':diff>=0?'ok':'warn'}">${status}</div>${isDono()?'<button type="button" class="btn ghost small" id="editGoalBtn">editar</button>':''}</div>
+    </div>
+    <div class="goal-track"><div class="goal-fill" style="width:${Math.min(100,g.pct*100)}%;"></div><div class="goal-pace" style="left:${g.monthPct*100}%;" title="Onde deveria estar hoje: ${g.expected}"></div></div>
+    <div class="goal-foot"><span>${Math.round(g.pct*100)}% da meta</span><span>ritmo ideal hoje: ${g.expected}</span></div>
+  </div>`;
+}
+function openGoalModal(){
+  const g = monthGoalStatus();
+  document.getElementById('itemModalTitle').textContent = `🎯 Meta de ${wrappedMonthName(g.m).toLowerCase()}`;
+  document.getElementById('itemModalBody').innerHTML = `
+    <div class="field"><label>Entregas no mês <span class="hint">peças aprovadas ou concluídas, de todos os clientes</span></label>
+      <input type="number" id="goal_n" min="1" value="${g.goal||''}" placeholder="Ex: 120"></div>
+    <div style="font-size:12px;color:var(--text-muted);margin:-6px 0 14px;">Até agora: <b>${g.done}</b> entregas neste mês.</div>
+    <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="goalSave">Salvar meta</button></div>`;
+  openModal('itemModalOverlay');
+  document.getElementById('goalSave').addEventListener('click', ()=>{
+    const v = Math.max(0, Math.round(Number(document.getElementById('goal_n').value)||0));
+    state.monthly_goals = state.monthly_goals || {};
+    if(v) state.monthly_goals[g.m] = v; else delete state.monthly_goals[g.m];
+    saveState(state); closeModal('itemModalOverlay'); render();
+  });
+}
+// confete uma vez por pessoa por mês quando a meta bate
+function maybeCelebrateGoal(){
+  const g = monthGoalStatus();
+  if(!g.hit) return;
+  const key = `smkos_goal_party_${currentUser()?.id}_${g.m}`;
+  try{ if(localStorage.getItem(key)) return; localStorage.setItem(key,'1'); }catch(e){ return; }
+  confettiBurst();
+}
+function confettiBurst(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const wrap = document.createElement('div'); wrap.className = 'confetti-wrap';
+  const colors = ['#3E6FF0','#5B8CFF','#8FB0FF','#FFFFFF','#9B7BEA','#2A52C9'];
+  wrap.innerHTML = Array.from({length:90},(_,i)=>{
+    const x = Math.random()*100, d = 2.2+Math.random()*1.8, delay = Math.random()*.5, r = Math.random()*720-360, w = 6+Math.random()*6;
+    return `<i style="left:${x}%;width:${w}px;height:${w*.45}px;background:${colors[i%colors.length]};animation-duration:${d}s;animation-delay:${delay}s;--r:${r}deg;--dx:${Math.random()*160-80}px;"></i>`;
+  }).join('');
+  document.body.appendChild(wrap);
+  setTimeout(()=>wrap.remove(), 4800);
+}
+
+/* ---------- 🕓 LINHA DO TEMPO DO CLIENTE ---------- */
+function clientTimeline(clientId){
+  const ev = [];
+  const all = [...state.tasks, ...Object.values(state.archived_tasks||{}).flat()].filter(t=>t.client_id===clientId);
+  const byId = Object.fromEntries(all.map(t=>[t.id,t]));
+  const toAp = `para "${STATUS_LABEL.aprovado}"`, toAlt = `para "${STATUS_LABEL.alteracao_solicitada}"`;
+  (state.task_comments||[]).forEach(c=>{
+    const t = byId[c.task_id]; if(!t || !c.created_at || c.type!=='system') return;
+    if((c.content||'').endsWith(toAp)) ev.push({ts:c.created_at, ic:'✅', kind:'ok', text:`Aprovada: ${t.title}`, task:t.id});
+    else if((c.content||'').endsWith(toAlt)) ev.push({ts:c.created_at, ic:'✏️', kind:'warn', text:`Alteração pedida: ${t.title}`, task:t.id});
+  });
+  all.filter(t=>t.created_at).forEach(t=>ev.push({ts:t.created_at, ic:'➕', kind:'', text:`Demanda criada: ${t.title}`, task:t.id}));
+  (state.commitments||[]).filter(c=>c.client_id===clientId && c.date).forEach(c=>{
+    const ts = new Date(`${c.date}T${c.time||'09:00'}:00`).getTime();
+    ev.push({ts, ic:'🎬', kind:'rec', text:`${COMMITMENT_TYPES[c.type]||'Compromisso'}: ${c.title||''}${c.client_confirmed_at?' · ✓ confirmada':''}`, future: ts>Date.now()});
+  });
+  if(isDono()){
+    const pays = [...state.payments, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.payments||[])].filter(x=>x.client_id===clientId && x.status==='pago' && x.paid_at);
+    pays.forEach(x=>ev.push({ts:new Date(x.paid_at+'T12:00:00').getTime(), ic:'💰', kind:'money', text:`Pagamento recebido: ${fmtMoney(x.value)}`}));
+    state.client_services.filter(sv=>sv.client_id===clientId && sv.effective_from).forEach(sv=>{
+      ev.push({ts:new Date(sv.effective_from+'-01T08:00:00').getTime(), ic:'📄', kind:'', text:`Serviço: ${sv.service_type} · ${fmtMoney(sv.contracted_value)}`, future: sv.effective_from>todayISO().slice(0,7)});
+    });
+  }
+  return ev.sort((a,b)=>b.ts-a.ts);
+}
+function clientTimelineHTML(clientId, limit=14){
+  const ev = clientTimeline(clientId);
+  if(!ev.length) return emptyStateHTML('folder','Ainda sem histórico.','Gravações, aprovações e pagamentos vão aparecendo aqui.','padding:16px;');
+  let lastMonth = '';
+  return `<div class="timeline">${ev.slice(0,limit).map(e=>{
+    const d = new Date(e.ts), mk = `${d.getFullYear()}-${d.getMonth()}`;
+    const head = mk!==lastMonth ? `<div class="tl-month">${d.toLocaleDateString('pt-BR',{month:'long', year:'numeric'})}</div>` : '';
+    lastMonth = mk;
+    return `${head}<div class="tl-item ${e.kind} ${e.future?'future':''}" ${e.task?`data-tl-task="${e.task}"`:''}>
+      <div class="tl-dot">${e.ic}</div>
+      <div class="tl-body"><div class="tl-text">${escapeHTML(e.text)}</div>
+        <div class="tl-when">${e.future?'em breve · ':''}${d.toLocaleDateString('pt-BR',{day:'2-digit', month:'2-digit'})}${d.getHours()||d.getMinutes()?' · '+d.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):''}</div></div>
+    </div>`; }).join('')}</div>
+    ${ev.length>limit?`<button type="button" class="btn ghost small" id="tlMoreBtn" style="margin-top:6px;">Ver tudo (${ev.length})</button>`:''}`;
+}
+
 /* ---------- ATIVIDADE DAS DEMANDAS (parada, sequência no prazo, resumo da semana) ---------- */
 // última movimentação de cada demanda (comentário ou mudança de status) — calculado uma vez por versão dos dados
 let _activityMemo = {ref:null, len:-1, last:null, review:null};
 function taskActivity(){
   const cm = state.task_comments || [];
   if(_activityMemo.ref===cm && _activityMemo.len===cm.length) return _activityMemo;
-  const last = {}, review = {}, approved = [];
+  const last = {}, review = {}, approved = [], approvedLast = {};
   const toReview = `para "${STATUS_LABEL.em_revisao}"`, toApproved = `para "${STATUS_LABEL.aprovado}"`;
   cm.forEach(c=>{
     if(!c.created_at) return;
     if(!last[c.task_id] || c.created_at>last[c.task_id]) last[c.task_id] = c.created_at;
     if(c.type==='system' && (c.content||'').endsWith(toReview) && (!review[c.task_id] || c.created_at<review[c.task_id])) review[c.task_id] = c.created_at;
-    if(c.type==='system' && (c.content||'').endsWith(toApproved)) approved.push({task_id:c.task_id, at:c.created_at});
+    if(c.type==='system' && (c.content||'').endsWith(toApproved)){
+      approved.push({task_id:c.task_id, at:c.created_at});
+      if(!approvedLast[c.task_id] || c.created_at>approvedLast[c.task_id]) approvedLast[c.task_id] = c.created_at;
+    }
   });
-  _activityMemo = {ref:cm, len:cm.length, last, review, approved};
+  _activityMemo = {ref:cm, len:cm.length, last, review, approved, approvedLast};
   return _activityMemo;
 }
 const STUCK_STATUSES = ['em_revisao','alteracao_solicitada'];
@@ -2636,6 +3016,7 @@ function renderDashboard(el){
 
     ${wrappedLauncherHTML()}
     ${weekSummaryHTML()}
+    ${monthGoalCardHTML()}
     <div class="kpi-grid" style="margin-top:14px;">
       ${kpiCardHTML({icon:'trendUp', color:'#5B8CFF', label:'Faturamento do mês', value:fmtMoney(faturamento), valueClass:'mono', count:faturamento, fmt:'money'})}
       ${kpiCardHTML({icon:'check', color:'#1FA97C', label:'Recebido', value:fmtMoney(recebido), valueClass:'pos', count:recebido, fmt:'money'})}
@@ -2684,6 +3065,8 @@ function renderDashboard(el){
   });
   wireChartTooltips(el);
   document.getElementById('openWrappedBtn')?.addEventListener('click', handleWrappedLaunch);
+  document.getElementById('editGoalBtn')?.addEventListener('click', openGoalModal);
+  maybeCelebrateGoal();
   el.querySelectorAll('[data-pkg-client]').forEach(r=>r.addEventListener('click', ()=>openClientDetail(r.dataset.pkgClient)));
 }
 
@@ -3378,6 +3761,8 @@ function openClientDetail(id){
       return html;
     })()}
     `:''}
+    <div class="section-title">🕓 Linha do tempo</div>
+    <div id="clientTimeline">${clientTimelineHTML(id)}</div>
     <div class="section-title">Demandas (${tasks.length})</div>
     ${tasks.map(t=>`<div class="task-card" data-task-id="${t.id}" style="padding:10px 12px;margin-bottom:6px;font-size:12.5px;display:flex;justify-content:space-between;align-items:center;"><span>${t.title}</span>${statusBadgeHTML(t.status)}</div>`).join('') || '<div class="empty">Sem demandas ainda.</div>'}
     <div class="modal-foot">
@@ -3389,6 +3774,12 @@ function openClientDetail(id){
   `;
   document.getElementById('editClientBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openClientModal(c); });
   document.getElementById('clientReportBtn').addEventListener('click', ()=>openClientMonthReport(id));
+  const wireTimeline = () => {
+    const box = document.getElementById('clientTimeline');
+    box.querySelectorAll('[data-tl-task]').forEach(r=>r.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openTaskModal(r.dataset.tlTask); }));
+    box.querySelector('#tlMoreBtn')?.addEventListener('click', ()=>{ box.innerHTML = clientTimelineHTML(id, 9999); wireTimeline(); });
+  };
+  wireTimeline();
   document.getElementById('editPackageBtn')?.addEventListener('click', ()=>openPackageModal(id));
   document.getElementById('archiveClientBtn')?.addEventListener('click', ()=>{
     document.getElementById('itemModalTitle').textContent = 'Encerrar cliente';
@@ -3708,7 +4099,7 @@ function wrappedData(m){
   // arquivadas do mês + concluídas que ainda estão no quadro (o arquivamento vira o mês em UTC, 21h no Brasil)
   const archived = state.archived_tasks?.[m] || [];
   const delivered = [...archived, ...state.tasks.filter(t=>!archived.some(x=>x.id===t.id)
-    && ((t.status==='concluido' && t.completed_month===m) || (m===cur && t.status==='aprovado')))];
+    && isDeliveredIn(t, m))];
   const videos = delivered.filter(t=>VIDEO_TASK_TYPES.includes(t.task_type));
   const artes = delivered.filter(t=>t.task_type==='Arte');
   const carrosseis = delivered.filter(t=>t.task_type==='Carrossel');
@@ -3969,7 +4360,7 @@ function clientPackageProgress(clientId){
   const pkg = c?.package || {};
   const monthKey = todayISO().slice(0,7);
   const mine = state.tasks.filter(t=>t.client_id===clientId);
-  const delivered = mine.filter(t=>t.status==='aprovado' || (t.status==='concluido' && t.completed_month===monthKey));
+  const delivered = mine.filter(t=>isDeliveredIn(t, monthKey));
   const doing = mine.filter(t=>!['aprovado','concluido','cancelado'].includes(t.status) && (t.due_date||'').startsWith(monthKey));
   const rows = Object.entries(pkg).filter(([,q])=>Number(q)>0).map(([type,goal])=>({
     type, goal:Number(goal),
@@ -4040,7 +4431,7 @@ function openClientMonthReport(id){
   const monthKey = todayISO().slice(0,7);
   const rawMonth = new Date().toLocaleDateString('pt-BR',{month:'long', year:'numeric'});
   const monthLabel = rawMonth.charAt(0).toUpperCase()+rawMonth.slice(1);
-  const delivered = state.tasks.filter(t=>t.client_id===id && (t.status==='aprovado' || (t.status==='concluido' && t.completed_month===monthKey)));
+  const delivered = state.tasks.filter(t=>t.client_id===id && isDeliveredIn(t, monthKey));
   const groups = [
     ['Vídeos', '🎬', '#5B8CFF', delivered.filter(t=>VIDEO_TASK_TYPES.includes(t.task_type))],
     ['Artes', '🎨', '#9B7BEA', delivered.filter(t=>t.task_type==='Arte')],
@@ -4450,10 +4841,11 @@ function changeTaskStatus(taskId, newStatus){
   if(!t || t.status===newStatus) return;
   const oldStatus = t.status;
   t.status = newStatus;
-  if(newStatus==='concluido' && oldStatus!=='concluido' && !t.completed_month) t.completed_month = todayISO().slice(0,7);
+  if(newStatus==='concluido' && oldStatus!=='concluido' && !t.completed_month) t.completed_month = approvalMonthOf(t) || todayISO().slice(0,7);
   if(newStatus!=='concluido') t.completed_month = null;
   state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:currentUser().id,
     content:`moveu de "${STATUS_LABEL[oldStatus]}" para "${STATUS_LABEL[newStatus]}"`, created_at:Date.now()});
+  archiveOldCompletedTasks();
   saveState(state);
   if(newStatus==='aprovado') celebrateApproval(taskId);
 }
@@ -5197,7 +5589,7 @@ function openTaskModal(id){
     <div class="field"><label>Título</label><input type="text" id="tf_title" value="${t?.title||''}"></div>
     <div class="field-row">
       <div class="field"><label>Cliente</label>
-        <select id="tf_client">${state.clients.map(c=>`<option value="${c.id}" ${t?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
+        <select id="tf_client">${!t?'<option value="" selected>— escolha o cliente —</option>':''}${state.clients.filter(c=>c.status!=='encerrado' || t?.client_id===c.id).map(c=>`<option value="${c.id}" ${t?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
       </div>
       <div class="field"><label>Tipo</label>
         <select id="tf_type">${TASK_TYPES.map(ty=>`<option ${t?.task_type===ty?'selected':''}>${ty}</option>`).join('')}</select>
@@ -5375,6 +5767,14 @@ function openTaskModal(id){
   document.getElementById('saveTaskBtn').addEventListener('click', ()=>{
     const title = document.getElementById('tf_title').value.trim();
     if(!title) return;
+    // cliente é obrigatório: antes vinha pré-selecionado o primeiro da lista e demandas caíam no cliente errado
+    const clientSel = document.getElementById('tf_client');
+    if(!clientSel.value){
+      clientSel.style.borderColor = 'var(--red)';
+      clientSel.focus();
+      alert('Escolhe o cliente dessa demanda antes de salvar.');
+      return;
+    }
     const ownerId = document.getElementById('tf_owner').value || null;
     const newStatus = document.getElementById('tf_status').value;
     const newDue = document.getElementById('tf_due').value;
@@ -5401,7 +5801,7 @@ function openTaskModal(id){
       // limpa campos antigos de responsável (legado) pra não conviver com assignee_id
       t.designer_id = null; t.editor_id = null; t.social_media_id = null; t.strategist_id = null;
       Object.assign(t,data);
-      if(newStatus==='concluido' && oldStatus!=='concluido' && !t.completed_month) t.completed_month = todayISO().slice(0,7);
+      if(newStatus==='concluido' && oldStatus!=='concluido' && !t.completed_month) t.completed_month = approvalMonthOf(t) || todayISO().slice(0,7);
       if(newStatus!=='concluido') t.completed_month = null;
       if(oldStatus!==newStatus){
         state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:me,
@@ -5412,6 +5812,7 @@ function openTaskModal(id){
         state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:me,
           content:`definiu o prazo para ${fmtDate(newDue)}`, created_at:Date.now()+1});
       }
+      if(newStatus==='concluido') archiveOldCompletedTasks();
     } else {
       state.tasks.push({id:uid(), created_by:currentUser().id, created_at:Date.now(), ...data});
     }
@@ -5594,7 +5995,7 @@ function nextMonthPreview(){
   const folha = state.team_costs.reduce((a,t)=>a+Number(t.monthly_cost||0),0);
   // editores: vídeos entregues neste mês que ainda não foram pagos (viram despesa no dia 1º)
   const cur = todayISO().slice(0,7);
-  const editorVideos = unpaidEditorVideos(state.tasks.filter(t=>t.status==='aprovado' || (t.status==='concluido' && t.completed_month===cur)));
+  const editorVideos = unpaidEditorVideos(state.tasks.filter(t=>isDeliveredIn(t, cur)));
   const editores = editorVideos.length*VIDEO_EDIT_RATE;
   const lucro = receita - fixos - folha - editores;
   const emAberto = state.payments.filter(p=>p.status==='pendente'||p.status==='atrasado').reduce((a,p)=>a+Number(p.value),0);
