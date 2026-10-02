@@ -815,6 +815,10 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .rv-text{font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;}
 .rv-text a{color:var(--brand-light);}
 .rv-empty{font-size:12.5px;color:var(--text-faint);text-align:center;}
+.rv-deliv-open{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
+.rv-deliv-open span{font-size:11.5px;color:var(--text-faint);}
+.rv-deliv-edit{display:flex;gap:8px;}
+.rv-deliv-edit input{flex:1;min-width:0;padding:7px 10px;font-size:12.5px;}
 @media(max-width:600px){ .rv-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .rv-status{grid-column:1 / -1;} }
 /* devolver arquivada pro quadro */
 .reopen-box{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding:12px 14px;border-radius:12px;border:1px dashed rgba(91,140,255,.45);background:rgba(62,111,240,.07);}
@@ -5637,10 +5641,18 @@ function taskReadViewHTML(t, fields){
     </div>
     <div class="rv-meta">
       <span>Criado por <b>${escapeHTML(creator?.full_name||'—')}</b></span>
-      ${t.delivery_link?`<a class="btn small" href="${t.delivery_link}" target="_blank" rel="noopener">↗ Abrir entrega</a>`:''}
     </div>
     ${show.map(f=>`<div class="rv-block"><div class="rv-label">${f.label}</div><div class="rv-text">${linkifyText(f.value)}</div></div>`).join('')
       || '<div class="rv-block rv-empty">Sem briefing ainda. Toque em ✏️ Editar pra preencher.</div>'}
+    <div class="rv-block rv-delivery">
+      <div class="rv-label">Link de entrega</div>
+      ${t.delivery_link?`<div class="rv-deliv-open"><a class="btn small primary" href="${t.delivery_link}" target="_blank" rel="noopener">↗ Abrir entrega</a>
+        ${t.delivery_link_updated_at?`<span>atualizado em ${new Date(t.delivery_link_updated_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>`:''}</div>`:''}
+      <div class="rv-deliv-edit">
+        <input type="text" id="rv_delivery" value="${escapeHTML(t.delivery_link||'')}" placeholder="Cola aqui o link do Drive, Figma, Canva…">
+        <button type="button" class="btn small" id="rv_delivery_save">${t.delivery_link?'Trocar link':'Salvar link'}</button>
+      </div>
+    </div>
   </div>`;
 }
 // duplicar: abre uma demanda nova já preenchida (título com o número seguinte, ex.: "Aula 1" → "Aula 2")
@@ -5765,6 +5777,17 @@ function openTaskModal(id){
     headEdit.textContent = viewing ? '✏️ Editar' : '👁 Ver ficha';
     if(!viewing) body.querySelectorAll('.tf-form textarea').forEach(ta=>{ if(ta.value){ ta.style.height='auto'; ta.style.height=Math.min(ta.scrollHeight+4, 420)+'px'; } });
   };
+  // link de entrega dá pra colar direto na ficha (sem abrir o Editar)
+  document.getElementById('rv_delivery_save')?.addEventListener('click', ()=>{
+    const v = document.getElementById('rv_delivery').value.trim();
+    if(v === (t.delivery_link||'')) return;
+    t.delivery_link = v;
+    t.delivery_link_updated_at = v ? Date.now() : null;
+    saveState(state);
+    render();
+    openTaskModal(t.id);
+  });
+  document.getElementById('rv_delivery')?.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('rv_delivery_save').click(); });
   document.getElementById('rv_status')?.addEventListener('change', e=>{
     changeTaskStatus(t.id, e.target.value);
     render();
