@@ -816,6 +816,13 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .rv-text a{color:var(--brand-light);}
 .rv-empty{font-size:12.5px;color:var(--text-faint);text-align:center;}
 @media(max-width:600px){ .rv-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .rv-status{grid-column:1 / -1;} }
+/* devolver arquivada pro quadro */
+.reopen-box{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding:12px 14px;border-radius:12px;border:1px dashed rgba(91,140,255,.45);background:rgba(62,111,240,.07);}
+.reopen-box > div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 240px;}
+.reopen-box b{font-size:13px;}
+.reopen-box span{font-size:11.5px;color:var(--text-faint);line-height:1.4;}
+.reopen-actions{display:flex;gap:8px;align-items:center;}
+.reopen-actions select{width:auto;padding:6px 30px 6px 10px;font-size:12.5px;}
 /* busca nas arquivadas */
 .arq-search-wrap{position:relative;margin-bottom:16px;}
 .arq-search{width:100%;padding:11px 36px 11px 38px !important;border-radius:12px !important;font-size:13.5px;
@@ -6604,9 +6611,34 @@ function openArchivedTaskView(t){
       <a href="${t.delivery_link}" target="_blank" rel="noopener" style="color:var(--accent-soft);font-size:12.5px;">↗ Abrir entrega</a>
       ${t.delivery_link_updated_at?`<span style="color:var(--text-faint);font-size:11px;">Atualizado em ${new Date(t.delivery_link_updated_at).toLocaleString('pt-BR')}</span>`:''}
     </div>`:''}
-    <div class="modal-foot"><button class="btn primary" data-close="genericModalOverlay">Fechar</button></div>
+    <div class="reopen-box">
+      <div><b>↩ Devolver pro quadro</b><span>Cliente pediu alteração depois de concluído? A demanda sai do arquivo e volta pra coluna escolhida.</span></div>
+      <div class="reopen-actions">
+        <select id="reopenStatus">${['aprovado','alteracao_solicitada','em_revisao','a_fazer'].map(st=>`<option value="${st}">${STATUS_LABEL[st]}</option>`).join('')}</select>
+        <button type="button" class="btn small primary" id="reopenBtn">Devolver</button>
+      </div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Fechar</button></div>
   `;
   openModal('genericModalOverlay');
+  document.getElementById('reopenBtn').addEventListener('click', ()=>reopenArchivedTask(t.id, document.getElementById('reopenStatus').value));
+}
+// tira a demanda do arquivo e devolve pro quadro (ex.: cliente pediu alteração depois de postado)
+function reopenArchivedTask(taskId, newStatus){
+  const arch = state.archived_tasks || {};
+  const month = Object.keys(arch).find(m=>(arch[m]||[]).some(x=>x.id===taskId));
+  if(!month) return;
+  const t = arch[month].find(x=>x.id===taskId);
+  arch[month] = arch[month].filter(x=>x.id!==taskId);
+  if(!arch[month].length) delete arch[month];
+  t.status = newStatus;
+  t.completed_month = null;
+  state.tasks.push(t);
+  state.task_comments.push({id:uid(), task_id:t.id, type:'system', user_id:currentUser().id,
+    content:`tirou dos arquivados e devolveu para "${STATUS_LABEL[newStatus]}"`, created_at:Date.now()});
+  saveState(state);
+  closeModal('genericModalOverlay');
+  render();
 }
 
 function renderEquipe(el){
