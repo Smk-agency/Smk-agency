@@ -814,12 +814,45 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .rv-label{font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--brand-light);font-weight:700;margin-bottom:6px;}
 .rv-text{font-size:13px;line-height:1.55;white-space:pre-wrap;overflow-wrap:anywhere;}
 .rv-text a{color:var(--brand-light);}
+.tpost{font-size:11px;color:var(--brand-light);margin-left:6px;white-space:nowrap;}
+.rv-grid .rv-status{grid-column:1 / -1;}
 .rv-empty{font-size:12.5px;color:var(--text-faint);text-align:center;}
 .rv-deliv-open{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:10px;}
 .rv-deliv-open span{font-size:11.5px;color:var(--text-faint);}
 .rv-deliv-edit{display:flex;gap:8px;}
 .rv-deliv-edit input{flex:1;min-width:0;padding:7px 10px;font-size:12.5px;}
 @media(max-width:600px){ .rv-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .rv-status{grid-column:1 / -1;} }
+/* prévia do feed */
+.feed-phone{max-width:390px;margin:0 auto;border-radius:28px;border:1px solid var(--border);background:#000;color:#F5F5F5;padding:14px 0 0;overflow:hidden;box-shadow:0 30px 60px -30px rgba(0,0,0,.8);font-family:-apple-system,'Segoe UI',Roboto,'Inter',sans-serif;}
+.feed-top{display:flex;justify-content:space-between;align-items:center;padding:0 16px 12px;font-size:15px;}
+.feed-profile{display:flex;align-items:center;gap:20px;padding:0 16px;}
+.feed-avatar{width:76px;height:76px;border-radius:50%;flex-shrink:0;overflow:hidden;background:#fff;display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 2px #000, 0 0 0 4px #d62976;}
+.feed-avatar img{width:82%;height:82%;object-fit:contain;}
+.feed-avatar span{color:#111;font-weight:700;font-size:22px;}
+.feed-stats{display:flex;flex:1;justify-content:space-around;text-align:center;}
+.feed-stats b{display:block;font-size:16px;}
+.feed-stats span{font-size:12px;color:#A8A8A8;}
+.feed-bio{padding:10px 16px 12px;font-size:13px;}
+.feed-tabs{display:flex;justify-content:center;border-top:1px solid #262626;}
+.feed-tabs span{padding:9px 0;width:33%;display:flex;justify-content:center;border-bottom:1px solid #F5F5F5;}
+.feed-tabs svg{width:22px;height:22px;}
+.feed-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:2px;max-height:62vh;overflow-y:auto;}
+.feed-tile{position:relative;aspect-ratio:3/4;border:0;padding:0;margin:0;cursor:pointer;overflow:hidden;background:var(--bg);}
+.feed-tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+.feed-fallback{position:absolute;inset:0;display:flex;flex-direction:column;justify-content:flex-end;gap:3px;padding:8px;text-align:left;color:#fff;
+  background:linear-gradient(180deg,rgba(0,0,0,0) 30%,rgba(0,0,0,.55));}
+.ft-type{font-size:9.5px;text-transform:uppercase;letter-spacing:.08em;opacity:.8;}
+.ft-title{font-size:11px;font-weight:600;line-height:1.25;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.feed-ic{position:absolute;top:6px;right:6px;width:18px;height:18px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.6));}
+.feed-ic svg{width:100%;height:100%;}
+.feed-tile.planned::after{content:"";position:absolute;inset:0;border:2px dashed rgba(255,255,255,.75);pointer-events:none;}
+.feed-chip{position:absolute;left:5px;top:5px;font-style:normal;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:99px;background:rgba(62,111,240,.92);color:#fff;}
+.feed-tile:hover img{filter:brightness(.85);}
+.feed-empty{grid-column:1/-1;padding:40px 16px;text-align:center;color:#A8A8A8;font-size:13px;}
+.feed-controls{max-width:390px;margin:14px auto 0;font-size:12.5px;}
+.feed-controls label{display:flex;align-items:center;gap:8px;cursor:pointer;}
+.feed-controls input{width:auto;}
+.feed-note{margin-top:8px;font-size:11.5px;color:var(--text-faint);line-height:1.45;}
 /* devolver arquivada pro quadro */
 .reopen-box{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:16px;padding:12px 14px;border-radius:12px;border:1px dashed rgba(91,140,255,.45);background:rgba(62,111,240,.07);}
 .reopen-box > div:first-child{display:flex;flex-direction:column;gap:2px;min-width:0;flex:1 1 240px;}
@@ -3737,7 +3770,10 @@ function openClientDetail(id){
   const body = document.getElementById('genericModalBody');
   body.innerHTML = `
     <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;">${c.company_name||''} · ${c.whatsapp||''} · ${c.instagram||''}${c.birthday?` · 🎂 ${c.birthday.slice(8,10)}/${c.birthday.slice(5,7)}`:''}</div>
-    <button type="button" class="btn small" id="clientReportBtn" style="margin-bottom:8px;">📊 Relatório de entregas do mês</button>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
+      <button type="button" class="btn small" id="clientReportBtn">📊 Relatório de entregas do mês</button>
+      <button type="button" class="btn small" id="clientFeedBtn">📱 Prévia do feed</button>
+    </div>
     ${(()=>{
       const p = clientPackageProgress(id);
       const monthName = new Date().toLocaleDateString('pt-BR',{month:'long'});
@@ -3828,6 +3864,7 @@ function openClientDetail(id){
   `;
   document.getElementById('editClientBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openClientModal(c); });
   document.getElementById('clientReportBtn').addEventListener('click', ()=>openClientMonthReport(id));
+  document.getElementById('clientFeedBtn').addEventListener('click', ()=>openFeedPreview(id));
   const wireTimeline = () => {
     const box = document.getElementById('clientTimeline');
     box.querySelectorAll('[data-tl-task]').forEach(r=>r.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openTaskModal(r.dataset.tlTask); }));
@@ -4812,7 +4849,7 @@ function taskCardHTML(t){
     <div class="ttitle">${t.title}${t.delivery_link?' 📎':''}${taskHasImage(t)?' 🖼️':''}</div>
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
-      <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
+      <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>${t.post_date?`<span class="tpost" title="Data de postagem">📲 ${fmtDate(t.post_date).slice(0,5)}</span>`:''}
     </div>
     ${stuckBadgeHTML(t)}
   </div>`;
@@ -4989,7 +5026,7 @@ function demandaListItemHTML(t){
     <div class="tmeta">
       <span><span class="prio-dot" style="background:${PRIO_COLOR[t.priority]}"></span>${t.task_type||''}</span>
       <span style="display:flex;align-items:center;gap:7px;">
-        <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>
+        <span class="tdue" style="${isLate?'color:var(--red);font-weight:600;':''}">${isLate?'⏰ ':''}${fmtDate(t.due_date)}</span>${t.post_date?`<span class="tpost" title="Data de postagem">📲 ${fmtDate(t.post_date).slice(0,5)}</span>`:''}
         ${owner?userAvatarHTML(owner, 20):''}
       </span>
     </div>
@@ -5629,6 +5666,68 @@ function feedItemHTML(c){
   return `<div class="comment-item">${delBtn}<div class="cauthor">${author}<span>${when}</span></div><div class="ctext">${c.content}</div></div>`;
 }
 
+/* ---------- 📱 PRÉVIA DO FEED (grade do Instagram com as artes entregues) ---------- */
+// Miniaturas vêm direto do Google Drive (link de entrega) — nada é guardado no banco.
+// Só funciona com arquivo (não pasta) compartilhado como "Qualquer pessoa com o link".
+const FEED_TYPES = ['Arte','Carrossel','Post','Reels','Vídeo','Fotografia'];
+function driveFileId(url){
+  return (url||'').match(/\/file\/d\/([\w-]{20,})/)?.[1] || (url||'').match(/[?&]id=([\w-]{20,})/)?.[1] || null;
+}
+let feedShowPlanned = true;
+function openFeedPreview(clientId){
+  const c = clientById(clientId); if(!c) return;
+  const archivedIds = new Set(Object.values(state.archived_tasks||{}).flat().map(t=>t.id));
+  const all = [...state.tasks, ...Object.values(state.archived_tasks||{}).flat()]
+    .filter(t=>t.client_id===clientId && FEED_TYPES.includes(t.task_type) && t.status!=='cancelado');
+  const posted = t => t.status==='concluido' || archivedIds.has(t.id);
+  const items = all.filter(t=>feedShowPlanned || posted(t))
+    .sort((a,b)=>(b.post_date||b.due_date||'').localeCompare(a.post_date||a.due_date||'')).slice(0,36);
+  const brandColors = (c.brand?.colors||[]).map(x=>x.hex).filter(Boolean);
+  const tileBg = i => brandColors.length ? brandColors[i % brandColors.length] : clientColor(clientId) || '#3E6FF0';
+  const igRaw = (c.instagram||'').trim().replace(/^@/,'').replace(/^https?:\/\/(www\.)?instagram\.com\//,'').replace(/\/.*$/,'');
+  const handle = /[a-z]/i.test(igRaw) ? igRaw : normSearch(c.name).replace(/[^a-z0-9]+/g,'');
+  const nPosted = all.filter(posted).length, nPlanned = all.length - nPosted;
+  const thumbs = items.filter(t=>driveFileId(t.delivery_link)).length;
+  const icon = t => t.task_type==='Carrossel' ? '<svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2"><rect x="7" y="7" width="13" height="13" rx="2"/><path d="M4 16V6a2 2 0 0 1 2-2h10"/></svg>'
+    : VIDEO_TASK_TYPES.includes(t.task_type) ? '<svg viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg>' : '';
+  document.getElementById('genericModalTitle').textContent = 'Prévia do feed';
+  document.getElementById('genericModalBody').innerHTML = `
+    <div class="feed-phone">
+      <div class="feed-top"><b>${escapeHTML(handle)}</b><span>⋯</span></div>
+      <div class="feed-profile">
+        <div class="feed-avatar">${c.brand?.logo_url?`<img src="${c.brand.logo_url}" alt="">`:`<span>${initials(c.name)}</span>`}</div>
+        <div class="feed-stats">
+          <div><b>${nPosted}</b><span>publicações</span></div>
+          <div><b>${nPlanned}</b><span>planejadas</span></div>
+          <div><b>${thumbs}</b><span>com prévia</span></div>
+        </div>
+      </div>
+      <div class="feed-bio"><b>${escapeHTML(c.company_name||c.name)}</b></div>
+      <div class="feed-tabs"><span class="on"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg></span></div>
+      <div class="feed-grid">
+        ${items.map((t,i)=>{ const fid = driveFileId(t.delivery_link); const done = posted(t);
+          return `<button type="button" class="feed-tile ${done?'':'planned'}" data-feed-task="${t.id}" style="--bg:${tileBg(i)};" title="${escapeHTML(t.title)}">
+            <div class="feed-fallback"><span class="ft-type">${escapeHTML(t.task_type)}</span><span class="ft-title">${escapeHTML(t.title)}</span></div>
+            ${fid?`<img src="https://drive.google.com/thumbnail?id=${fid}&sz=w600" alt="" loading="lazy" referrerpolicy="no-referrer" onerror="this.remove()">`:''}
+            ${icon(t)?`<i class="feed-ic">${icon(t)}</i>`:''}
+            ${done?'':`<i class="feed-chip">${t.post_date?'📲 '+fmtDate(t.post_date).slice(0,5):(t.due_date?fmtDate(t.due_date).slice(0,5):'s/ data')} · ${STATUS_LABEL[t.status]||''}</i>`}
+          </button>`; }).join('') || '<div class="feed-empty">Nenhuma arte ou vídeo desse cliente ainda.</div>'}
+      </div>
+    </div>
+    <div class="feed-controls">
+      <label><input type="checkbox" id="feedPlanned" ${feedShowPlanned?'checked':''}> Mostrar o que ainda vai ser postado</label>
+      <div class="feed-note">As imagens vêm do link de entrega no Google Drive. Se uma arte aparece só com o título, o link é de uma pasta ou o arquivo não está como "Qualquer pessoa com o link".</div>
+    </div>
+    <div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Fechar</button></div>`;
+  openModal('genericModalOverlay');
+  document.getElementById('feedPlanned').addEventListener('change', e=>{ feedShowPlanned = e.target.checked; openFeedPreview(clientId); });
+  document.querySelectorAll('[data-feed-task]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.dataset.feedTask;
+    if(state.tasks.some(t=>t.id===id)){ closeModal('genericModalOverlay'); openTaskModal(id); }
+    else { const t = Object.values(state.archived_tasks||{}).flat().find(x=>x.id===id); if(t) openArchivedTaskView(t); }
+  }));
+}
+
 // ficha de leitura da demanda (cliente, tipo, prazo… + briefing/head/sub/referência/arquivos em texto)
 function linkifyText(str){
   return escapeHTML(str||'').replace(/(https?:\/\/[^\s<]+)/g, u=>`<a href="${u}" target="_blank" rel="noopener">${u.length>60?u.slice(0,57)+'…':u}</a>`);
@@ -5643,6 +5742,7 @@ function taskReadViewHTML(t, fields){
       ${item('Cliente', `<i class="rv-dot" style="background:${clientColor(t.client_id)}"></i>${escapeHTML(c?.name||'—')}`)}
       ${item('Tipo', escapeHTML(t.task_type||'—'))}
       ${item('Prazo', `${late?'⏰ ':''}${fmtDate(t.due_date)}`, late?'late':'')}
+      ${item('Postagem', t.post_date?`📲 ${fmtDate(t.post_date)}`:'<span style="color:var(--text-faint);font-weight:500;">não definida</span>')}
       ${item('Prioridade', `<i class="rv-dot" style="background:${PRIO_COLOR[t.priority]||'#8C93A3'}"></i>${t.priority||'—'}`)}
       ${item('Responsável', owner ? `${userAvatarHTML(owner,20)}${escapeHTML(owner.full_name)}` : 'sem responsável')}
       <div class="rv-item rv-status"><span>Status</span>
@@ -5732,8 +5832,9 @@ function openTaskModal(id){
       <div class="field tf-edit-only"><label>Prioridade</label>
         <select id="tf_prio">${['baixa','media','alta','urgente'].map(p=>`<option value="${p}" ${t?.priority===p?'selected':''}>${p}</option>`).join('')}</select>
       </div>
-      <div class="field"><label>Prazo</label><input type="date" id="tf_due" value="${t?.due_date||todayISO()}"></div>
+      <div class="field"><label>Prazo <span class="hint">entrega da peça</span></label><input type="date" id="tf_due" value="${t?.due_date||todayISO()}"></div>
     </div>
+    <div class="field"><label>Data de postagem <span class="hint">opcional — quando vai pro feed do cliente</span></label><input type="date" id="tf_post" value="${t?.post_date||''}"></div>
     <div class="field-row">
       <div class="field"><label>Status</label>
         <select id="tf_status">${STATUS_FLOW.concat(['pausado','cancelado']).map(s=>`<option value="${s}" ${t?.status===s?'selected':''}>${STATUS_LABEL[s]}</option>`).join('')}</select>
@@ -5958,6 +6059,7 @@ function openTaskModal(id){
         arquivos:document.getElementById('tf_files').value
       },
       delivery_link:document.getElementById('tf_delivery').value.trim(),
+      post_date:document.getElementById('tf_post').value || null,
       assignee_id: ownerId
     };
     if(data.delivery_link !== (t?.delivery_link||'')){
