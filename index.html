@@ -2778,8 +2778,8 @@ function clientTimeline(clientId){
   const toAp = `para "${STATUS_LABEL.aprovado}"`, toAlt = `para "${STATUS_LABEL.alteracao_solicitada}"`;
   (state.task_comments||[]).forEach(c=>{
     const t = byId[c.task_id]; if(!t || !c.created_at || c.type!=='system') return;
-    if((c.content||'').endsWith(toAp)) ev.push({ts:c.created_at, ic:'✅', kind:'ok', text:`Aprovada: ${t.title}`, task:t.id});
-    else if((c.content||'').endsWith(toAlt)) ev.push({ts:c.created_at, ic:'✏️', kind:'warn', text:`Alteração pedida: ${t.title}`, task:t.id});
+    if(isStatusMove(c) && c.content.endsWith(toAp)) ev.push({ts:c.created_at, ic:'✅', kind:'ok', text:`Aprovada: ${t.title}`, task:t.id});
+    else if(isStatusMove(c) && c.content.endsWith(toAlt)) ev.push({ts:c.created_at, ic:'✏️', kind:'warn', text:`Alteração pedida: ${t.title}`, task:t.id});
   });
   all.filter(t=>t.created_at).forEach(t=>ev.push({ts:t.created_at, ic:'➕', kind:'', text:`Demanda criada: ${t.title}`, task:t.id}));
   (state.commitments||[]).filter(c=>c.client_id===clientId && c.date).forEach(c=>{
@@ -2813,6 +2813,8 @@ function clientTimelineHTML(clientId, limit=14){
 
 /* ---------- ATIVIDADE DAS DEMANDAS (parada, sequência no prazo, resumo da semana) ---------- */
 // última movimentação de cada demanda (comentário ou mudança de status) — calculado uma vez por versão dos dados
+// só conta como mudança de status o log "moveu de X para Y" (devolver dos arquivados não é aprovação nova)
+function isStatusMove(c){ return c.type==='system' && (c.content||'').startsWith('moveu de '); }
 let _activityMemo = {ref:null, len:-1, last:null, review:null};
 function taskActivity(){
   const cm = state.task_comments || [];
@@ -2822,8 +2824,8 @@ function taskActivity(){
   cm.forEach(c=>{
     if(!c.created_at) return;
     if(!last[c.task_id] || c.created_at>last[c.task_id]) last[c.task_id] = c.created_at;
-    if(c.type==='system' && (c.content||'').endsWith(toReview) && (!review[c.task_id] || c.created_at<review[c.task_id])) review[c.task_id] = c.created_at;
-    if(c.type==='system' && (c.content||'').endsWith(toApproved)){
+    if(isStatusMove(c) && c.content.endsWith(toReview) && (!review[c.task_id] || c.created_at<review[c.task_id])) review[c.task_id] = c.created_at;
+    if(isStatusMove(c) && c.content.endsWith(toApproved)){
       approved.push({task_id:c.task_id, at:c.created_at});
       if(!approvedLast[c.task_id] || c.created_at>approvedLast[c.task_id]) approvedLast[c.task_id] = c.created_at;
     }
