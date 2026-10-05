@@ -822,6 +822,16 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .rv-deliv-edit{display:flex;gap:8px;}
 .rv-deliv-edit input{flex:1;min-width:0;padding:7px 10px;font-size:12.5px;}
 @media(max-width:600px){ .rv-grid{grid-template-columns:repeat(2,minmax(0,1fr));} .rv-status{grid-column:1 / -1;} }
+/* prévia da arte ao passar o mouse */
+.art-peek{position:fixed;z-index:1600;width:300px;border-radius:14px;overflow:hidden;background:var(--surface);border:1px solid var(--border);
+  box-shadow:0 24px 60px -18px rgba(0,0,0,.75);pointer-events:none;opacity:0;transform:translateY(6px) scale(.98);transition:opacity .15s ease, transform .15s ease;}
+.art-peek.on{opacity:1;transform:none;}
+.ap-img{position:relative;min-height:120px;max-height:380px;background:var(--surface-2);display:flex;align-items:center;justify-content:center;}
+.ap-img img{display:block;width:100%;max-height:380px;object-fit:contain;}
+.ap-wait{font-size:12px;color:var(--text-faint);padding:20px;text-align:center;}
+.ap-cap{padding:10px 12px;display:flex;flex-direction:column;gap:2px;}
+.ap-cap b{font-size:12.5px;line-height:1.3;}
+.ap-cap span{font-size:11px;color:var(--text-faint);}
 /* prévia do feed */
 .feed-phone{max-width:390px;margin:0 auto;border-radius:28px;border:1px solid var(--border);background:#000;color:#F5F5F5;padding:14px 0 0;overflow:hidden;box-shadow:0 30px 60px -30px rgba(0,0,0,.8);font-family:-apple-system,'Segoe UI',Roboto,'Inter',sans-serif;}
 .feed-top{display:flex;justify-content:space-between;align-items:center;padding:0 16px 12px;font-size:15px;}
@@ -2327,6 +2337,50 @@ function enterApp(){
   render();
   renderNotifBell();
 }
+
+// 👀 prévia da arte: passar o mouse (ou segurar o dedo) num card com link de entrega mostra a miniatura grande
+(function initArtPeek(){
+  const peek = document.createElement('div');
+  peek.id = 'artPeek'; peek.className = 'art-peek';
+  document.body.appendChild(peek);
+  let timer = null, current = null, suppressClick = false;
+  const cardSel = '.task-card[data-id], .task-card[data-task-id], .task-card[data-archived-id]';
+  const taskOf = card => {
+    const id = card.dataset.id || card.dataset.taskId || card.dataset.archivedId;
+    return state.tasks.find(t=>t.id===id) || Object.values(state.archived_tasks||{}).flat().find(t=>t.id===id);
+  };
+  function show(card){
+    const t = taskOf(card); const fid = t && driveFileId(t.delivery_link);
+    if(!fid) return;
+    current = card;
+    peek.innerHTML = `<div class="ap-img"><div class="ap-wait">carregando…</div><img src="https://drive.google.com/thumbnail?id=${fid}&sz=w700" alt="" referrerpolicy="no-referrer"
+        onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.textContent='Sem prévia (arquivo restrito no Drive)';this.remove()"></div>
+      <div class="ap-cap"><b>${escapeHTML(t.title)}</b><span>${escapeHTML(clientById(t.client_id)?.name||'')} · ${escapeHTML(t.task_type||'')}</span></div>`;
+    const r = card.getBoundingClientRect(), W = 300, gap = 12;
+    let left = r.right + gap; if(left + W > innerWidth - 8) left = r.left - W - gap; if(left < 8) left = Math.max(8, (innerWidth - W)/2);
+    peek.style.left = left + 'px';
+    peek.style.top = Math.max(8, Math.min(r.top, innerHeight - 440)) + 'px';
+    peek.classList.add('on');
+  }
+  function hide(){ clearTimeout(timer); timer = null; current = null; peek.classList.remove('on'); }
+  document.addEventListener('mouseover', e=>{
+    if(window.matchMedia('(hover: none)').matches) return;
+    const card = e.target.closest(cardSel);
+    if(card === current) return;
+    hide();
+    if(card && !e.target.closest('button, select, a')) timer = setTimeout(()=>show(card), 380);
+  });
+  document.addEventListener('mouseout', e=>{ const card = e.target.closest(cardSel); if(card && !card.contains(e.relatedTarget)) hide(); });
+  document.addEventListener('touchstart', e=>{
+    const card = e.target.closest(cardSel); if(!card) return;
+    timer = setTimeout(()=>{ suppressClick = true; show(card); }, 450);
+  }, {passive:true});
+  document.addEventListener('touchend', ()=>{ clearTimeout(timer); if(current) setTimeout(hide, 1600); });
+  document.addEventListener('touchmove', ()=>clearTimeout(timer), {passive:true});
+  // depois de segurar pra ver a prévia, o toque não abre a demanda
+  document.addEventListener('click', e=>{ if(suppressClick && e.target.closest(cardSel)){ e.stopPropagation(); e.preventDefault(); } suppressClick = false; }, true);
+  document.addEventListener('scroll', hide, true);
+})();
 
 // ícones do menu: animação também ao abrir a tela (além do hover)
 document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click', ()=>{
@@ -4564,6 +4618,7 @@ function openClientMonthReport(id){
         if(grav.length) tiles.push(tile('Gravações', grav.length, '#E0A62D'));
         return tiles.length ? `<div style="display:grid;grid-template-columns:repeat(${Math.min(tiles.length,4)},1fr);gap:8px;margin-bottom:22px;">${tiles.join('')}</div>` : '';
       })()}
+      ${reportFeedGridHTML(c, monthKey)}
       ${groups.filter(g=>g[3].length).map(([label,icon,color,items])=>`
         <div style="margin-bottom:14px;">
           <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:${color};font-weight:700;margin-bottom:8px;">${icon} ${label}</div>
@@ -4591,6 +4646,32 @@ function openClientMonthReport(id){
   document.getElementById('copyReportBtn').addEventListener('click', function(){ copyElementAsImage('clientReportCard', this); });
   document.getElementById('backToClientBtn').addEventListener('click', ()=>openClientDetail(id));
   openModal('genericModalOverlay');
+}
+
+// grade "Feed do mês" do relatório: artes/carrosséis/vídeos entregues no mês + fotos postadas no mês.
+// Usa lh3.googleusercontent (aceita CORS) pra imagem entrar no "Copiar imagem"; vídeo não tem miniatura lá → quadrado com ▶.
+function reportFeedGridHTML(c, monthKey){
+  const items = [
+    ...state.tasks.filter(t=>t.client_id===c.id && FEED_TYPES.includes(t.task_type) && isDeliveredIn(t, monthKey))
+      .map(t=>({date:t.post_date||t.due_date||'', fid: VIDEO_TASK_TYPES.includes(t.task_type) ? null : driveFileId(t.delivery_link), title:t.title, type:t.task_type})),
+    ...(c.feed_photos||[]).filter(ph=>(ph.post_date||'').startsWith(monthKey))
+      .map(ph=>({date:ph.post_date, fid:driveFileId(ph.link), title:'Foto', type:'Foto'})),
+  ].sort((a,b)=>b.date.localeCompare(a.date));
+  if(!items.length) return '';
+  const shown = items.slice(0,12);
+  const colors = (c.brand?.colors||[]).map(x=>x.hex).filter(Boolean);
+  const bg = i => colors.length ? colors[i % colors.length] : '#1B2A55';
+  return `<div style="margin-bottom:18px;">
+    <div style="font-size:11px;letter-spacing:1px;text-transform:uppercase;color:#8FB0FF;font-weight:700;margin-bottom:8px;">📱 Feed do mês</div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:3px;border-radius:12px;overflow:hidden;">
+      ${shown.map((it,i)=>`<div style="position:relative;aspect-ratio:4/5;background:${bg(i)};overflow:hidden;">
+        <div style="position:absolute;left:0;right:0;bottom:0;padding:8px;font-size:10.5px;font-weight:600;line-height:1.25;color:#fff;background:linear-gradient(180deg,rgba(0,0,0,0),rgba(0,0,0,.55));">
+          <div style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;opacity:.8;">${VIDEO_TASK_TYPES.includes(it.type)?'▶ ':''}${escapeHTML(it.type)}</div>${escapeHTML(it.title).slice(0,60)}</div>
+        ${it.fid?`<div style="position:absolute;inset:0;background-image:url('https://lh3.googleusercontent.com/d/${it.fid}=w500');background-size:cover;background-position:center;"></div>`:''}
+      </div>`).join('')}
+    </div>
+    ${items.length>shown.length?`<div style="font-size:11.5px;color:#8B95AC;margin-top:6px;">+ ${items.length-shown.length} publicações no mês</div>`:''}
+  </div>`;
 }
 
 function syncContractValue(clientId){
@@ -5396,7 +5477,7 @@ async function copyElementAsImage(elId, btnEl){
     await navigator.clipboard.write([
       new ClipboardItem({
         'image/png': new Promise((resolve, reject)=>{
-          html2canvas(el, {backgroundColor:'#0A1128', scale:2}).then(canvas=>{
+          html2canvas(el, {backgroundColor:'#0A1128', scale:2, useCORS:true}).then(canvas=>{
             canvas.toBlob(blob=> blob ? resolve(blob) : reject(new Error('sem imagem')), 'image/png');
           }).catch(reject);
         })
