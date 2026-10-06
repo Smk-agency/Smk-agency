@@ -888,6 +888,54 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .arq-clear{position:absolute;right:8px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-faint);font-size:18px;cursor:pointer;padding:4px 8px;}
 .arq-clear:hover{color:var(--text);}
 .arq-month{color:var(--brand-light);}
+/* pontuação do time */
+.eval-card{width:100%;margin:0 0 16px;display:flex;align-items:center;gap:14px;text-align:left;padding:14px 18px;border-radius:14px;cursor:pointer;color:var(--text);
+  border:1px solid rgba(224,166,45,.45);background:linear-gradient(135deg, rgba(224,166,45,.14), rgba(62,111,240,.08)), var(--surface);}
+.eval-card:hover{border-color:rgba(224,166,45,.8);}
+.eval-ic{font-size:22px;}
+.eval-txt{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0;}
+.eval-txt b{font-family:var(--font-display);font-size:14.5px;}
+.eval-txt span{font-size:12px;color:var(--text-muted);}
+.eval-go{font-size:12.5px;font-weight:600;color:#E0A62D;white-space:nowrap;}
+.eval-day{font-size:12px;color:var(--text-faint);margin-bottom:12px;}
+.eval-person{padding:14px;border-radius:12px;border:1px solid var(--border);background:var(--surface-2);margin-bottom:10px;}
+.eval-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.eval-head b{display:block;font-size:13.5px;}
+.eval-head span{font-size:11.5px;color:var(--text-faint);}
+.eval-q{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:5px 0;font-size:12.5px;}
+.eval-dots{display:flex;gap:5px;flex-shrink:0;}
+.eval-dots button{width:30px;height:30px;border-radius:8px;border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-weight:700;font-size:12.5px;cursor:pointer;transition:.12s;}
+.eval-dots button:hover{border-color:var(--brand-bright);color:var(--text);}
+.eval-dots button.on{background:var(--brand);border-color:var(--brand);color:#fff;box-shadow:0 4px 14px -6px rgba(62,111,240,.9);}
+.eval-note{margin-top:8px;font-size:12.5px;}
+@media(max-width:600px){ .eval-q{flex-direction:column;align-items:flex-start;} }
+.score-row{display:flex;align-items:center;gap:12px;padding:10px 6px;margin:0 -6px;border-radius:10px;cursor:pointer;border-bottom:1px solid var(--border);}
+.score-row:last-child{border-bottom:none;}
+.score-row:hover{background:var(--surface-2);}
+.score-pos{width:26px;text-align:center;font-family:var(--font-mono);font-size:12.5px;color:var(--text-faint);font-weight:700;}
+.score-row:first-child .score-pos{color:#E0A62D;}
+.score-who{display:flex;align-items:center;gap:9px;flex:1;min-width:0;}
+.score-who b{display:block;font-size:13px;}
+.score-who span{font-size:11px;color:var(--text-faint);}
+.score-parts{display:flex;gap:14px;font-size:11.5px;color:var(--text-faint);}
+.score-parts b{color:var(--text);font-family:var(--font-mono);}
+.score-parts i{font-style:normal;}
+.score-final{width:52px;text-align:right;font-family:var(--font-display);font-size:24px;font-weight:700;}
+@media(max-width:700px){ .score-parts{display:none;} }
+.score-big{font-family:var(--font-display);font-size:54px;font-weight:700;line-height:1;text-align:center;margin:4px 0 14px;}
+.score-big span{font-size:18px;color:var(--text-faint);margin-left:4px;}
+.score-split{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.score-split div{padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);text-align:center;}
+.score-split b{display:block;font-family:var(--font-display);font-size:22px;}
+.score-split span{font-size:11px;color:var(--text-faint);}
+.score-list{padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);margin-bottom:10px;}
+.score-list div{display:flex;justify-content:space-between;gap:10px;font-size:12.5px;padding:4px 0;}
+.score-list b{font-family:var(--font-mono);}
+.score-list i{font-style:normal;color:var(--text-faint);font-weight:400;}
+.score-notes{padding:10px 12px;border-radius:12px;background:var(--surface-2);border:1px solid var(--border);font-size:12.5px;line-height:1.5;}
+.score-notes i{font-style:normal;color:var(--text-faint);font-family:var(--font-mono);font-size:11px;margin-right:6px;}
+.my-score{margin:-8px 0 18px;padding:18px;border-radius:16px;border:1px solid rgba(224,166,45,.45);background:radial-gradient(120% 120% at 0% 0%, rgba(224,166,45,.14), transparent 60%), var(--surface);}
+.my-score-head{font-family:var(--font-display);font-weight:700;font-size:14.5px;text-align:center;}
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -1918,8 +1966,9 @@ async function initApp(){
       const m4 = generateMonthlyInvoices();
       const m4b = generateMonthlyFixedExpenses();
       const m4c = generateEditorPayouts();
+      const m6 = compactEvaluations();
       const m5 = archiveOldFinance();
-      if(m1 || m1b || m2 || m3 || m4 || m4b || m4c || m5) saveState(state);
+      if(m1 || m1b || m2 || m3 || m4 || m4b || m4c || m5 || m6) saveState(state);
     }
 
     agencyDocRef.onSnapshot(docSnap=>{
@@ -2602,6 +2651,7 @@ function renderMesa(el){
 
   el.innerHTML = `
     ${muralHTML()}
+    ${myScoreCardHTML()}
     <div style="margin:-8px 0 18px;">${wrappedLauncherHTML()}</div>
     ${canSeeAgencyOverview()?`
     <div class="filter-bar">
@@ -2698,6 +2748,201 @@ function renderMesa(el){
 }
 
 // "Hoje": compromissos do dia (com a pauta, se for gravação) + demandas que vencem hoje
+/* ---------- ⭐ PONTUAÇÃO DO TIME (avaliação diária do CEO + números do app) ---------- */
+// state.evaluations[AAAA-MM-DD][userId] = {p,o,q,c (1–5), n:'comentário', by, at}
+// state.evaluations_summary[AAAA-MM][userId] = {s:{p,o,q,c}, k:{p,o,q,c}, days}  (meses antigos resumidos pra não pesar o banco)
+const EVAL_QUESTIONS = [['p','Cumpriu os prazos'],['o','Seguiu as orientações e o briefing'],['q','Qualidade do que entregou'],['c','Comunicação e proatividade']];
+// pontuados: o time todo (menos a conta do Smurk CEO e a conta de editor dele); avaliáveis: os pontuados menos quem está avaliando
+function scoredUsers(){ return state.users.filter(u=>u.status!=='disabled' && u.id!=='u_dono' && !AWARD_EXCLUDED_USERS.includes(u.id)); }
+function evaluableUsers(){ const me = currentUser(); return scoredUsers().filter(u=>u.id!==me?.id); }
+function dayActivity(userId, dayKey){
+  const inDay = ts => ts && localKeyOf(ts)===dayKey;
+  const cm = (state.task_comments||[]).filter(c=>c.user_id===userId && inDay(c.created_at));
+  const moves = cm.filter(c=>c.type==='system').length, comments = cm.length - moves;
+  const created = state.tasks.filter(t=>t.created_by===userId && inDay(t.created_at)).length;
+  const recordings = (state.commitments||[]).filter(c=>c.date===dayKey && (c.user_ids||[]).includes(userId)).length;
+  return {moves, comments, created, recordings, total: moves+comments+created+recordings};
+}
+function dayWorkers(dayKey){ return evaluableUsers().filter(u=>dayActivity(u.id, dayKey).total>0); }
+function addDaysKey(dayKey, n){ const d = new Date(dayKey+'T12:00:00'); d.setDate(d.getDate()+n); return localKeyOf(d.getTime()); }
+function pendingEvalDay(){
+  const today = localDayKey(), ev = state.evaluations||{};
+  const pending = k => dayWorkers(k).some(u=>!(ev[k]||{})[u.id]);
+  if(new Date().getHours()>=17 && pending(today)) return today;
+  const y = addDaysKey(today,-1);
+  return pending(y) ? y : null;
+}
+function evalCardHTML(){
+  if(!isDono()) return '';
+  const day = pendingEvalDay();
+  if(!day) return '';
+  const workers = dayWorkers(day), done = workers.filter(u=>(state.evaluations?.[day]||{})[u.id]).length;
+  const isToday = day===localDayKey();
+  return `<button type="button" class="eval-card" data-eval-day="${day}">
+    <span class="eval-ic">⭐</span>
+    <span class="eval-txt"><b>Avaliação ${isToday?'de hoje':'de ontem'}</b><span>${workers.length} ${workers.length===1?'pessoa trabalhou':'pessoas trabalharam'} ${isToday?'hoje':'ontem'} · ${done} avaliada${done===1?'':'s'} · leva 1 minuto</span></span>
+    <span class="eval-go">Avaliar →</span>
+  </button>`;
+}
+function openEvalModal(dayKey){
+  const workers = dayWorkers(dayKey);
+  const ev = (state.evaluations||{})[dayKey] || {};
+  const draft = {}; workers.forEach(u=>{ draft[u.id] = {...(ev[u.id]||{})}; });
+  const d = new Date(dayKey+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'});
+  document.getElementById('genericModalTitle').textContent = '⭐ Avaliação do dia';
+  const actTxt = a => [a.moves?`${a.moves} mudança${a.moves>1?'s':''} de status`:'', a.comments?`${a.comments} comentário${a.comments>1?'s':''}`:'', a.created?`${a.created} demanda${a.created>1?'s':''} criada${a.created>1?'s':''}`:'', a.recordings?`${a.recordings} gravação`:''].filter(Boolean).join(' · ');
+  document.getElementById('genericModalBody').innerHTML = `
+    <div class="eval-day">${d.charAt(0).toUpperCase()+d.slice(1)} · de 1 (ruim) a 5 (excelente)</div>
+    ${workers.map(u=>`<div class="eval-person" data-eval-user="${u.id}">
+      <div class="eval-head">${userAvatarHTML(u,30)}<div><b>${escapeHTML(u.full_name)}</b><span>${ROLE_LABEL[u.role]} · ${actTxt(dayActivity(u.id, dayKey))}</span></div></div>
+      ${EVAL_QUESTIONS.map(([k,label])=>`<div class="eval-q"><span>${label}</span><div class="eval-dots">${[1,2,3,4,5].map(v=>`<button type="button" data-q="${k}" data-v="${v}" class="${draft[u.id][k]===v?'on':''}">${v}</button>`).join('')}</div></div>`).join('')}
+      <textarea class="eval-note" rows="1" placeholder="Comentário (opcional, só você vê)">${escapeHTML(draft[u.id].n||'')}</textarea>
+    </div>`).join('') || '<div class="empty">Ninguém teve atividade nesse dia.</div>'}
+    <div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Cancelar</button><button class="btn primary" id="evalSave">Salvar avaliação</button></div>`;
+  openModal('genericModalOverlay');
+  document.querySelectorAll('.eval-person').forEach(box=>{
+    const uidv = box.dataset.evalUser;
+    box.querySelectorAll('.eval-dots button').forEach(b=>b.addEventListener('click', ()=>{
+      draft[uidv][b.dataset.q] = Number(b.dataset.v);
+      box.querySelectorAll(`.eval-dots button[data-q="${b.dataset.q}"]`).forEach(x=>x.classList.toggle('on', x===b));
+    }));
+    box.querySelector('.eval-note').addEventListener('input', e=>{ draft[uidv].n = e.target.value; });
+  });
+  document.getElementById('evalSave').addEventListener('click', ()=>{
+    state.evaluations = state.evaluations || {};
+    const day = state.evaluations[dayKey] = state.evaluations[dayKey] || {};
+    Object.entries(draft).forEach(([uidv, a])=>{
+      if(!EVAL_QUESTIONS.some(([k])=>a[k])) return;
+      day[uidv] = {...a, n:(a.n||'').trim().slice(0,300), by:currentUser().id, at:Date.now()};
+      if(!day[uidv].n) delete day[uidv].n;
+    });
+    saveState(state); closeModal('genericModalOverlay'); render();
+  });
+}
+// meses com mais de 2 meses viram só médias (sem comentários) — mantém o documento leve
+function compactEvaluations(){
+  const ev = state.evaluations || {}; const cur = todayISO().slice(0,7);
+  const d = new Date(Number(cur.slice(0,4)), Number(cur.slice(5,7))-3, 1);
+  const cutoff = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+  let changed = false;
+  Object.keys(ev).forEach(day=>{
+    const m = day.slice(0,7); if(m > cutoff) return;
+    state.evaluations_summary = state.evaluations_summary || {};
+    const sm = state.evaluations_summary[m] = state.evaluations_summary[m] || {};
+    Object.entries(ev[day]).forEach(([uidv,a])=>{
+      const x = sm[uidv] = sm[uidv] || {s:{}, k:{}, days:0};
+      x.days++;
+      EVAL_QUESTIONS.forEach(([k])=>{ if(a[k]){ x.s[k]=(x.s[k]||0)+a[k]; x.k[k]=(x.k[k]||0)+1; } });
+    });
+    delete ev[day]; changed = true;
+  });
+  return changed;
+}
+function ceoScoreOf(userId, m){
+  const sums = {}, cnt = {}; let days = 0; const notes = [];
+  Object.entries(state.evaluations||{}).filter(([day])=>day.startsWith(m)).forEach(([day, byU])=>{
+    const a = byU[userId]; if(!a) return; days++;
+    EVAL_QUESTIONS.forEach(([k])=>{ if(a[k]){ sums[k]=(sums[k]||0)+a[k]; cnt[k]=(cnt[k]||0)+1; } });
+    if(a.n) notes.push({day, n:a.n});
+  });
+  const sm = state.evaluations_summary?.[m]?.[userId];
+  if(sm){ days += sm.days; EVAL_QUESTIONS.forEach(([k])=>{ sums[k]=(sums[k]||0)+(sm.s[k]||0); cnt[k]=(cnt[k]||0)+(sm.k[k]||0); }); }
+  const per = {}; EVAL_QUESTIONS.forEach(([k])=>{ if(cnt[k]) per[k] = sums[k]/cnt[k]; });
+  const vals = Object.values(per);
+  if(!vals.length) return null;
+  const avg = vals.reduce((a,b)=>a+b,0)/vals.length;
+  return {pct: Math.round((avg-1)/4*100), avg, per, days, notes: notes.sort((a,b)=>b.day.localeCompare(a.day))};
+}
+function deliveredTasksIn(m){
+  const arch = state.archived_tasks?.[m] || [], ids = new Set(arch.map(t=>t.id));
+  return [...arch, ...state.tasks.filter(t=>!ids.has(t.id) && isDeliveredIn(t, m))];
+}
+function autoScoresFor(m){
+  const act = taskActivity(), all = [...state.tasks, ...Object.values(state.archived_tasks||{}).flat()];
+  const delivered = deliveredTasksIn(m);
+  const altered = new Set((state.task_comments||[]).filter(c=>isStatusMove(c) && c.content.endsWith(`para "${STATUS_LABEL.alteracao_solicitada}"`)).map(c=>c.task_id));
+  const team = scoredUsers();
+  const execs = team.filter(u=>EXECUTOR_ROLES.includes(u.role)), creators = team.filter(u=>!EXECUTOR_ROLES.includes(u.role));
+  const out = {};
+  const execVol = Object.fromEntries(execs.map(u=>[u.id, delivered.filter(t=>t.assignee_id===u.id).length]));
+  const execAvg = (()=>{ const v = Object.values(execVol).filter(n=>n>0); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : 0; })();
+  execs.forEach(u=>{
+    const sent = all.filter(t=>t.assignee_id===u.id && t.due_date && act.review[t.id] && localKeyOf(act.review[t.id]).startsWith(m));
+    const mine = delivered.filter(t=>t.assignee_id===u.id);
+    if(!sent.length && !mine.length){ out[u.id] = null; return; }
+    const onTime = sent.length ? sent.filter(t=>localKeyOf(act.review[t.id]) <= t.due_date).length/sent.length : 1;
+    const first = mine.length ? mine.filter(t=>!altered.has(t.id)).length/mine.length : 1;
+    const vol = execAvg ? Math.min(1, execVol[u.id]/execAvg) : 1;
+    const late = m===todayISO().slice(0,7) ? state.tasks.filter(t=>t.assignee_id===u.id && isTaskLate(t)).length : 0;
+    out[u.id] = {pct: Math.max(0, Math.min(100, Math.round(40*onTime + 30*first + 30*vol - 3*late))), onTime, first, vol:execVol[u.id], late, kind:'exec'};
+  });
+  const createdIn = id => all.filter(t=>t.created_by===id && (t.created_at ? localKeyOf(t.created_at).startsWith(m) : (t.due_date||'').startsWith(m)));
+  const crVol = Object.fromEntries(creators.map(u=>[u.id, createdIn(u.id).length]));
+  const crAvg = (()=>{ const v = Object.values(crVol).filter(n=>n>0); return v.length ? v.reduce((a,b)=>a+b,0)/v.length : 0; })();
+  creators.forEach(u=>{
+    const created = crVol[u.id], approved = delivered.filter(t=>t.created_by===u.id).length;
+    if(!created && !approved){ out[u.id] = null; return; }
+    const rate = created ? Math.min(1, approved/created) : 1;
+    const vol = crAvg ? Math.min(1, created/crAvg) : 1;
+    out[u.id] = {pct: Math.round(50*rate + 50*vol), created, approved, rate, kind:'creator'};
+  });
+  return out;
+}
+function monthScores(m){
+  const auto = autoScoresFor(m);
+  return scoredUsers().map(u=>{
+    const a = auto[u.id] || null, c = ceoScoreOf(u.id, m);
+    const final = a && c ? Math.round((a.pct + c.pct)/2) : a ? a.pct : c ? c.pct : null;
+    return {u, auto:a, ceo:c, final};
+  }).filter(x=>x.final!==null).sort((x,y)=>y.final-x.final);
+}
+function scoreColor(n){ return n>=80 ? '#3FD39E' : n>=60 ? 'var(--brand-light)' : n>=40 ? '#E0A62D' : 'var(--red)'; }
+function teamScoresHTML(){
+  if(!isDono()) return '';
+  const m = todayISO().slice(0,7), rows = monthScores(m);
+  const mes = wrappedMonthName(m).toLowerCase();
+  return `<div class="section-title" style="margin-top:0;">⭐ Pontuação de ${mes} <span class="hint">50% sua avaliação · 50% números · o time vê nos últimos 3 dias do mês</span></div>
+    <div class="card" style="margin-bottom:24px;">
+      ${rows.map((r,i)=>`<div class="score-row" data-score-user="${r.u.id}">
+        <div class="score-pos">${i+1}º</div>
+        <div class="score-who">${userAvatarHTML(r.u,26)}<div><b>${escapeHTML(r.u.full_name)}</b><span>${ROLE_LABEL[r.u.role]}</span></div></div>
+        <div class="score-parts"><span>Números <b>${r.auto?r.auto.pct:'—'}</b></span><span>Avaliação <b>${r.ceo?r.ceo.pct:'—'}</b>${r.ceo?` <i>(${r.ceo.days} dia${r.ceo.days>1?'s':''})</i>`:''}</span></div>
+        <div class="score-final" style="color:${scoreColor(r.final)}">${r.final}</div>
+      </div>`).join('') || '<div class="empty" style="padding:16px;">Ainda sem dados neste mês. Comece avaliando o dia no Dashboard (a partir das 17h).</div>'}
+    </div>`;
+}
+function scoreBreakdownHTML(r, withNotes){
+  const pctTxt = x => `${Math.round(x*100)}%`;
+  return `<div class="score-big" style="color:${scoreColor(r.final)}">${r.final}<span>/100</span></div>
+    <div class="score-split">
+      <div><b>${r.auto?r.auto.pct:'—'}</b><span>Números do app</span></div>
+      <div><b>${r.ceo?r.ceo.pct:'—'}</b><span>Avaliação do CEO${r.ceo?` · ${r.ceo.days} dia${r.ceo.days>1?'s':''}`:''}</span></div>
+    </div>
+    ${r.auto?`<div class="score-list">${r.auto.kind==='exec'
+      ? `<div><span>Entregas no prazo</span><b>${pctTxt(r.auto.onTime)}</b></div><div><span>Aprovadas de primeira</span><b>${pctTxt(r.auto.first)}</b></div><div><span>Entregas no mês</span><b>${r.auto.vol}</b></div>${r.auto.late?`<div><span>Atrasadas agora</span><b style="color:var(--red)">${r.auto.late}</b></div>`:''}`
+      : `<div><span>Demandas criadas</span><b>${r.auto.created}</b></div><div><span>Aprovadas</span><b>${r.auto.approved}</b></div><div><span>Taxa de aprovação</span><b>${pctTxt(r.auto.rate)}</b></div>`}</div>`:''}
+    ${r.ceo?`<div class="score-list">${EVAL_QUESTIONS.map(([k,label])=>r.ceo.per[k]?`<div><span>${label}</span><b>${r.ceo.per[k].toFixed(1)} <i>/5</i></b></div>`:'').join('')}</div>`:''}
+    ${withNotes && r.ceo?.notes.length?`<div class="score-notes"><div class="rv-label">Seus comentários</div>${r.ceo.notes.slice(0,12).map(x=>`<div><i>${fmtDate(x.day).slice(0,5)}</i> ${escapeHTML(x.n)}</div>`).join('')}</div>`:''}`;
+}
+function openScoreDetail(userId){
+  const r = monthScores(todayISO().slice(0,7)).find(x=>x.u.id===userId); if(!r) return;
+  document.getElementById('genericModalTitle').textContent = `⭐ ${r.u.full_name}`;
+  document.getElementById('genericModalBody').innerHTML = `${scoreBreakdownHTML(r, true)}<div class="modal-foot"><button class="btn ghost" data-close="genericModalOverlay">Fechar</button></div>`;
+  openModal('genericModalOverlay');
+}
+// cada pessoa vê a própria pontuação só nos últimos 3 dias do mês (sem os comentários do CEO)
+function myScoreCardHTML(){
+  const u = currentUser(); if(!u || isDono()) return '';
+  const n = new Date(), last = new Date(n.getFullYear(), n.getMonth()+1, 0).getDate();
+  if(last - n.getDate() > 2) return '';
+  const r = monthScores(todayISO().slice(0,7)).find(x=>x.u.id===u.id);
+  if(!r) return '';
+  return `<div class="my-score">
+    <div class="my-score-head">⭐ Sua pontuação de ${wrappedMonthName(todayISO().slice(0,7)).toLowerCase()}</div>
+    ${scoreBreakdownHTML(r, false)}
+  </div>`;
+}
+
 /* ---------- 📌 MURAL DA EQUIPE (recados fixados no topo da Mesa) ---------- */
 function canPostNotes(){ return canSeeAgencyOverview(); }
 function timeAgo(ts){
@@ -3169,6 +3414,7 @@ function renderDashboard(el){
     </div>
 
     ${wrappedLauncherHTML()}
+    ${evalCardHTML()}
     ${weekSummaryHTML()}
     ${monthGoalCardHTML()}
     <div class="kpi-grid" style="margin-top:14px;">
@@ -3220,6 +3466,7 @@ function renderDashboard(el){
   wireChartTooltips(el);
   document.getElementById('openWrappedBtn')?.addEventListener('click', handleWrappedLaunch);
   document.getElementById('editGoalBtn')?.addEventListener('click', openGoalModal);
+  el.querySelectorAll('[data-eval-day]').forEach(b=>b.addEventListener('click', ()=>openEvalModal(b.dataset.evalDay)));
   maybeCelebrateGoal();
   el.querySelectorAll('[data-pkg-client]').forEach(r=>r.addEventListener('click', ()=>openClientDetail(r.dataset.pkgClient)));
 }
@@ -6982,6 +7229,7 @@ function renderEquipe(el){
   ` : '';
 
   el.innerHTML = `
+    ${teamScoresHTML()}
     ${rankingHTML}
     ${artRankingHTML}
     <div class="section-title" style="margin-top:0;">Usuários <button class="btn small primary" id="addUserBtn">+ Novo usuário</button></div>
@@ -7025,6 +7273,7 @@ function renderEquipe(el){
   `;
   document.getElementById('addTeamCostBtn').addEventListener('click', ()=>openTeamCostModal());
   document.getElementById('addUserBtn').addEventListener('click', ()=>openUserModal());
+  el.querySelectorAll('[data-score-user]').forEach(r=>r.addEventListener('click', ()=>openScoreDetail(r.dataset.scoreUser)));
   el.querySelectorAll('[data-show-videos]').forEach(el2=>{
     el2.addEventListener('click', ()=>openApprovedVideosModal(el2.dataset.showVideos));
   });
