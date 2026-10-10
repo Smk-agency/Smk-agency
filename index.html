@@ -946,6 +946,45 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .sig-pad-wrap canvas{display:block;width:100%;height:150px;touch-action:none;cursor:crosshair;position:relative;z-index:1;}
 .sig-baseline{position:absolute;left:24px;right:24px;bottom:28px;border-top:1px dashed #C3CAD6;}
 .sig-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9AA3B5;font-size:12.5px;pointer-events:none;}
+/* banco */
+.bank-onboard{max-width:460px;margin:30px auto;text-align:center;padding:30px 24px;border-radius:18px;border:1px solid rgba(91,140,255,.35);background:radial-gradient(120% 100% at 50% 0%, rgba(62,111,240,.2), transparent 60%), var(--surface);}
+.bank-ic{font-size:40px;margin-bottom:8px;}
+.bank-onboard b{display:block;font-family:var(--font-display);font-size:18px;margin-bottom:6px;}
+.bank-onboard p{font-size:13px;color:var(--text-muted);line-height:1.5;margin:0 0 18px;}
+.bank-start{display:flex;align-items:center;gap:8px;justify-content:center;}
+.bank-start span{font-family:var(--font-mono);color:var(--text-muted);}
+.bank-start input{max-width:180px;font-size:18px;font-family:var(--font-mono);}
+.bank-hero{padding:22px 24px 0;border-radius:18px;border:1px solid rgba(91,140,255,.3);background:radial-gradient(120% 140% at 0% 0%, rgba(62,111,240,.25), transparent 55%), radial-gradient(90% 120% at 100% 100%, rgba(155,123,234,.12), transparent 60%), var(--surface);overflow:hidden;margin-bottom:14px;}
+.bank-hero-top{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;}
+.bank-label{font-size:12px;color:var(--text-muted);}
+.bank-saldo{font-family:var(--font-display);font-size:42px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:4px 0;}
+.bank-saldo.neg{color:var(--red);}
+.bank-sub{font-size:11.5px;color:var(--text-faint);}
+.bank-actions{display:flex;gap:6px;flex-wrap:wrap;}
+.bank-spark{display:block;width:calc(100% + 48px);height:70px;margin:14px -24px 0;}
+.bank-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin-bottom:8px;}
+.bank-kpis > div{padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface);min-width:0;}
+.bank-kpis span{display:block;font-size:11px;color:var(--text-faint);margin-bottom:4px;}
+.bank-kpis b{font-family:var(--font-mono);font-size:14.5px;white-space:nowrap;}
+.bank-kpis b.pos, .bank-rv b.pos{color:var(--accent-soft);}
+.bank-kpis b.neg, .bank-rv b.neg{color:var(--red);}
+.bank-kpis .hl{border-color:rgba(91,140,255,.45);background:rgba(62,111,240,.1);}
+@media(max-width:900px){ .bank-kpis{grid-template-columns:repeat(2,minmax(0,1fr));} .bank-kpis .hl{grid-column:1/-1;} }
+.bank-filters{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px;}
+.bank-filters select{width:auto;}
+.bank-filters input{flex:1;min-width:160px;}
+.bank-statement{padding:6px 14px;}
+.bank-day{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-faint);padding:12px 0 4px;}
+.bank-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+.bank-row:hover{background:var(--surface-2);margin:0 -8px;padding:10px 8px;border-radius:8px;}
+.bank-ri{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface-2);flex-shrink:0;}
+.bank-rt{flex:1;min-width:0;}
+.bank-rt b{display:block;font-size:13px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bank-rt span{font-size:11px;color:var(--text-faint);}
+.bank-rv{text-align:right;flex-shrink:0;}
+.bank-rv b{display:block;font-family:var(--font-mono);font-size:13.5px;}
+.bank-rv span{font-size:10.5px;color:var(--text-faint);font-family:var(--font-mono);}
+.nav-item[data-view="banco"]:hover .ic svg, .nav-item[data-view="banco"].ic-anim .ic svg{animation-name:icPulse;}
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -1387,6 +1426,7 @@ html[data-theme="light"] .theme-toggle .sun{display:none;}
       <div class="nav-group" data-owner="1">
         <div class="nav-label">Gestão</div>
         <button class="nav-item" data-view="financeiro" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="22"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></span> Financeiro</button>
+        <button class="nav-item" data-view="banco" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10h18"/><path d="M12 3 3 8v2h18V8z"/><path d="M5 10v8M9.5 10v8M14.5 10v8M19 10v8"/><path d="M3 21h18"/></svg></span> Banco</button>
         <button class="nav-item" data-view="rentabilidade" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg></span> Rentabilidade</button>
         <button class="nav-item" data-view="equipe" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="2"/><circle cx="12" cy="10" r="2.5"/><path d="M8 17c0-1.5 1.8-2.5 4-2.5s4 1 4 2.5"/></svg></span> Equipe</button>
         <button class="nav-item" data-view="arquivadas" data-owner="1"><span class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="5" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/></svg></span> Arquivadas</button>
@@ -2623,11 +2663,12 @@ const TITLES = {
   demandas:['Demandas','Fluxo de produção'],
   agenda:['Agenda','Gravações, reuniões, folgas e compromissos da equipe'],
   financeiro:['Financeiro','Receitas e despesas — visível só ao CEO'],
+  banco:['Banco','Saldo e extrato da conta da agência — visível só ao CEO'],
   rentabilidade:['Rentabilidade','Lucro e margem por cliente e serviço'],
   equipe:['Equipe','Usuários e custo mensal'],
   arquivadas:['Arquivadas','Demandas concluídas em meses anteriores — visível só ao CEO'],
 };
-function guardedViews(){ return ['dashboard','financeiro','rentabilidade','equipe','arquivadas']; }
+function guardedViews(){ return ['dashboard','financeiro','banco','rentabilidade','equipe','arquivadas']; }
 
 function render(){
   const [title,sub] = TITLES[currentView];
@@ -2661,6 +2702,7 @@ function renderView(el){
   if(currentView==='demandas') return renderDemandas(el);
   if(currentView==='agenda') return renderAgenda(el);
   if(currentView==='financeiro') return renderFinanceiro(el);
+  if(currentView==='banco') return renderBanco(el);
   if(currentView==='rentabilidade') return renderRentabilidade(el);
   if(currentView==='equipe') return renderEquipe(el);
   if(currentView==='arquivadas') return renderArquivadas(el);
@@ -6838,6 +6880,162 @@ function openFinanceReportModal(faturamento, despesasSoltas, folha, despesasTota
   openModal('genericModalOverlay');
 }
 
+/* ---------- 🏦 BANCO (saldo + extrato a partir do saldo real informado) ---------- */
+// state.bank = {start_date:'AAAA-MM-DD', start_value, start_at:timestamp}
+// state.bank_entries = [{id, kind:'in'|'adjust', value, date, description, created_at}]   (saídas viram despesa paga)
+// state.payroll_payments = [{id, team_cost_id, month, value, name, paid_at, paid_ts}]      (folha paga pelos Gastos fixos)
+// Lançamentos do próprio dia inicial só contam se foram marcados DEPOIS de informar o saldo (o saldo digitado já inclui o resto).
+function bankLedger(){
+  const b = state.bank; if(!b) return [];
+  const counts = (date, ts) => date && (date > b.start_date || (date===b.start_date && ts && ts > b.start_at));
+  const L = [];
+  const pays = [...state.payments, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.payments||[])];
+  pays.filter(p=>p.status==='pago' && counts(p.paid_at, p.paid_ts)).forEach(p=>L.push({kind:'pay', ref:p.id, date:p.paid_at, ts:p.paid_ts||0, value:Number(p.value)||0, desc:clientById(p.client_id)?.name||'Cliente', cat:'Recebimento de cliente'}));
+  const exps = [...state.expenses, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.expenses||[])];
+  exps.filter(e=>(e.status==='pago' || !e.status)).forEach(e=>{
+    const date = e.paid_at || e.expense_date;
+    if(counts(date, e.paid_ts)) L.push({kind:'exp', ref:e.id, date, ts:e.paid_ts||0, value:-(Number(e.value)||0), desc:e.description||e.category, cat:e.category||'Despesa'});
+  });
+  (state.payroll_payments||[]).filter(x=>counts(x.paid_at, x.paid_ts)).forEach(x=>L.push({kind:'folha', ref:x.id, date:x.paid_at, ts:x.paid_ts||0, value:-(Number(x.value)||0), desc:`${x.name} — folha de ${wrappedMonthName(x.month).toLowerCase()}`, cat:'Folha'}));
+  (state.bank_entries||[]).filter(x=>counts(x.date, x.created_at)).forEach(x=>L.push({kind:x.kind, ref:x.id, date:x.date, ts:x.created_at||0, value: x.kind==='in' ? Math.abs(x.value) : x.value, desc:x.description || (x.kind==='adjust'?'Ajuste de saldo':'Entrada'), cat: x.kind==='adjust'?'Ajuste':'Entrada avulsa'}));
+  L.sort((a,b)=>a.date.localeCompare(b.date) || a.ts-b.ts);
+  let bal = Number(b.start_value)||0;
+  L.forEach(x=>{ bal += x.value; x.balance = bal; });
+  return L;
+}
+function bankBalance(){ const L = bankLedger(); return L.length ? L[L.length-1].balance : (Number(state.bank?.start_value)||0); }
+let bankFilter = {month:null, type:'all', q:''};
+function renderBanco(el){
+  if(!state.bank){
+    el.innerHTML = `<div class="bank-onboard">
+      <div class="bank-ic">🏦</div>
+      <b>Vamos abrir a conta da SMK no app</b>
+      <p>Me diz quanto tem <strong>hoje</strong> na conta da agência. A partir daí, cada cliente marcado como pago entra no saldo, e cada despesa paga sai.</p>
+      <div class="bank-start"><span>R$</span><input type="number" step="0.01" id="bankStartValue" placeholder="0,00"><button type="button" class="btn primary" id="bankStartBtn">Começar</button></div>
+    </div>`;
+    document.getElementById('bankStartBtn').addEventListener('click', ()=>{
+      const v = Number(document.getElementById('bankStartValue').value);
+      if(isNaN(v) || document.getElementById('bankStartValue').value==='') return;
+      state.bank = {start_date: todayISO(), start_value: v, start_at: Date.now()};
+      saveState(state); render();
+    });
+    return;
+  }
+  const L = bankLedger(), saldo = L.length ? L[L.length-1].balance : Number(state.bank.start_value)||0;
+  const m = todayISO().slice(0,7);
+  const inMonth = L.filter(x=>x.date.startsWith(m));
+  const entradas = inMonth.filter(x=>x.value>0 && x.kind!=='adjust').reduce((a,x)=>a+x.value,0);
+  const saidas = inMonth.filter(x=>x.value<0 && x.kind!=='adjust').reduce((a,x)=>a-x.value,0);
+  const aReceber = state.payments.filter(p=>p.status!=='pago' && p.status!=='cancelado' && (p.due_date||'')<=`${m}-31`).reduce((a,p)=>a+Number(p.value),0);
+  const folhaPend = state.team_costs.filter(tc=>!(state.payroll_payments||[]).some(x=>x.team_cost_id===tc.id && x.month===m)).reduce((a,tc)=>a+Number(tc.monthly_cost||0),0);
+  const aPagar = state.expenses.filter(e=>e.status && e.status!=='pago' && (e.expense_date||'')<=`${m}-31`).reduce((a,e)=>a+Number(e.value),0) + folhaPend;
+  const previsto = saldo + aReceber - aPagar;
+  // gráfico do saldo no mês
+  const days = new Date(Number(m.slice(0,4)), Number(m.slice(5,7)), 0).getDate(), today = new Date().getDate();
+  const before = L.filter(x=>x.date < `${m}-01`); let run = before.length ? before[before.length-1].balance : Number(state.bank.start_value)||0;
+  if(state.bank.start_date.startsWith(m)) run = Number(state.bank.start_value)||0;
+  const pts = []; for(let d=1; d<=today; d++){ const key = `${m}-${String(d).padStart(2,'0')}`; const dayItems = inMonth.filter(x=>x.date===key); if(dayItems.length) run = dayItems[dayItems.length-1].balance; if(key>=state.bank.start_date) pts.push(run); }
+  const spark = (()=>{ if(pts.length<2) return ''; const W=600,H=70, mn=Math.min(...pts), mx=Math.max(...pts), rg=(mx-mn)||1;
+    const xy = pts.map((v,i)=>[i/(pts.length-1)*W, H-6-(v-mn)/rg*(H-12)]);
+    const d = xy.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+    return `<svg class="bank-spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${d} L${W} ${H} L0 ${H}Z" fill="rgba(62,111,240,.18)"/><path d="${d}" fill="none" stroke="#5B8CFF" stroke-width="2.2" vector-effect="non-scaling-stroke"/></svg>`; })();
+  // extrato
+  const months = [...new Set(L.map(x=>x.date.slice(0,7)))].sort().reverse();
+  if(!bankFilter.month || !months.includes(bankFilter.month)) bankFilter.month = months[0] || m;
+  const q = normSearch(bankFilter.q);
+  const rows = L.filter(x=>x.date.startsWith(bankFilter.month))
+    .filter(x=>bankFilter.type==='all' || (bankFilter.type==='in' ? x.value>0 : x.value<0))
+    .filter(x=>!q || normSearch(x.desc+' '+x.cat).includes(q)).reverse();
+  const byDay = {}; rows.forEach(x=>{ (byDay[x.date] = byDay[x.date] || []).push(x); });
+  const icon = x => x.kind==='pay' ? '💰' : x.kind==='folha' ? '👥' : x.kind==='in' ? '➕' : x.kind==='adjust' ? '⚖️' : '💸';
+  el.innerHTML = `
+    <div class="bank-hero">
+      <div class="bank-hero-top">
+        <div><div class="bank-label">Saldo disponível</div><div class="bank-saldo ${saldo<0?'neg':''}" ${countAttrs(saldo,'money')}>${fmtMoney(saldo)}</div>
+          <div class="bank-sub">desde ${fmtDate(state.bank.start_date)} · saldo inicial ${fmtMoney(state.bank.start_value)}</div></div>
+        <div class="bank-actions">
+          <button type="button" class="btn small" id="bankIn">＋ Entrada</button>
+          <button type="button" class="btn small" id="bankOut">－ Saída</button>
+          <button type="button" class="btn small ghost" id="bankAdjust">⚖️ Ajustar saldo</button>
+        </div>
+      </div>
+      ${spark}
+    </div>
+    <div class="bank-kpis">
+      <div><span>Entradas no mês</span><b class="pos">${fmtMoney(entradas)}</b></div>
+      <div><span>Saídas no mês</span><b class="neg">${fmtMoney(saidas)}</b></div>
+      <div><span>A receber</span><b>${fmtMoney(aReceber)}</b></div>
+      <div><span>A pagar</span><b>${fmtMoney(aPagar)}</b></div>
+      <div class="hl"><span>Previsto no fim do mês</span><b class="${previsto<0?'neg':''}">${fmtMoney(previsto)}</b></div>
+    </div>
+    <div class="section-title">📄 Extrato</div>
+    <div class="bank-filters">
+      <select id="bankMonth">${(months.length?months:[m]).map(x=>`<option value="${x}" ${x===bankFilter.month?'selected':''}>${wrappedMonthName(x)} ${x.slice(0,4)}</option>`).join('')}</select>
+      <div class="q-layout">${[['all','Tudo'],['in','Entradas'],['out','Saídas']].map(([v,l])=>`<button type="button" data-bank-type="${v}" class="${bankFilter.type===v?'on':''}">${l}</button>`).join('')}</div>
+      <input type="text" id="bankSearch" placeholder="Buscar no extrato…" value="${escapeHTML(bankFilter.q)}">
+    </div>
+    <div class="card bank-statement">
+      ${Object.entries(byDay).map(([day, items])=>`<div class="bank-day">${new Date(day+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short', day:'2-digit', month:'2-digit'})}</div>
+        ${items.map(x=>`<div class="bank-row" data-bank-kind="${x.kind}" data-bank-ref="${x.ref}">
+          <span class="bank-ri">${icon(x)}</span>
+          <div class="bank-rt"><b>${escapeHTML(x.desc)}</b><span>${escapeHTML(x.cat)}</span></div>
+          <div class="bank-rv"><b class="${x.value>=0?'pos':'neg'}">${x.value>=0?'+':'−'} ${fmtMoney(Math.abs(x.value))}</b><span>saldo ${fmtMoney(x.balance)}</span></div>
+        </div>`).join('')}`).join('') || emptyStateHTML('folder','Nenhuma movimentação nesse período.','Quando um cliente for marcado como pago ou uma despesa for paga, aparece aqui.')}
+    </div>`;
+  document.getElementById('bankMonth').addEventListener('change', e=>{ bankFilter.month = e.target.value; render(); });
+  el.querySelectorAll('[data-bank-type]').forEach(b=>b.addEventListener('click', ()=>{ bankFilter.type = b.dataset.bankType; render(); }));
+  const bs = document.getElementById('bankSearch');
+  bs.addEventListener('input', ()=>{ bankFilter.q = bs.value; clearTimeout(bs._t); bs._t = setTimeout(()=>{ render(); const n = document.getElementById('bankSearch'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
+  document.getElementById('bankIn').addEventListener('click', ()=>openBankEntryModal('in'));
+  document.getElementById('bankOut').addEventListener('click', ()=>openBankEntryModal('out'));
+  document.getElementById('bankAdjust').addEventListener('click', ()=>openBankEntryModal('adjust', saldo));
+  el.querySelectorAll('.bank-row').forEach(r=>r.addEventListener('click', ()=>{
+    const k = r.dataset.bankKind, id = r.dataset.bankRef;
+    if(k==='pay'){ const p = state.payments.find(x=>x.id===id); if(p) openPaymentModal(p); }
+    else if(k==='exp'){ const e = state.expenses.find(x=>x.id===id); if(e) openExpenseModal(e); }
+    else if(k==='in' || k==='adjust'){ if(confirm('Apagar esse lançamento do extrato?')){ state.bank_entries = (state.bank_entries||[]).filter(x=>x.id!==id); saveState(state); render(); } }
+    else if(k==='folha'){ if(confirm('Desfazer esse pagamento de folha?')){ state.payroll_payments = (state.payroll_payments||[]).filter(x=>x.id!==id); saveState(state); render(); } }
+  }));
+}
+function openBankEntryModal(kind, currentBalance){
+  const titles = {in:'＋ Entrada', out:'－ Saída (vira despesa paga)', adjust:'⚖️ Ajustar saldo'};
+  const cats = [...new Set([...state.expenses, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.expenses||[])].map(e=>e.category).filter(Boolean))];
+  document.getElementById('itemModalTitle').textContent = titles[kind];
+  document.getElementById('itemModalBody').innerHTML = kind==='adjust' ? `
+      <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:12px;">Saldo no app agora: <b>${fmtMoney(currentBalance)}</b>. Digite quanto tem de verdade na conta — o app lança a diferença como ajuste.</div>
+      <div class="field"><label>Saldo real da conta</label><input type="number" step="0.01" id="be_value" value="${currentBalance}"></div>
+      <div class="field"><label>Motivo <span class="hint">opcional</span></label><input type="text" id="be_desc" placeholder="Ex: tarifa do banco, rendimento"></div>
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="be_save">Ajustar</button></div>`
+    : `
+      <div class="field"><label>Descrição</label><input type="text" id="be_desc" placeholder="${kind==='in'?'Ex: aporte, rendimento, venda de equipamento':'Ex: Uber pra gravação, lanche da equipe'}"></div>
+      ${kind==='out'?`<div class="field"><label>Categoria</label><input type="text" id="be_cat" list="be_cats" placeholder="Ex: Transporte"><datalist id="be_cats">${cats.map(c=>`<option value="${escapeHTML(c)}">`).join('')}</datalist></div>`:''}
+      <div class="field-row"><div class="field"><label>Valor (R$)</label><input type="number" step="0.01" id="be_value"></div><div class="field"><label>Data</label><input type="date" id="be_date" value="${todayISO()}"></div></div>
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="be_save">${kind==='in'?'Lançar entrada':'Lançar saída'}</button></div>`;
+  openModal('itemModalOverlay');
+  setTimeout(()=>document.getElementById(kind==='adjust'?'be_value':'be_desc')?.focus(), 50);
+  document.getElementById('be_save').addEventListener('click', ()=>{
+    const v = Number(document.getElementById('be_value').value);
+    const desc = document.getElementById('be_desc').value.trim();
+    if(isNaN(v) || document.getElementById('be_value').value==='') return;
+    const now = Date.now();
+    state.bank_entries = state.bank_entries || [];
+    if(kind==='adjust'){
+      const diff = Math.round((v - currentBalance)*100)/100;
+      if(!diff){ closeModal('itemModalOverlay'); return; }
+      state.bank_entries.push({id:uid(), kind:'adjust', value:diff, date:todayISO(), description: desc || 'Ajuste de saldo', created_at:now});
+    } else if(kind==='in'){
+      if(v<=0) return;
+      state.bank_entries.push({id:uid(), kind:'in', value:v, date:document.getElementById('be_date').value || todayISO(), description: desc || 'Entrada', created_at:now});
+    } else {
+      if(v<=0) return;
+      const date = document.getElementById('be_date').value || todayISO();
+      state.expenses.push({id:uid(), category: document.getElementById('be_cat').value.trim() || 'Outros', description: desc || 'Saída', value:v,
+        expense_date:date, status:'pago', paid_at:date, paid_ts:now, responsible_id: currentUser().id});
+    }
+    saveState(state); closeModal('itemModalOverlay'); render();
+  });
+}
+
 /* ---------- PRÉVIA DO PRÓXIMO MÊS (aparece nos últimos 7 dias do mês) ---------- */
 // Mesma regra das rotinas automáticas: cobrança de cada cliente não encerrado (serviços ativos no mês que vem,
 // respeitando a forma de pagamento) + gastos fixos ativos + folha da equipe.
@@ -6938,21 +7136,27 @@ function renderFinanceiro(el){
     <div class="section-title">Gastos fixos <button class="btn small primary" id="addFixedExpenseBtn">+ Gasto fixo</button></div>
     <div class="card" style="margin-bottom:24px;">
       <div class="table-wrap"><table>
-        <tr><th>Categoria</th><th>Descrição</th><th>Valor mensal</th><th>Vencimento</th><th>Status</th><th></th></tr>
+        <tr><th>Categoria</th><th>Descrição</th><th>Valor mensal</th><th>Vencimento</th><th>Status</th><th>Pagamento (${wrappedMonthName(todayISO().slice(0,7)).toLowerCase()})</th><th></th></tr>
         ${state.team_costs.map(tc=>`<tr>
           <td>Folha</td><td>${tc.professional_name} — ${tc.role}</td><td class="mono">${fmtMoney(tc.monthly_cost)}</td><td>—</td>
           <td><span class="badge green">ativo</span></td>
+          <td>${(()=>{ const pp = (state.payroll_payments||[]).find(x=>x.team_cost_id===tc.id && x.month===todayISO().slice(0,7));
+            return pp ? `<span class="badge green">pago</span> <button class="btn ghost small" data-undo-folha="${pp.id}" title="Desfazer">↺</button>`
+              : `<span class="badge blue">pendente</span> <button class="btn small primary" data-pay-folha="${tc.id}">Marcar como pago</button>`; })()}</td>
           <td style="text-align:right;white-space:nowrap;"><span style="font-size:11px;color:var(--text-faint);">editar na Equipe</span></td>
         </tr>`).join('')}
         ${(state.fixed_expenses||[]).map(fe=>`<tr style="${fe.status==='pausado'?'opacity:.5;':''}">
           <td>${fe.category}</td><td>${fe.description}</td><td class="mono">${fmtMoney(fe.value)}</td><td>todo dia ${fe.due_day}</td>
           <td><span class="badge ${fe.status==='pausado'?'gray':'green'}">${fe.status==='pausado'?'pausado':'ativo'}</span></td>
+          <td>${(()=>{ const ex = state.expenses.find(e=>e.fixed_expense_id===fe.id && (e.expense_date||'').startsWith(todayISO().slice(0,7)));
+            if(!ex) return '<span style="font-size:11px;color:var(--text-faint);">—</span>';
+            return (ex.status||'pago')==='pago' ? '<span class="badge green">pago</span>' : `<span class="badge blue">pendente</span> <button class="btn small primary" data-mark-expense-paid="${ex.id}">Marcar como pago</button>`; })()}</td>
           <td style="text-align:right;white-space:nowrap;">
             <button class="btn ghost small" data-edit-fixed="${fe.id}">editar</button>
             <button class="btn ghost small" data-toggle-fixed="${fe.id}">${fe.status==='pausado'?'reativar':'pausar'}</button>
           </td>
         </tr>`).join('')}
-        ${(!state.team_costs.length && !(state.fixed_expenses||[]).length) ? `<tr><td colspan="6" style="color:var(--text-faint)">Nenhum gasto fixo cadastrado — ex: aluguel, assinatura de software.</td></tr>` : ''}
+        ${(!state.team_costs.length && !(state.fixed_expenses||[]).length) ? `<tr><td colspan="7" style="color:var(--text-faint)">Nenhum gasto fixo cadastrado — ex: aluguel, assinatura de software.</td></tr>` : ''}
       </table></div>
       <div style="font-size:11px;color:var(--text-faint);margin-top:10px;">Folha da equipe é gerenciada na aba Equipe — aqui é só pra você ver tudo que é gasto fixo junto.</div>
     </div>
@@ -6981,6 +7185,7 @@ function renderFinanceiro(el){
       const p = state.payments.find(x=>x.id===btn.dataset.markPaid);
       p.status = 'pago';
       p.paid_at = todayISO();
+      p.paid_ts = Date.now();
       saveState(state);
       render();
     });
@@ -7001,11 +7206,25 @@ function renderFinanceiro(el){
       render();
     });
   });
+  el.querySelectorAll('[data-pay-folha]').forEach(btn=>btn.addEventListener('click', ()=>{
+    const tc = state.team_costs.find(x=>x.id===btn.dataset.payFolha); if(!tc) return;
+    const m = todayISO().slice(0,7);
+    state.payroll_payments = state.payroll_payments || [];
+    if(state.payroll_payments.some(x=>x.team_cost_id===tc.id && x.month===m)) return;
+    state.payroll_payments.push({id:uid(), team_cost_id:tc.id, month:m, value:Number(tc.monthly_cost)||0, name:tc.professional_name, paid_at:todayISO(), paid_ts:Date.now()});
+    saveState(state); render();
+  }));
+  el.querySelectorAll('[data-undo-folha]').forEach(btn=>btn.addEventListener('click', ()=>{
+    if(!confirm('Desfazer o pagamento dessa folha?')) return;
+    state.payroll_payments = (state.payroll_payments||[]).filter(x=>x.id!==btn.dataset.undoFolha);
+    saveState(state); render();
+  }));
   el.querySelectorAll('[data-mark-expense-paid]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       const e = state.expenses.find(x=>x.id===btn.dataset.markExpensePaid);
       e.status = 'pago';
       e.paid_at = todayISO();
+      e.paid_ts = Date.now();
       saveState(state);
       render();
     });
@@ -7042,10 +7261,10 @@ function openPaymentModal(existing){
       due_date:document.getElementById('pf_due').value, status};
     if(existing){
       Object.assign((existing = liveRef(existing)), data);
-      if(status==='pago' && !existing.paid_at) existing.paid_at = todayISO();
+      if(status==='pago' && !existing.paid_at){ existing.paid_at = todayISO(); existing.paid_ts = Date.now(); }
       if(status!=='pago') existing.paid_at = null;
     } else {
-      state.payments.push({id:uid(), ...data, paid_at: status==='pago'?todayISO():null});
+      state.payments.push({id:uid(), ...data, paid_at: status==='pago'?todayISO():null, paid_ts: status==='pago'?Date.now():null});
     }
     saveState(state); closeModal('genericModalOverlay'); render();
   });
@@ -7088,10 +7307,10 @@ function openExpenseModal(existing){
       responsible_id: document.getElementById('ef_responsible').value || null};
     if(existing){
       Object.assign((existing = liveRef(existing)), data);
-      if(status==='pago' && !existing.paid_at) existing.paid_at = todayISO();
+      if(status==='pago' && !existing.paid_at){ existing.paid_at = todayISO(); existing.paid_ts = Date.now(); }
       if(status!=='pago') existing.paid_at = null;
     } else {
-      state.expenses.push({id:uid(), ...data, paid_at: status==='pago'?todayISO():null});
+      state.expenses.push({id:uid(), ...data, paid_at: status==='pago'?todayISO():null, paid_ts: status==='pago'?Date.now():null});
     }
     saveState(state); closeModal('genericModalOverlay'); render();
   });
