@@ -985,6 +985,67 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .bank-rv b{display:block;font-family:var(--font-mono);font-size:13.5px;}
 .bank-rv span{font-size:10.5px;color:var(--text-faint);font-family:var(--font-mono);}
 .nav-item[data-view="banco"]:hover .ic svg, .nav-item[data-view="banco"].ic-anim .ic svg{animation-name:icPulse;}
+/* SMK Bank */
+.sb-wrap{position:relative;border-radius:22px;overflow:hidden;margin-bottom:14px;padding:22px 26px 0;color:#fff;
+  background:radial-gradient(120% 120% at 100% 0%, rgba(91,140,255,.35), transparent 55%), radial-gradient(80% 120% at 0% 100%, rgba(155,123,234,.25), transparent 60%), linear-gradient(135deg,#0A1128,#0E1A44 55%,#13245E);
+  border:1px solid rgba(143,176,255,.25);box-shadow:0 30px 60px -34px rgba(10,17,40,.9);}
+.sb-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;}
+.sb-brand{display:flex;align-items:center;gap:8px;}
+.sb-brand img{height:22px;width:auto;}
+.sb-brand span{font-family:var(--font-display);font-weight:700;font-size:20px;letter-spacing:-.01em;color:#8FB0FF;}
+.sb-acct{font-family:var(--font-mono);font-size:11px;color:rgba(255,255,255,.55);}
+.sb-main{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:26px;align-items:center;}
+.sb-hello{font-size:13px;color:rgba(255,255,255,.7);margin-bottom:10px;}
+.sb-label{display:flex;align-items:center;gap:8px;font-size:12px;color:rgba(255,255,255,.6);}
+.sb-eye{background:rgba(255,255,255,.1);border:0;color:#fff;width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;}
+.sb-eye svg{width:15px;height:15px;}
+.sb-eye:hover{background:rgba(255,255,255,.2);}
+.sb-amount{font-family:var(--font-display);font-size:44px;font-weight:700;letter-spacing:-.02em;line-height:1.1;margin:6px 0 4px;}
+.sb-amount.neg{color:#FF8A75;}
+.sb-sub{font-size:12px;color:rgba(255,255,255,.6);}
+.sb-sub b{color:#fff;font-family:var(--font-mono);font-weight:600;}
+.sb-quick{display:flex;gap:18px;margin-top:20px;flex-wrap:wrap;}
+.sb-quick button{display:flex;flex-direction:column;align-items:center;gap:7px;background:none;border:0;color:#fff;cursor:pointer;font-size:11.5px;font-weight:600;}
+.sb-quick i{width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.14);transition:background-color .15s, transform .15s;}
+.sb-quick i svg{width:21px;height:21px;}
+.sb-quick button:hover i{background:rgba(91,140,255,.45);transform:translateY(-2px);}
+.sb-card{perspective:900px;}
+.sb-card-in{position:relative;aspect-ratio:1.586;border-radius:18px;padding:18px 20px;display:flex;flex-direction:column;justify-content:space-between;overflow:hidden;
+  transform:rotateX(var(--rx,0deg)) rotateY(var(--ry,-8deg));transition:transform .25s ease-out;
+  background:radial-gradient(120% 90% at var(--gx,30%) 0%, rgba(255,255,255,.18), transparent 50%), linear-gradient(135deg,#1A1F2E 0%,#0B0D14 55%,#1B2B66 100%);
+  border:1px solid rgba(255,255,255,.14);box-shadow:0 26px 50px -22px rgba(0,0,0,.85), inset 0 1px 0 rgba(255,255,255,.12);}
+.sb-card-in::before{content:"";position:absolute;inset:0;background:repeating-linear-gradient(115deg, rgba(255,255,255,.025) 0 2px, transparent 2px 9px);pointer-events:none;}
+.sb-card-in::after{content:"";position:absolute;right:-60px;bottom:-80px;width:220px;height:220px;border-radius:50%;background:radial-gradient(circle, rgba(62,111,240,.45), transparent 65%);}
+.sb-card-top,.sb-card-mid,.sb-card-num,.sb-card-bottom{position:relative;z-index:1;}
+.sb-card-top{display:flex;justify-content:space-between;align-items:center;}
+.sb-card-logo{display:flex;align-items:center;gap:6px;}
+.sb-card-logo img{height:15px;}
+.sb-card-logo b{font-family:var(--font-display);font-size:11px;letter-spacing:.2em;color:#8FB0FF;}
+.sb-card-tier{font-size:9.5px;letter-spacing:.3em;color:rgba(255,255,255,.55);font-weight:700;}
+.sb-card-mid{display:flex;align-items:center;gap:10px;}
+.sb-chip{width:40px;height:30px;border-radius:6px;background:linear-gradient(135deg,#E8C77A,#B8904F 45%,#F2DB9E 70%,#A57D3C);box-shadow:inset 0 0 0 1px rgba(0,0,0,.25);position:relative;}
+.sb-chip::before{content:"";position:absolute;inset:6px 10px;border:1px solid rgba(0,0,0,.28);border-radius:3px;}
+.sb-nfc{width:22px;height:22px;color:rgba(255,255,255,.7);transform:rotate(0deg);}
+.sb-card-num{font-family:var(--font-mono);font-size:17px;letter-spacing:.14em;color:#E9EDF7;}
+.sb-card-bottom{display:flex;justify-content:space-between;font-size:11px;font-weight:600;letter-spacing:.08em;}
+.sb-card-bottom small{display:block;font-size:8px;letter-spacing:.14em;color:rgba(255,255,255,.5);text-transform:uppercase;font-weight:600;margin-bottom:2px;}
+.sb-wrap .bank-spark{width:calc(100% + 52px);margin:18px -26px 0;}
+.sb-month{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-bottom:8px;}
+.sb-month > div{display:grid;grid-template-columns:auto 1fr;grid-template-rows:auto auto;column-gap:10px;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--surface);}
+.sb-month i{grid-row:1 / 3;width:36px;height:36px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--surface-2);font-style:normal;font-size:15px;}
+.sb-month i svg{width:17px;height:17px;}
+.sb-month i.in{color:var(--accent-soft);background:rgba(31,169,124,.13);}
+.sb-month i.out{color:var(--red);background:rgba(224,85,61,.12);}
+.sb-month span{font-size:11px;color:var(--text-faint);}
+.sb-month b{font-family:var(--font-mono);font-size:14px;white-space:nowrap;}
+.sb-month b.pos{color:var(--accent-soft);} .sb-month b.neg{color:var(--red);}
+.bank-ri svg{width:16px;height:16px;}
+.bank-ri.in{color:var(--accent-soft);background:rgba(31,169,124,.13);}
+.bank-ri.out{color:var(--red);background:rgba(224,85,61,.12);}
+.bank-ri.adj{color:var(--brand-light);background:rgba(62,111,240,.14);}
+.bank-rk{display:block;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
+.bank-day{text-transform:capitalize;}
+@media(max-width:900px){ .sb-main{grid-template-columns:1fr;} .sb-card{max-width:340px;} .sb-month{grid-template-columns:repeat(2,minmax(0,1fr));} .sb-amount{font-size:36px;} .sb-wrap{padding:18px 18px 0;} .sb-wrap .bank-spark{width:calc(100% + 36px);margin:16px -18px 0;} }
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -6908,7 +6969,7 @@ let bankFilter = {month:null, type:'all', q:''};
 function renderBanco(el){
   if(!state.bank){
     el.innerHTML = `<div class="bank-onboard">
-      <div class="bank-ic">🏦</div>
+      <div class="sb-brand" style="justify-content:center;margin-bottom:14px;"><img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK"><span>Bank</span></div>
       <b>Vamos abrir a conta da SMK no app</b>
       <p>Me diz quanto tem <strong>hoje</strong> na conta da agência. A partir daí, cada cliente marcado como pago entra no saldo, e cada despesa paga sai.</p>
       <div class="bank-start"><span>R$</span><input type="number" step="0.01" id="bankStartValue" placeholder="0,00"><button type="button" class="btn primary" id="bankStartBtn">Começar</button></div>
@@ -6947,41 +7008,73 @@ function renderBanco(el){
     .filter(x=>bankFilter.type==='all' || (bankFilter.type==='in' ? x.value>0 : x.value<0))
     .filter(x=>!q || normSearch(x.desc+' '+x.cat).includes(q)).reverse();
   const byDay = {}; rows.forEach(x=>{ (byDay[x.date] = byDay[x.date] || []).push(x); });
-  const icon = x => x.kind==='pay' ? '💰' : x.kind==='folha' ? '👥' : x.kind==='in' ? '➕' : x.kind==='adjust' ? '⚖️' : '💸';
+  let hide = false; try{ hide = localStorage.getItem('smkos_bank_hide')==='1'; }catch(e){}
+  const money = v => hide ? 'R$ ••••••' : fmtMoney(v);
+  const firstName = (currentUser()?.full_name||'').split(' ')[0];
+  const txTitle = x => ({pay:'Transferência recebida', exp:'Pagamento', folha:'Folha de pagamento', in:'Depósito', adjust:'Ajuste de saldo'})[x.kind] || 'Movimentação';
+  const SVG_IN = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 7 7 17"/><path d="M15 17H7V9"/></svg>';
+  const SVG_OUT = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17 17 7"/><path d="M9 7h8v8"/></svg>';
+  const SVG_ADJ = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v18"/><path d="M5 7h14"/><path d="m5 7-3 6a3 3 0 0 0 6 0z"/><path d="m19 7-3 6a3 3 0 0 0 6 0z"/></svg>';
+  const SVG_EYE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const SVG_EYE_OFF = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c6.5 0 10 7 10 7a17 17 0 0 1-3.2 4.1M6.6 6.6A17 17 0 0 0 2 12s3.5 7 10 7a9.8 9.8 0 0 0 5.4-1.6"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const icon = x => x.kind==='adjust' ? SVG_ADJ : x.value>=0 ? SVG_IN : SVG_OUT;
+  const logo = document.querySelector('.brand-logo-sm')?.src || '';
   el.innerHTML = `
-    <div class="bank-hero">
-      <div class="bank-hero-top">
-        <div><div class="bank-label">Saldo disponível</div><div class="bank-saldo ${saldo<0?'neg':''}" ${countAttrs(saldo,'money')}>${fmtMoney(saldo)}</div>
-          <div class="bank-sub">desde ${fmtDate(state.bank.start_date)} · saldo inicial ${fmtMoney(state.bank.start_value)}</div></div>
-        <div class="bank-actions">
-          <button type="button" class="btn small" id="bankIn">＋ Entrada</button>
-          <button type="button" class="btn small" id="bankOut">－ Saída</button>
-          <button type="button" class="btn small ghost" id="bankAdjust">⚖️ Ajustar saldo</button>
+    <div class="sb-wrap">
+      <div class="sb-top">
+        <div class="sb-brand"><img src="${logo}" alt="SMK"><span>Bank</span></div>
+        <div class="sb-acct">Ag 0001 · Conta 2026-7</div>
+      </div>
+      <div class="sb-main">
+        <div class="sb-balance">
+          <div class="sb-hello">Olá, ${escapeHTML(firstName)} 👋</div>
+          <div class="sb-label">Saldo em conta <button type="button" class="sb-eye" id="sbEye" title="${hide?'Mostrar':'Esconder'} valores">${hide?SVG_EYE_OFF:SVG_EYE}</button></div>
+          <div class="sb-amount ${saldo<0?'neg':''}" ${hide?'':countAttrs(saldo,'money')}>${money(saldo)}</div>
+          <div class="sb-sub">Previsto no fim do mês: <b>${money(previsto)}</b> · conta aberta em ${fmtDate(state.bank.start_date)}</div>
+          <div class="sb-quick">
+            <button type="button" id="bankIn"><i>${SVG_IN}</i><span>Receber</span></button>
+            <button type="button" id="bankOut"><i>${SVG_OUT}</i><span>Pagar</span></button>
+            <button type="button" id="bankAdjust"><i>${SVG_ADJ}</i><span>Ajustar</span></button>
+            <button type="button" id="sbGoExtrato"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></i><span>Extrato</span></button>
+          </div>
+        </div>
+        <div class="sb-card" id="sbCard">
+          <div class="sb-card-in">
+            <div class="sb-card-top"><span class="sb-card-logo"><img src="${logo}" alt="SMK"><b>BANK</b></span><span class="sb-card-tier">BLACK</span></div>
+            <div class="sb-card-mid"><span class="sb-chip"></span><svg class="sb-nfc" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8.5 8.5a5 5 0 0 1 0 7"/><path d="M12 6a8.5 8.5 0 0 1 0 12"/><path d="M15.5 3.5a12 12 0 0 1 0 17"/></svg></div>
+            <div class="sb-card-num">•••• •••• •••• 2026</div>
+            <div class="sb-card-bottom"><div><small>Titular</small>SMK AGENCY</div><div><small>Válido até</small>12/30</div></div>
+          </div>
         </div>
       </div>
-      ${spark}
+      ${hide ? '' : spark}
     </div>
-    <div class="bank-kpis">
-      <div><span>Entradas no mês</span><b class="pos">${fmtMoney(entradas)}</b></div>
-      <div><span>Saídas no mês</span><b class="neg">${fmtMoney(saidas)}</b></div>
-      <div><span>A receber</span><b>${fmtMoney(aReceber)}</b></div>
-      <div><span>A pagar</span><b>${fmtMoney(aPagar)}</b></div>
-      <div class="hl"><span>Previsto no fim do mês</span><b class="${previsto<0?'neg':''}">${fmtMoney(previsto)}</b></div>
+    <div class="sb-month">
+      <div><i class="in">${SVG_IN}</i><span>Entradas no mês</span><b class="pos">${money(entradas)}</b></div>
+      <div><i class="out">${SVG_OUT}</i><span>Saídas no mês</span><b class="neg">${money(saidas)}</b></div>
+      <div><i>⏳</i><span>A receber</span><b>${money(aReceber)}</b></div>
+      <div><i>📌</i><span>A pagar</span><b>${money(aPagar)}</b></div>
     </div>
-    <div class="section-title">📄 Extrato</div>
+    <div class="section-title" id="sbExtrato">Extrato</div>
     <div class="bank-filters">
       <select id="bankMonth">${(months.length?months:[m]).map(x=>`<option value="${x}" ${x===bankFilter.month?'selected':''}>${wrappedMonthName(x)} ${x.slice(0,4)}</option>`).join('')}</select>
       <div class="q-layout">${[['all','Tudo'],['in','Entradas'],['out','Saídas']].map(([v,l])=>`<button type="button" data-bank-type="${v}" class="${bankFilter.type===v?'on':''}">${l}</button>`).join('')}</div>
       <input type="text" id="bankSearch" placeholder="Buscar no extrato…" value="${escapeHTML(bankFilter.q)}">
     </div>
     <div class="card bank-statement">
-      ${Object.entries(byDay).map(([day, items])=>`<div class="bank-day">${new Date(day+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short', day:'2-digit', month:'2-digit'})}</div>
+      ${Object.entries(byDay).map(([day, items])=>`<div class="bank-day">${new Date(day+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long'})}</div>
         ${items.map(x=>`<div class="bank-row" data-bank-kind="${x.kind}" data-bank-ref="${x.ref}">
-          <span class="bank-ri">${icon(x)}</span>
-          <div class="bank-rt"><b>${escapeHTML(x.desc)}</b><span>${escapeHTML(x.cat)}</span></div>
-          <div class="bank-rv"><b class="${x.value>=0?'pos':'neg'}">${x.value>=0?'+':'−'} ${fmtMoney(Math.abs(x.value))}</b><span>saldo ${fmtMoney(x.balance)}</span></div>
+          <span class="bank-ri ${x.kind==='adjust'?'adj':x.value>=0?'in':'out'}">${icon(x)}</span>
+          <div class="bank-rt"><span class="bank-rk">${txTitle(x)}</span><b>${escapeHTML(x.desc)}</b><span>${escapeHTML(x.cat)}</span></div>
+          <div class="bank-rv"><b class="${x.value>=0?'pos':'neg'}">${hide?'••••':(x.value>=0?'+ ':'− ')+fmtMoney(Math.abs(x.value))}</b><span>saldo ${money(x.balance)}</span></div>
         </div>`).join('')}`).join('') || emptyStateHTML('folder','Nenhuma movimentação nesse período.','Quando um cliente for marcado como pago ou uma despesa for paga, aparece aqui.')}
     </div>`;
+  document.getElementById('sbEye').addEventListener('click', ()=>{ try{ localStorage.setItem('smkos_bank_hide', hide?'0':'1'); }catch(e){} render(); });
+  document.getElementById('sbGoExtrato').addEventListener('click', ()=>document.getElementById('sbExtrato').scrollIntoView({behavior:'smooth', block:'start'}));
+  const card = document.getElementById('sbCard');
+  card.addEventListener('pointermove', e=>{ const r = card.getBoundingClientRect(); const x = (e.clientX-r.left)/r.width-.5, y = (e.clientY-r.top)/r.height-.5;
+    card.style.setProperty('--ry', (x*14).toFixed(2)+'deg'); card.style.setProperty('--rx', (-y*12).toFixed(2)+'deg'); card.style.setProperty('--gx', ((x+.5)*100).toFixed(0)+'%'); });
+  card.addEventListener('pointerleave', ()=>{ card.style.setProperty('--ry','0deg'); card.style.setProperty('--rx','0deg'); });
   document.getElementById('bankMonth').addEventListener('change', e=>{ bankFilter.month = e.target.value; render(); });
   el.querySelectorAll('[data-bank-type]').forEach(b=>b.addEventListener('click', ()=>{ bankFilter.type = b.dataset.bankType; render(); }));
   const bs = document.getElementById('bankSearch');
