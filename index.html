@@ -942,6 +942,10 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .q-layout{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;}
 .q-layout button{border:0;background:var(--surface-2);color:var(--text-muted);font-size:11.5px;font-weight:600;padding:6px 10px;cursor:pointer;}
 .q-layout button.on{background:var(--brand);color:#fff;}
+.sig-pad-wrap{position:relative;border-radius:12px;background:#fff;border:1px solid var(--border);overflow:hidden;}
+.sig-pad-wrap canvas{display:block;width:100%;height:150px;touch-action:none;cursor:crosshair;position:relative;z-index:1;}
+.sig-baseline{position:absolute;left:24px;right:24px;bottom:28px;border-top:1px dashed #C3CAD6;}
+.sig-hint{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#9AA3B5;font-size:12.5px;pointer-events:none;}
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -2478,6 +2482,18 @@ function openProfileModal(){
       </div>
     </div>
     <div class="field" style="margin-top:18px;">
+      <label>✍️ Minha rubrica <span class="hint">aparece na assinatura dos orçamentos que você mandar</span></label>
+      <div class="sig-pad-wrap">
+        <canvas id="sigPad" width="920" height="300"></canvas>
+        <div class="sig-baseline"></div>
+        <div class="sig-hint" id="sigHint">${u.signature?'':'Desenhe sua rubrica aqui com o mouse ou o dedo'}</div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:6px;">
+        <button type="button" class="btn small ghost" id="sigClear">Limpar</button>
+        ${u.signature?'<button type="button" class="btn small ghost danger" id="sigRemove">Remover rubrica salva</button>':''}
+      </div>
+    </div>
+    <div class="field" style="margin-top:18px;">
       <label>Trocar código de acesso</label>
       <input type="text" id="pf_code" maxlength="4" inputmode="numeric" placeholder="0000" style="font-family:var(--font-mono);letter-spacing:3px;" autocomplete="off">
       <div id="pf_codeError" style="display:none;color:var(--red);font-size:11.5px;margin-top:5px;"></div>
@@ -2488,6 +2504,31 @@ function openProfileModal(){
     </div>
   `;
   let pickedColor = avColor;
+  // rubrica: desenha num canvas; ao salvar recorta o espaço vazio e guarda um PNG transparente pequeno
+  const pad = document.getElementById('sigPad'), pctx = pad.getContext('2d');
+  let sigTouched = false, sigRemoved = false, drawing = false, last = null;
+  pctx.lineCap = 'round'; pctx.lineJoin = 'round'; pctx.strokeStyle = '#151B26'; pctx.lineWidth = 5;
+  if(u.signature){ const im = new Image(); im.onload = ()=>{ const sc = Math.min(1, (pad.width-40)/im.width, (pad.height-60)/im.height); pctx.drawImage(im, (pad.width-im.width*sc)/2, (pad.height-40-im.height*sc), im.width*sc, im.height*sc); }; im.src = u.signature; }
+  const ptOf = e => { const r = pad.getBoundingClientRect(); return {x:(e.clientX-r.left)*pad.width/r.width, y:(e.clientY-r.top)*pad.height/r.height}; };
+  pad.addEventListener('pointerdown', e=>{ drawing = true; last = ptOf(e); pad.setPointerCapture(e.pointerId); if(!sigTouched){ pctx.clearRect(0,0,pad.width,pad.height); sigTouched = true; sigRemoved = false; document.getElementById('sigHint').textContent=''; } });
+  pad.addEventListener('pointermove', e=>{
+    if(!drawing) return; const p = ptOf(e);
+    pctx.beginPath(); pctx.moveTo(last.x, last.y); pctx.quadraticCurveTo(last.x, last.y, (last.x+p.x)/2, (last.y+p.y)/2); pctx.lineTo(p.x, p.y); pctx.stroke();
+    last = p;
+  });
+  ['pointerup','pointercancel','pointerleave'].forEach(ev=>pad.addEventListener(ev, ()=>{ drawing = false; }));
+  document.getElementById('sigClear').addEventListener('click', ()=>{ pctx.clearRect(0,0,pad.width,pad.height); sigTouched = true; document.getElementById('sigHint').textContent='Desenhe sua rubrica aqui com o mouse ou o dedo'; });
+  document.getElementById('sigRemove')?.addEventListener('click', e=>{ pctx.clearRect(0,0,pad.width,pad.height); sigRemoved = true; sigTouched = false; e.currentTarget.remove(); document.getElementById('sigHint').textContent='Desenhe sua rubrica aqui com o mouse ou o dedo'; });
+  const exportSignature = () => {
+    const d = pctx.getImageData(0,0,pad.width,pad.height).data;
+    let x0=pad.width, y0=pad.height, x1=-1, y1=-1;
+    for(let y=0;y<pad.height;y++) for(let x=0;x<pad.width;x++){ if(d[(y*pad.width+x)*4+3]>10){ if(x<x0)x0=x; if(x>x1)x1=x; if(y<y0)y0=y; if(y>y1)y1=y; } }
+    if(x1<0) return null;
+    const pad2 = 8, w = x1-x0+1+pad2*2, h = y1-y0+1+pad2*2, sc = Math.min(1, 360/w, 120/h);
+    const out = document.createElement('canvas'); out.width = Math.round(w*sc); out.height = Math.round(h*sc);
+    out.getContext('2d').drawImage(pad, x0-pad2, y0-pad2, w, h, 0, 0, out.width, out.height);
+    return out.toDataURL('image/png');
+  };
   document.querySelectorAll('#avatarColorPicker .avatar-swatch').forEach(sw=>{
     sw.addEventListener('click', ()=>{
       pickedColor = sw.dataset.color;
@@ -2513,9 +2554,12 @@ function openProfileModal(){
         errEl.style.display = 'block';
         return;
       }
-      u.access_code = codeInput;
+      liveRef(u).access_code = codeInput;
     }
-    u.avatar_color = pickedColor;
+    const lu = liveRef(u);
+    lu.avatar_color = pickedColor;
+    if(sigRemoved) delete lu.signature;
+    else if(sigTouched){ const sig = exportSignature(); if(sig) lu.signature = sig; else delete lu.signature; }
     saveState(state);
     refreshSidebarProfile();
     closeModal('itemModalOverlay');
@@ -3930,6 +3974,8 @@ function quoteSimpleHTML(q){
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;border-top:1px solid ${line};padding-top:22px;margin-top:8px;">
         <div style="font-size:10.5px;color:${muted};max-width:280px;line-height:1.5;">Documento sem valor fiscal. Valores válidos até a data indicada.</div>
         <div style="text-align:center;min-width:200px;">
+          ${(()=>{ const signer = state.users.find(u=>u.full_name===q.sender_name && u.signature) || state.users.find(u=>u.id===q.created_by && u.signature);
+            return signer ? `<img src="${signer.signature}" alt="" style="display:block;height:56px;max-width:220px;margin:0 auto -6px;object-fit:contain;">` : ''; })()}
           <div style="border-top:1px solid ${ink};padding-top:6px;font-size:11.5px;font-weight:600;">${escapeHTML(q.sender_name || ag.name || 'SMK Agency')}</div>
           <div style="font-size:10.5px;color:${muted};">${escapeHTML(ag.name||'SMK Agency')}</div>
         </div>
