@@ -1075,6 +1075,26 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .pers-chips button{border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer;}
 .pers-chips button.on{border-color:#E0A62D;background:rgba(224,166,45,.16);}
 @media(max-width:900px){ .pers-grid{grid-template-columns:1fr;} .sb-month{grid-template-columns:repeat(2,minmax(0,1fr));} }
+/* face id de brincadeira */
+.fid-ov{position:fixed;inset:0;z-index:3000;display:flex;align-items:center;justify-content:center;background:rgba(5,8,16,.55);backdrop-filter:blur(14px);animation:fidIn .2s ease both;cursor:pointer;}
+.fid-ov.out{animation:fidOut .3s ease forwards;}
+@keyframes fidIn{from{opacity:0;}} @keyframes fidOut{to{opacity:0;}}
+.fid-box{width:170px;height:170px;border-radius:38px;background:rgba(20,24,36,.82);border:1px solid rgba(255,255,255,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 30px 70px -20px rgba(0,0,0,.8);animation:fidPop .35s cubic-bezier(.2,1.4,.4,1) both;}
+@keyframes fidPop{from{transform:scale(.8);opacity:0;}}
+.fid-svg{width:84px;height:84px;color:#fff;stroke:#fff;overflow:visible;}
+.fid-corners{transform-origin:50% 50%;animation:fidCorners 1s ease-in-out both;}
+@keyframes fidCorners{0%{transform:scale(1.18);opacity:.4;}45%{transform:scale(1);opacity:1;}70%{transform:scale(1.04);}100%{transform:scale(1);}}
+.fid-face path{stroke-dasharray:60;stroke-dashoffset:60;animation:fidDraw .5s ease forwards;}
+.fid-face path:nth-child(2){animation-delay:.08s;} .fid-face path:nth-child(3){animation-delay:.16s;} .fid-face path:nth-child(4){animation-delay:.26s;}
+@keyframes fidDraw{to{stroke-dashoffset:0;}}
+.fid-scan{fill:#5B8CFF;stroke:none;opacity:0;filter:drop-shadow(0 0 6px #5B8CFF);animation:fidScan .75s ease-in-out .25s 1 both;}
+@keyframes fidScan{0%{transform:translateY(0);opacity:0;}15%{opacity:1;}85%{opacity:1;}100%{transform:translateY(70px);opacity:0;}}
+.fid-check{stroke:#5B8CFF;stroke-dasharray:80;stroke-dashoffset:80;opacity:0;}
+.fid-ov.ok .fid-face{opacity:0;transition:opacity .15s;}
+.fid-ov.ok .fid-check{opacity:1;animation:fidDraw .35s ease forwards;}
+.fid-ov.ok .fid-scan{display:none;}
+.fid-ov.ok .fid-corners{stroke:#5B8CFF;transition:stroke .2s;}
+.fid-txt{color:#fff;font-size:14px;font-weight:600;letter-spacing:.01em;font-family:-apple-system,'Segoe UI','Inter',sans-serif;}
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -2775,6 +2795,7 @@ function render(){
   lastRenderedView = currentView;
   el.classList.toggle('view-enter', isViewEntry);
   renderView(el);
+  if(isViewEntry && currentView==='banco' && isDono() && state.bank) playFaceIdUnlock();
   if(isViewEntry){
     el.querySelectorAll('.kpi-card,.mesa-hero,.mesa-stat,.chart-card,.task-card,.client-card').forEach((c,i)=>c.style.setProperty('--i', Math.min(i,14)));
     el.querySelectorAll('.bar').forEach((b,i)=>b.style.setProperty('--i', Math.min(i,14)));
@@ -7001,6 +7022,34 @@ let bankFilter = {month:null, type:'all', q:'', scope:'all'};
 let bankTab = 'conta';
 const PERSONAL_CATS = [['Casa','🏠'],['Comida','🍽️'],['Combustível','⛽'],['Transporte','🚗'],['Saúde','💊'],['Lazer','🎉'],['Compras','🛍️'],['Outros','📦']];
 const personalIcon = c => (PERSONAL_CATS.find(x=>x[0]===c)||['','📦'])[1];
+// 😄 "Face ID" de brincadeira ao entrar no SMK Bank (sem câmera — só animação). Toque pula.
+function playFaceIdUnlock(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  document.getElementById('faceIdOv')?.remove();
+  const name = (currentUser()?.full_name||'').split(' ')[0];
+  const ov = document.createElement('div');
+  ov.id = 'faceIdOv'; ov.className = 'fid-ov';
+  ov.innerHTML = `<div class="fid-box">
+    <svg class="fid-svg" viewBox="0 0 100 100" fill="none" stroke-linecap="round" stroke-linejoin="round">
+      <g class="fid-corners" stroke-width="5">
+        <path d="M8 30V18a10 10 0 0 1 10-10h12"/><path d="M70 8h12a10 10 0 0 1 10 10v12"/>
+        <path d="M92 70v12a10 10 0 0 1-10 10H70"/><path d="M30 92H18a10 10 0 0 1-10-10V70"/>
+      </g>
+      <g class="fid-face" stroke-width="5">
+        <path d="M34 36v7"/><path d="M66 36v7"/><path d="M50 36v19h-5"/><path d="M36 66c8 7 20 7 28 0"/>
+      </g>
+      <path class="fid-check" d="M30 52l13 13 27-29" stroke-width="7"/>
+      <rect class="fid-scan" x="12" y="14" width="76" height="3" rx="1.5"/>
+    </svg>
+    <div class="fid-txt">Face ID</div>
+  </div>`;
+  document.body.appendChild(ov);
+  const txt = ov.querySelector('.fid-txt');
+  const close = () => { ov.classList.add('out'); setTimeout(()=>ov.remove(), 320); };
+  ov.addEventListener('click', close);
+  setTimeout(()=>{ ov.classList.add('ok'); txt.textContent = name ? `Olá, ${name}` : 'Liberado'; }, 1050);
+  setTimeout(close, 1750);
+}
 function renderBanco(el){
   if(!state.bank){
     el.innerHTML = `<div class="bank-onboard">
