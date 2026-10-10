@@ -1046,6 +1046,35 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .bank-rk{display:block;font-size:10.5px;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;}
 .bank-day{text-transform:capitalize;}
 @media(max-width:900px){ .sb-main{grid-template-columns:1fr;} .sb-card{max-width:340px;} .sb-month{grid-template-columns:repeat(2,minmax(0,1fr));} .sb-amount{font-size:36px;} .sb-wrap{padding:18px 18px 0;} .sb-wrap .bank-spark{width:calc(100% + 36px);margin:16px -18px 0;} }
+.sb-tabs{display:flex;gap:6px;margin:4px 0 12px;}
+.sb-tabs button{border:1px solid var(--border);background:var(--surface);color:var(--text-muted);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:99px;cursor:pointer;}
+.sb-tabs button.on{background:var(--brand);border-color:var(--brand);color:#fff;}
+.sb-month{grid-template-columns:repeat(5,minmax(0,1fr));}
+.tag-pessoal{font-style:normal;font-size:9.5px;text-transform:uppercase;letter-spacing:.05em;padding:1px 6px;border-radius:99px;background:rgba(224,166,45,.16);color:#E0A62D;margin-left:4px;}
+.pers-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px;}
+.pers-head select{width:auto;}
+.pers-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr);gap:12px;margin-bottom:12px;}
+.pers-total{padding:18px;border-radius:16px;border:1px solid rgba(224,166,45,.35);background:radial-gradient(120% 120% at 0% 0%, rgba(224,166,45,.14), transparent 60%), var(--surface);}
+.pers-total > span{font-size:12px;color:var(--text-muted);}
+.pers-total > b{display:block;font-family:var(--font-display);font-size:34px;font-weight:700;margin:4px 0 8px;}
+.pers-vs{font-size:12px;color:var(--text-faint);}
+.pers-vs b{font-family:var(--font-mono);color:var(--text);}
+.pers-split{height:8px;border-radius:6px;background:#E0A62D;overflow:hidden;margin-top:12px;}
+.pers-split i{display:block;height:100%;background:var(--brand-bright);}
+.pers-legend{display:flex;gap:14px;font-size:11px;color:var(--text-faint);margin-top:6px;}
+.pers-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;}
+.pers-legend i.ag{background:var(--brand-bright);} .pers-legend i.ps{background:#E0A62D;}
+.pers-cats{padding:14px 16px;border-radius:16px;border:1px solid var(--border);background:var(--surface);display:flex;flex-direction:column;gap:9px;}
+.pers-cat{display:grid;grid-template-columns:120px 1fr auto;gap:10px;align-items:center;font-size:12.5px;}
+.pers-bar{height:8px;border-radius:6px;background:var(--surface-2);overflow:hidden;}
+.pers-bar i{display:block;height:100%;background:#E0A62D;border-radius:6px;}
+.pers-cat b{font-family:var(--font-mono);font-size:12.5px;}
+.pers-del{background:none;border:0;color:var(--text-faint);font-size:16px;cursor:pointer;padding:0 0 0 6px;}
+.pers-del:hover{color:var(--red);}
+.pers-chips{display:flex;flex-wrap:wrap;gap:6px;}
+.pers-chips button{border:1px solid var(--border);background:var(--surface-2);color:var(--text);font-size:12px;padding:6px 10px;border-radius:99px;cursor:pointer;}
+.pers-chips button.on{border-color:#E0A62D;background:rgba(224,166,45,.16);}
+@media(max-width:900px){ .pers-grid{grid-template-columns:1fr;} .sb-month{grid-template-columns:repeat(2,minmax(0,1fr));} }
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -6958,14 +6987,20 @@ function bankLedger(){
     if(counts(date, e.paid_ts)) L.push({kind:'exp', ref:e.id, date, ts:e.paid_ts||0, value:-(Number(e.value)||0), desc:e.description||e.category, cat:e.category||'Despesa'});
   });
   (state.payroll_payments||[]).filter(x=>counts(x.paid_at, x.paid_ts)).forEach(x=>L.push({kind:'folha', ref:x.id, date:x.paid_at, ts:x.paid_ts||0, value:-(Number(x.value)||0), desc:`${x.name} — folha de ${wrappedMonthName(x.month).toLowerCase()}`, cat:'Folha'}));
-  (state.bank_entries||[]).filter(x=>counts(x.date, x.created_at)).forEach(x=>L.push({kind:x.kind, ref:x.id, date:x.date, ts:x.created_at||0, value: x.kind==='in' ? Math.abs(x.value) : x.value, desc:x.description || (x.kind==='adjust'?'Ajuste de saldo':'Entrada'), cat: x.kind==='adjust'?'Ajuste':'Entrada avulsa'}));
+  (state.bank_entries||[]).filter(x=>counts(x.date, x.created_at)).forEach(x=>L.push({kind:x.kind, ref:x.id, date:x.date, ts:x.created_at||0,
+    value: x.kind==='in' ? Math.abs(x.value) : x.kind==='personal' ? -Math.abs(x.value) : x.value,
+    desc:x.description || (x.kind==='adjust'?'Ajuste de saldo':x.kind==='personal'?'Gasto pessoal':'Entrada'),
+    cat: x.kind==='adjust'?'Ajuste':x.kind==='personal'?(x.category||'Outros'):'Entrada avulsa', personal: x.kind==='personal'}));
   L.sort((a,b)=>a.date.localeCompare(b.date) || a.ts-b.ts);
   let bal = Number(b.start_value)||0;
   L.forEach(x=>{ bal += x.value; x.balance = bal; });
   return L;
 }
 function bankBalance(){ const L = bankLedger(); return L.length ? L[L.length-1].balance : (Number(state.bank?.start_value)||0); }
-let bankFilter = {month:null, type:'all', q:''};
+let bankFilter = {month:null, type:'all', q:'', scope:'all'};
+let bankTab = 'conta';
+const PERSONAL_CATS = [['Casa','🏠'],['Comida','🍽️'],['Combustível','⛽'],['Transporte','🚗'],['Saúde','💊'],['Lazer','🎉'],['Compras','🛍️'],['Outros','📦']];
+const personalIcon = c => (PERSONAL_CATS.find(x=>x[0]===c)||['','📦'])[1];
 function renderBanco(el){
   if(!state.bank){
     el.innerHTML = `<div class="bank-onboard">
@@ -6986,7 +7021,8 @@ function renderBanco(el){
   const m = todayISO().slice(0,7);
   const inMonth = L.filter(x=>x.date.startsWith(m));
   const entradas = inMonth.filter(x=>x.value>0 && x.kind!=='adjust').reduce((a,x)=>a+x.value,0);
-  const saidas = inMonth.filter(x=>x.value<0 && x.kind!=='adjust').reduce((a,x)=>a-x.value,0);
+  const saidas = inMonth.filter(x=>x.value<0 && x.kind!=='adjust' && !x.personal).reduce((a,x)=>a-x.value,0);
+  const pessoais = inMonth.filter(x=>x.personal).reduce((a,x)=>a-x.value,0);
   const aReceber = state.payments.filter(p=>p.status!=='pago' && p.status!=='cancelado' && (p.due_date||'')<=`${m}-31`).reduce((a,p)=>a+Number(p.value),0);
   const folhaPend = state.team_costs.filter(tc=>!(state.payroll_payments||[]).some(x=>x.team_cost_id===tc.id && x.month===m)).reduce((a,tc)=>a+Number(tc.monthly_cost||0),0);
   const aPagar = state.expenses.filter(e=>e.status && e.status!=='pago' && (e.expense_date||'')<=`${m}-31`).reduce((a,e)=>a+Number(e.value),0) + folhaPend;
@@ -7006,6 +7042,7 @@ function renderBanco(el){
   const q = normSearch(bankFilter.q);
   const rows = L.filter(x=>x.date.startsWith(bankFilter.month))
     .filter(x=>bankFilter.type==='all' || (bankFilter.type==='in' ? x.value>0 : x.value<0))
+    .filter(x=>bankFilter.scope==='all' || (bankFilter.scope==='personal' ? x.personal : !x.personal))
     .filter(x=>!q || normSearch(x.desc+' '+x.cat).includes(q)).reverse();
   const byDay = {}; rows.forEach(x=>{ (byDay[x.date] = byDay[x.date] || []).push(x); });
   let hide = false; try{ hide = localStorage.getItem('smkos_bank_hide')==='1'; }catch(e){}
@@ -7034,6 +7071,7 @@ function renderBanco(el){
           <div class="sb-quick">
             <button type="button" id="bankIn"><i>${SVG_IN}</i><span>Receber</span></button>
             <button type="button" id="bankOut"><i>${SVG_OUT}</i><span>Pagar</span></button>
+            <button type="button" id="bankPersonal"><i style="font-size:20px;font-style:normal;">🏠</i><span>Pessoal</span></button>
             <button type="button" id="bankAdjust"><i>${SVG_ADJ}</i><span>Ajustar</span></button>
             <button type="button" id="sbGoExtrato"><i><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg></i><span>Extrato</span></button>
           </div>
@@ -7049,9 +7087,15 @@ function renderBanco(el){
       </div>
       ${hide ? '' : spark}
     </div>
+    <div class="sb-tabs">
+      <button type="button" data-bank-tab="conta" class="${bankTab==='conta'?'on':''}">🏦 Conta</button>
+      <button type="button" data-bank-tab="pessoal" class="${bankTab==='pessoal'?'on':''}">🏠 Gastos pessoais</button>
+    </div>
+    ${bankTab==='pessoal' ? personalTabHTML(L, hide) : `
     <div class="sb-month">
       <div><i class="in">${SVG_IN}</i><span>Entradas no mês</span><b class="pos">${money(entradas)}</b></div>
-      <div><i class="out">${SVG_OUT}</i><span>Saídas no mês</span><b class="neg">${money(saidas)}</b></div>
+      <div><i class="out">${SVG_OUT}</i><span>Saídas da agência</span><b class="neg">${money(saidas)}</b></div>
+      <div><i style="font-style:normal;">🏠</i><span>Gastos pessoais</span><b class="neg">${money(pessoais)}</b></div>
       <div><i>⏳</i><span>A receber</span><b>${money(aReceber)}</b></div>
       <div><i>📌</i><span>A pagar</span><b>${money(aPagar)}</b></div>
     </div>
@@ -7059,39 +7103,106 @@ function renderBanco(el){
     <div class="bank-filters">
       <select id="bankMonth">${(months.length?months:[m]).map(x=>`<option value="${x}" ${x===bankFilter.month?'selected':''}>${wrappedMonthName(x)} ${x.slice(0,4)}</option>`).join('')}</select>
       <div class="q-layout">${[['all','Tudo'],['in','Entradas'],['out','Saídas']].map(([v,l])=>`<button type="button" data-bank-type="${v}" class="${bankFilter.type===v?'on':''}">${l}</button>`).join('')}</div>
+      <div class="q-layout">${[['all','Agência + pessoal'],['agency','Agência'],['personal','Pessoal']].map(([v,l])=>`<button type="button" data-bank-scope="${v}" class="${bankFilter.scope===v?'on':''}">${l}</button>`).join('')}</div>
       <input type="text" id="bankSearch" placeholder="Buscar no extrato…" value="${escapeHTML(bankFilter.q)}">
     </div>
     <div class="card bank-statement">
       ${Object.entries(byDay).map(([day, items])=>`<div class="bank-day">${new Date(day+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'long', day:'2-digit', month:'long'})}</div>
         ${items.map(x=>`<div class="bank-row" data-bank-kind="${x.kind}" data-bank-ref="${x.ref}">
           <span class="bank-ri ${x.kind==='adjust'?'adj':x.value>=0?'in':'out'}">${icon(x)}</span>
-          <div class="bank-rt"><span class="bank-rk">${txTitle(x)}</span><b>${escapeHTML(x.desc)}</b><span>${escapeHTML(x.cat)}</span></div>
+          <div class="bank-rt"><span class="bank-rk">${x.personal?'Gasto pessoal':txTitle(x)}${x.personal?' <em class="tag-pessoal">pessoal</em>':''}</span><b>${escapeHTML(x.desc)}</b><span>${x.personal?personalIcon(x.cat)+' ':''}${escapeHTML(x.cat)}</span></div>
           <div class="bank-rv"><b class="${x.value>=0?'pos':'neg'}">${hide?'••••':(x.value>=0?'+ ':'− ')+fmtMoney(Math.abs(x.value))}</b><span>saldo ${money(x.balance)}</span></div>
         </div>`).join('')}`).join('') || emptyStateHTML('folder','Nenhuma movimentação nesse período.','Quando um cliente for marcado como pago ou uma despesa for paga, aparece aqui.')}
-    </div>`;
+    </div>`}`;
   document.getElementById('sbEye').addEventListener('click', ()=>{ try{ localStorage.setItem('smkos_bank_hide', hide?'0':'1'); }catch(e){} render(); });
-  document.getElementById('sbGoExtrato').addEventListener('click', ()=>document.getElementById('sbExtrato').scrollIntoView({behavior:'smooth', block:'start'}));
   const card = document.getElementById('sbCard');
   card.addEventListener('pointermove', e=>{ const r = card.getBoundingClientRect(); const x = (e.clientX-r.left)/r.width-.5, y = (e.clientY-r.top)/r.height-.5;
     card.style.setProperty('--ry', (x*14).toFixed(2)+'deg'); card.style.setProperty('--rx', (-y*12).toFixed(2)+'deg'); card.style.setProperty('--gx', ((x+.5)*100).toFixed(0)+'%'); });
   card.addEventListener('pointerleave', ()=>{ card.style.setProperty('--ry','0deg'); card.style.setProperty('--rx','0deg'); });
+  el.querySelectorAll('[data-bank-tab]').forEach(b=>b.addEventListener('click', ()=>{ bankTab = b.dataset.bankTab; render(); }));
+  document.getElementById('bankPersonal').addEventListener('click', ()=>openBankEntryModal('personal'));
+  el.querySelectorAll('[data-bank-scope]').forEach(b=>b.addEventListener('click', ()=>{ bankFilter.scope = b.dataset.bankScope; render(); }));
+  el.querySelectorAll('[data-personal-del]').forEach(b=>b.addEventListener('click', ()=>{
+    if(!confirm('Apagar esse gasto pessoal?')) return;
+    state.bank_entries = (state.bank_entries||[]).filter(x=>x.id!==b.dataset.personalDel); saveState(state); render();
+  }));
+  document.getElementById('personalMonth')?.addEventListener('change', e=>{ bankFilter.pmonth = e.target.value; render(); });
+  document.getElementById('personalAdd')?.addEventListener('click', ()=>openBankEntryModal('personal'));
+  document.getElementById('bankIn').addEventListener('click', ()=>openBankEntryModal('in'));
+  document.getElementById('bankOut').addEventListener('click', ()=>openBankEntryModal('out'));
+  document.getElementById('bankAdjust').addEventListener('click', ()=>openBankEntryModal('adjust', saldo));
+  document.getElementById('sbGoExtrato').onclick = ()=>{ if(bankTab!=='conta'){ bankTab='conta'; render(); } setTimeout(()=>document.getElementById('sbExtrato')?.scrollIntoView({behavior:'smooth', block:'start'}), 60); };
+  if(bankTab==='pessoal') return;
   document.getElementById('bankMonth').addEventListener('change', e=>{ bankFilter.month = e.target.value; render(); });
   el.querySelectorAll('[data-bank-type]').forEach(b=>b.addEventListener('click', ()=>{ bankFilter.type = b.dataset.bankType; render(); }));
   const bs = document.getElementById('bankSearch');
   bs.addEventListener('input', ()=>{ bankFilter.q = bs.value; clearTimeout(bs._t); bs._t = setTimeout(()=>{ render(); const n = document.getElementById('bankSearch'); n.focus(); n.setSelectionRange(n.value.length, n.value.length); }, 250); });
-  document.getElementById('bankIn').addEventListener('click', ()=>openBankEntryModal('in'));
-  document.getElementById('bankOut').addEventListener('click', ()=>openBankEntryModal('out'));
-  document.getElementById('bankAdjust').addEventListener('click', ()=>openBankEntryModal('adjust', saldo));
   el.querySelectorAll('.bank-row').forEach(r=>r.addEventListener('click', ()=>{
     const k = r.dataset.bankKind, id = r.dataset.bankRef;
     if(k==='pay'){ const p = state.payments.find(x=>x.id===id); if(p) openPaymentModal(p); }
     else if(k==='exp'){ const e = state.expenses.find(x=>x.id===id); if(e) openExpenseModal(e); }
-    else if(k==='in' || k==='adjust'){ if(confirm('Apagar esse lançamento do extrato?')){ state.bank_entries = (state.bank_entries||[]).filter(x=>x.id!==id); saveState(state); render(); } }
+    else if(k==='in' || k==='adjust' || k==='personal'){ if(confirm('Apagar esse lançamento do extrato?')){ state.bank_entries = (state.bank_entries||[]).filter(x=>x.id!==id); saveState(state); render(); } }
     else if(k==='folha'){ if(confirm('Desfazer esse pagamento de folha?')){ state.payroll_payments = (state.payroll_payments||[]).filter(x=>x.id!==id); saveState(state); render(); } }
   }));
 }
+function personalTabHTML(L, hide){
+  const money = v => hide ? 'R$ ••••••' : fmtMoney(v);
+  const all = L.filter(x=>x.personal);
+  const months = [...new Set([todayISO().slice(0,7), ...all.map(x=>x.date.slice(0,7))])].sort().reverse();
+  const pm = bankFilter.pmonth && months.includes(bankFilter.pmonth) ? bankFilter.pmonth : months[0];
+  const list = all.filter(x=>x.date.startsWith(pm)).reverse();
+  const total = list.reduce((a,x)=>a-x.value,0);
+  const agencyOut = L.filter(x=>x.date.startsWith(pm) && x.value<0 && !x.personal && x.kind!=='adjust').reduce((a,x)=>a-x.value,0);
+  const byCat = Object.entries(list.reduce((m,x)=>{ m[x.cat]=(m[x.cat]||0)-x.value; return m; },{})).sort((a,b)=>b[1]-a[1]);
+  const max = Math.max(1, ...byCat.map(c=>c[1]));
+  return `<div class="pers-head">
+      <select id="personalMonth">${months.map(x=>`<option value="${x}" ${x===pm?'selected':''}>${wrappedMonthName(x)} ${x.slice(0,4)}</option>`).join('')}</select>
+      <button type="button" class="btn small primary" id="personalAdd">＋ Gasto pessoal</button>
+    </div>
+    <div class="pers-grid">
+      <div class="pers-total">
+        <span>Gastos pessoais em ${wrappedMonthName(pm).toLowerCase()}</span>
+        <b>${money(total)}</b>
+        <div class="pers-vs">Saídas da agência no mesmo mês: <b>${money(agencyOut)}</b></div>
+        ${total+agencyOut>0?`<div class="pers-split"><i style="width:${(agencyOut/(total+agencyOut)*100).toFixed(1)}%"></i></div>
+        <div class="pers-legend"><span><i class="ag"></i>Agência ${Math.round(agencyOut/(total+agencyOut)*100)}%</span><span><i class="ps"></i>Pessoal ${Math.round(total/(total+agencyOut)*100)}%</span></div>`:''}
+      </div>
+      <div class="pers-cats">
+        ${byCat.map(([c,v])=>`<div class="pers-cat"><span>${personalIcon(c)} ${escapeHTML(c)}</span><div class="pers-bar"><i style="width:${v/max*100}%"></i></div><b>${money(v)}</b></div>`).join('') || '<div class="empty" style="padding:16px;">Nenhum gasto pessoal nesse mês.</div>'}
+      </div>
+    </div>
+    <div class="card bank-statement">
+      ${list.map(x=>`<div class="bank-row" style="cursor:default;">
+        <span class="bank-ri" style="font-size:16px;">${personalIcon(x.cat)}</span>
+        <div class="bank-rt"><span class="bank-rk">${new Date(x.date+'T12:00:00').toLocaleDateString('pt-BR',{weekday:'short', day:'2-digit', month:'2-digit'})}</span><b>${escapeHTML(x.desc)}</b><span>${escapeHTML(x.cat)}</span></div>
+        <div class="bank-rv"><b class="neg">${hide?'••••':'− '+fmtMoney(-x.value)}</b><button type="button" class="pers-del" data-personal-del="${x.ref}" title="Apagar">×</button></div>
+      </div>`).join('') || emptyStateHTML('folder','Nada lançado nesse mês.','Use “Gasto pessoal” pra registrar contas de casa, comida, combustível…')}
+    </div>`;
+}
 function openBankEntryModal(kind, currentBalance){
-  const titles = {in:'＋ Entrada', out:'－ Saída (vira despesa paga)', adjust:'⚖️ Ajustar saldo'};
+  const titles = {in:'＋ Entrada', out:'－ Saída da agência (vira despesa paga)', adjust:'⚖️ Ajustar saldo', personal:'🏠 Gasto pessoal'};
+  if(kind==='personal'){
+    let pcat = 'Comida';
+    document.getElementById('itemModalTitle').textContent = titles.personal;
+    document.getElementById('itemModalBody').innerHTML = `
+      <div style="font-size:12px;color:var(--text-muted);margin-bottom:12px;">Sai do saldo do banco, mas <b>não entra</b> nas despesas da agência (lucro e margem continuam certos).</div>
+      <div class="field"><label>Categoria</label><div class="pers-chips">${PERSONAL_CATS.map(([c,ic])=>`<button type="button" data-pcat="${c}" class="${c===pcat?'on':''}">${ic} ${c}</button>`).join('')}</div></div>
+      <div class="field"><label>Descrição</label><input type="text" id="be_desc" placeholder="Ex: mercado, conta de luz, gasolina"></div>
+      <div class="field-row"><div class="field"><label>Valor (R$)</label><input type="number" step="0.01" id="be_value"></div><div class="field"><label>Data</label><input type="date" id="be_date" value="${todayISO()}"></div></div>
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="be_save">Lançar gasto</button></div>`;
+    openModal('itemModalOverlay');
+    setTimeout(()=>document.getElementById('be_desc')?.focus(), 50);
+    document.querySelectorAll('[data-pcat]').forEach(b=>b.addEventListener('click', ()=>{ pcat = b.dataset.pcat; document.querySelectorAll('[data-pcat]').forEach(x=>x.classList.toggle('on', x===b)); }));
+    document.getElementById('be_save').addEventListener('click', ()=>{
+      const v = Number(document.getElementById('be_value').value);
+      if(!v || v<=0) return;
+      state.bank_entries = state.bank_entries || [];
+      state.bank_entries.push({id:uid(), kind:'personal', value:v, category:pcat, date:document.getElementById('be_date').value || todayISO(),
+        description: document.getElementById('be_desc').value.trim() || pcat, created_at:Date.now()});
+      saveState(state); closeModal('itemModalOverlay'); render();
+    });
+    return;
+  }
   const cats = [...new Set([...state.expenses, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.expenses||[])].map(e=>e.category).filter(Boolean))];
   document.getElementById('itemModalTitle').textContent = titles[kind];
   document.getElementById('itemModalBody').innerHTML = kind==='adjust' ? `
