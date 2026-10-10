@@ -766,6 +766,9 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .wr-duo>div:last-child{background:rgba(62,111,240,.25);border-color:rgba(143,176,255,.5);}
 .wr-duo b{display:block;font-size:13cqw;line-height:1;font-weight:800;color:#B7CBFF;letter-spacing:-.03em;}
 .wr-duo span{display:block;font-size:4cqw;font-weight:600;color:#C9D6FF;margin-top:1.6cqw;}
+.wr-chips{display:flex;flex-wrap:wrap;gap:2.4cqw;margin-top:3cqw;position:relative;}
+.wr-chips span{font-size:4.6cqw;font-weight:600;padding:2.2cqw 3.6cqw;border-radius:99px;background:rgba(255,255,255,.08);border:.3cqw solid rgba(143,176,255,.35);}
+.wr-chips b{color:#8FB0FF;font-family:var(--font-mono);font-weight:600;}
 .wr-podium{display:flex;flex-direction:column;gap:3cqw;margin-top:7cqw;position:relative;}
 .wr-podium div{display:flex;align-items:center;gap:3.4cqw;font-size:5cqw;font-weight:600;padding:3.4cqw 4cqw;border-radius:4cqw;background:rgba(255,255,255,.06);border:.3cqw solid rgba(255,255,255,.1);}
 .wr-podium div:first-child{background:rgba(62,111,240,.25);border-color:rgba(143,176,255,.5);}
@@ -4832,6 +4835,7 @@ function wrappedData(m){
   return {
     m, delivered, videos, artes, carrosseis, outros, grav,
     shots: grav.reduce((a,c)=>a+(c.shot_list||[]).length,0),
+    gravClients: Object.entries(grav.reduce((acc,c)=>{ const n = c.client_id ? clientById(c.client_id)?.name : null; if(n) acc[n]=(acc[n]||0)+1; return acc; },{})).sort((a,b)=>b[1]-a[1]),
     editor: topEditor ? {u:userById(topEditor[0]), n:topEditor[1]} : null,
     designer: topDesigner ? {u:userById(topDesigner[0]), artes: artes.filter(t=>t.assignee_id===topDesigner[0]).length, carrosseis: carrosseis.filter(t=>t.assignee_id===topDesigner[0]).length} : null,
     clients: clients.map(([id,n])=>({c:clientById(id), n})).filter(x=>x.c),
@@ -4884,7 +4888,8 @@ function buildWrappedSlides(d){
     slides.push(frame(`<div class="wr-kicker wr-anim">Bastidores 🎬</div>
       <div class="wr-big wr-anim" style="--d:.1s;" data-count="${d.grav.length}">${d.grav.length}</div>
       <div class="wr-sub wr-anim" style="--d:.25s;">${d.grav.length===1?'gravação':'gravações'} no mês</div>
-      ${d.shots?`<div class="wr-title wr-anim" style="--d:.45s;font-size:7cqw;margin-top:8cqw;"><em>${d.shots}</em> vídeos na pauta,<br>um por um.</div>`:''}`));
+      ${d.gravClients.length?`<div class="wr-kicker wr-anim" style="--d:.4s;margin-top:9cqw;">Gravamos com</div>
+      <div class="wr-chips">${d.gravClients.slice(0,6).map(([n,c],i)=>`<span class="wr-anim" style="--d:${.5+i*.08}s;">${escapeHTML(n)}${c>1?` <b>${c}x</b>`:''}</span>`).join('')}${d.gravClients.length>6?`<span class="wr-anim" style="--d:1s;">+${d.gravClients.length-6}</span>`:''}</div>`:''}`));
   }
   if(d.editor?.u){
     slides.push(frame(`<div class="wr-kicker wr-anim">Editor do mês 🏆</div>
