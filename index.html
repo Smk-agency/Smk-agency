@@ -939,6 +939,9 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .paste-hint{font-size:11px;color:var(--text-faint);align-self:center;}
 .paste-hint b{color:var(--text-muted);}
 #taskModalBody.drop-on{outline:2px dashed var(--brand-bright);outline-offset:6px;border-radius:12px;}
+.q-layout{display:inline-flex;border:1px solid var(--border);border-radius:9px;overflow:hidden;}
+.q-layout button{border:0;background:var(--surface-2);color:var(--text-muted);font-size:11.5px;font-weight:600;padding:6px 10px;cursor:pointer;}
+.q-layout button.on{background:var(--brand);color:#fff;}
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -3645,11 +3648,18 @@ function renderOrcamentos(el){
 function openShowcaseLogosModal(pending){
   const logos = pending ? pending.logos : (state.settings.showcase_logos || []).slice();
   const aboutUs = pending ? pending.aboutUs : (state.settings.about_us || '');
+  const agency = pending?.agency || state.settings.agency_info || {};
+  const readAgency = () => Object.fromEntries(['name','doc','phone','email','city','site'].map(k=>[k, (document.getElementById('ag_'+k)?.value||'').trim()]));
   document.getElementById('itemModalTitle').textContent = 'Identidade da proposta';
   document.getElementById('itemModalBody').innerHTML = `
     <div class="field">
       <label>Sobre a gente <span class="hint">opcional — aparece no topo da proposta</span></label>
       <textarea id="pb_aboutUs" rows="3" placeholder="Ex: Somos uma produtora audiovisual movida pela paixão de contar histórias...">${aboutUs}</textarea>
+    </div>
+    <div class="field"><label>Dados da agência <span class="hint">aparecem no cabeçalho do orçamento simples (tipo nota)</span></label>
+      <div class="field-row" style="margin-bottom:6px;"><input type="text" id="ag_name" placeholder="Nome / razão social" value="${escapeHTML(agency.name||'')}"><input type="text" id="ag_doc" placeholder="CNPJ" value="${escapeHTML(agency.doc||'')}"></div>
+      <div class="field-row" style="margin-bottom:6px;"><input type="text" id="ag_phone" placeholder="Telefone / WhatsApp" value="${escapeHTML(agency.phone||'')}"><input type="text" id="ag_email" placeholder="E-mail" value="${escapeHTML(agency.email||'')}"></div>
+      <div class="field-row"><input type="text" id="ag_city" placeholder="Cidade / UF" value="${escapeHTML(agency.city||'')}"><input type="text" id="ag_site" placeholder="Site ou @instagram" value="${escapeHTML(agency.site||'')}"></div>
     </div>
     <div class="field"><label>Logos de clientes <span class="hint">até 6 — aparecem como prova social no rodapé. Funciona melhor com PNG de fundo transparente</span></label></div>
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:6px;">
@@ -3670,6 +3680,7 @@ function openShowcaseLogosModal(pending){
   `;
   document.getElementById('pb_saveBtn').addEventListener('click', ()=>{
     state.settings.about_us = document.getElementById('pb_aboutUs').value.trim();
+    state.settings.agency_info = readAgency();
     state.settings.showcase_logos = logos;
     saveState(state);
     closeModal('itemModalOverlay');
@@ -3681,7 +3692,7 @@ function openShowcaseLogosModal(pending){
       try{
         const dataUrl = await compressLogoToDataURL(file, 240);
         logos.push({id:uid(), data_url:dataUrl});
-        openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value});
+        openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value, agency: readAgency()});
       }catch(err){
         console.error('Erro ao processar logo:', err);
         alert('Não consegui processar essa imagem: ' + (err?.message || err) + '\nTenta outra ou avisa o suporte com essa mensagem.');
@@ -3691,7 +3702,7 @@ function openShowcaseLogosModal(pending){
   document.querySelectorAll('[data-remove-logo]').forEach(btn=>{
     btn.addEventListener('click', ()=>{
       logos.splice(Number(btn.dataset.removeLogo),1);
-      openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value});
+      openShowcaseLogosModal({logos, aboutUs: document.getElementById('pb_aboutUs').value, agency: readAgency()});
     });
   });
   openModal('itemModalOverlay');
@@ -3847,6 +3858,87 @@ function openQuoteModal(existing){
   openModal('itemModalOverlay');
 }
 
+// ---------- orçamento no formato simples (tipo nota) ----------
+// número estável: ordem de criação dentro do ano (ORC-2026-0007)
+function quoteNumber(q){
+  const y = new Date(q.created_at).getFullYear();
+  const sameYear = [...state.quotes].filter(x=>new Date(x.created_at).getFullYear()===y).sort((a,b)=>a.created_at-b.created_at);
+  return `ORC-${y}-${String(sameYear.findIndex(x=>x.id===q.id)+1).padStart(4,'0')}`;
+}
+function quoteSimpleHTML(q){
+  const ag = state.settings.agency_info || {};
+  const issued = new Date(q.created_at).toISOString().slice(0,10);
+  const validUntil = q.validity_days ? new Date(q.created_at + q.validity_days*86400000).toISOString().slice(0,10) : null;
+  const multi = (q.options||[]).length > 1;
+  const ink = '#151B26', muted = '#5B6475', line = '#E3E7EE';
+  const label = t => `<div style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:${muted};font-weight:700;margin-bottom:4px;">${t}</div>`;
+  const agLines = [ag.doc?`CNPJ ${escapeHTML(ag.doc)}`:'', ag.phone?escapeHTML(ag.phone):'', ag.email?escapeHTML(ag.email):'', ag.city?escapeHTML(ag.city):'', ag.site?escapeHTML(ag.site):''].filter(Boolean);
+  const th = `font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:${muted};font-weight:700;padding:9px 10px;border-bottom:1.5px solid ${ink};text-align:left;`;
+  const td = `font-size:12.5px;padding:10px;border-bottom:1px solid ${line};color:${ink};vertical-align:top;`;
+  return `<div id="quotePaper" class="printable-card" style="background:#fff;color:${ink};border-radius:10px;overflow:hidden;font-family:'Inter',Arial,sans-serif;">
+    <div style="background:#0A1128;padding:22px 30px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:24px;width:auto;">
+      <div style="text-align:right;color:#fff;">
+        <div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#8FB0FF;font-weight:700;">Orçamento</div>
+        <div style="font-size:15px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${quoteNumber(q)}</div>
+      </div>
+    </div>
+    <div style="padding:26px 30px 30px;">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;padding-bottom:18px;border-bottom:1px solid ${line};margin-bottom:18px;">
+        <div>${label('Emitente')}
+          <div style="font-size:14px;font-weight:700;">${escapeHTML(ag.name||'SMK Agency')}</div>
+          <div style="font-size:11.5px;color:${muted};line-height:1.6;margin-top:2px;">${agLines.join('<br>')}</div>
+        </div>
+        <div>${label('Cliente')}
+          <div style="font-size:14px;font-weight:700;">${escapeHTML(q.company || q.name)}</div>
+          <div style="font-size:11.5px;color:${muted};line-height:1.6;margin-top:2px;">${[q.company?`A/C ${escapeHTML(q.name)}`:'', q.whatsapp?escapeHTML(q.whatsapp):''].filter(Boolean).join('<br>')}</div>
+        </div>
+      </div>
+      <div style="display:flex;gap:28px;flex-wrap:wrap;margin-bottom:22px;">
+        <div>${label('Emissão')}<div style="font-size:12.5px;font-weight:600;">${fmtDate(issued)}</div></div>
+        ${validUntil?`<div>${label('Válido até')}<div style="font-size:12.5px;font-weight:600;">${fmtDate(validUntil)}</div></div>`:''}
+        ${q.sender_name?`<div>${label('Responsável')}<div style="font-size:12.5px;font-weight:600;">${escapeHTML(q.sender_name)}</div></div>`:''}
+      </div>
+      ${(q.options||[]).map((opt,oi)=>{
+        const subtotal = (opt.items||[]).reduce((a,i)=>a+quoteItemLineTotal(i),0);
+        const total = quoteOptionTotal(opt);
+        const heading = multi ? `Opção ${oi+1}${opt.title?' — '+escapeHTML(opt.title):''}` : escapeHTML(opt.title||'');
+        return `<div style="margin-bottom:22px;">
+          ${heading?`<div style="font-size:13px;font-weight:700;margin-bottom:4px;">${heading}</div>`:''}
+          ${opt.description?`<div style="font-size:11.5px;color:${muted};margin-bottom:8px;white-space:pre-line;">${escapeHTML(opt.description)}</div>`:''}
+          <table style="width:100%;border-collapse:collapse;">
+            <tr><th style="${th}">Descrição do serviço</th><th style="${th}text-align:center;width:54px;">Qtd</th><th style="${th}text-align:right;width:110px;">Valor unit.</th><th style="${th}text-align:right;width:110px;">Total</th></tr>
+            ${opt.items.map(i=>`<tr>
+              <td style="${td}">${escapeHTML(i.description)}</td>
+              <td style="${td}text-align:center;">${Number(i.quantity)||1}</td>
+              <td style="${td}text-align:right;font-family:'IBM Plex Mono',monospace;">${fmtMoney(i.value)}</td>
+              <td style="${td}text-align:right;font-family:'IBM Plex Mono',monospace;">${fmtMoney(quoteItemLineTotal(i))}</td></tr>`).join('')}
+          </table>
+          <div style="display:flex;justify-content:flex-end;margin-top:10px;">
+            <div style="min-width:230px;font-size:12.5px;">
+              <div style="display:flex;justify-content:space-between;padding:4px 10px;color:${muted};"><span>Subtotal</span><span style="font-family:'IBM Plex Mono',monospace;">${fmtMoney(subtotal)}</span></div>
+              ${opt.discount>0?`<div style="display:flex;justify-content:space-between;padding:4px 10px;color:#C2391F;"><span>Desconto</span><span style="font-family:'IBM Plex Mono',monospace;">-${fmtMoney(opt.discount)}</span></div>`:''}
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 10px;margin-top:4px;background:#0A1128;color:#fff;border-radius:6px;">
+                <span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">${opt.recurring?'Total mensal':'Total'}</span>
+                <span style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;">${fmtMoney(total)}</span>
+              </div>
+            </div>
+          </div>
+        </div>`;
+      }).join('')}
+      ${q.notes?`<div style="border-top:1px solid ${line};padding-top:14px;margin-bottom:18px;">${label('Observações')}<div style="font-size:12px;line-height:1.6;white-space:pre-line;">${escapeHTML(q.notes)}</div></div>`:''}
+      <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;border-top:1px solid ${line};padding-top:22px;margin-top:8px;">
+        <div style="font-size:10.5px;color:${muted};max-width:280px;line-height:1.5;">Documento sem valor fiscal. Valores válidos até a data indicada.</div>
+        <div style="text-align:center;min-width:200px;">
+          <div style="border-top:1px solid ${ink};padding-top:6px;font-size:11.5px;font-weight:600;">${escapeHTML(q.sender_name || ag.name || 'SMK Agency')}</div>
+          <div style="font-size:10.5px;color:${muted};">${escapeHTML(ag.name||'SMK Agency')}</div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+let quoteLayout = (()=>{ try{ return localStorage.getItem('smkos_quote_layout') || 'proposta'; }catch(e){ return 'proposta'; } })();
 function openQuoteDetail(id){
   const q = state.quotes.find(x=>x.id===id);
   document.getElementById('genericModalTitle').textContent = 'Orçamento';
@@ -3869,10 +3961,14 @@ function openQuoteDetail(id){
         <button class="btn small ghost" id="qMarkRejected">Marcar como recusado</button>
       ` : ''}
       ${canEditClients()?`<button class="btn small ghost" id="qEditBtn" style="margin-left:auto;">Editar</button>`:''}
+      <div class="q-layout" role="group" aria-label="Modelo">
+        <button type="button" data-qlayout="proposta" class="${quoteLayout==='proposta'?'on':''}">✨ Proposta</button>
+        <button type="button" data-qlayout="simples" class="${quoteLayout==='simples'?'on':''}">🧾 Simples</button>
+      </div>
       <button class="btn small primary" id="qPrintBtn">🖨️ Imprimir / Salvar PDF</button>
       <button type="button" class="btn small" id="qCopyImgBtn">📋 Copiar imagem</button>
     </div>
-    <div id="quotePaper" class="printable-card" style="background:radial-gradient(circle at 12% 0%, rgba(76,126,255,.14), transparent 40%), radial-gradient(circle at 92% 15%, rgba(76,126,255,.08), transparent 45%), #0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
+    ${quoteLayout==='simples' ? quoteSimpleHTML(q) : `<div id="quotePaper" class="printable-card" style="background:radial-gradient(circle at 12% 0%, rgba(76,126,255,.14), transparent 40%), radial-gradient(circle at 92% 15%, rgba(76,126,255,.08), transparent 45%), #0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
         <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:24px;width:auto;">
         <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">Proposta de serviços</div>
@@ -3947,10 +4043,15 @@ function openQuoteDetail(id){
         <div style="width:38px;height:38px;border-radius:11px;background:#3E6FF0;display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-weight:700;color:#fff;font-size:16px;flex-shrink:0;">S</div>
         <div style="font-size:20px;font-weight:800;">Vamos trabalhar juntos?</div>
       </div>
-    </div>
+    </div>`}
     <div class="modal-foot"><button class="btn" data-close="genericModalOverlay">Fechar</button></div>
   `;
   document.getElementById('qPrintBtn').addEventListener('click', ()=>window.print());
+  body.querySelectorAll('[data-qlayout]').forEach(b=>b.addEventListener('click', ()=>{
+    quoteLayout = b.dataset.qlayout;
+    try{ localStorage.setItem('smkos_quote_layout', quoteLayout); }catch(e){}
+    openQuoteDetail(id);
+  }));
   document.getElementById('qCopyImgBtn').addEventListener('click', function(){ copyElementAsImage('quotePaper', this); });
   document.getElementById('qEditBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openQuoteModal(q); });
   document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ q.status='aceito'; saveState(state); openQuoteDetail(id); });
