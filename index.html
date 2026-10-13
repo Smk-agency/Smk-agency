@@ -1098,6 +1098,42 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .fid-ov.ok .fid-scan{display:none;}
 .fid-ov.ok .fid-corners{stroke:#5B8CFF;transition:stroke .2s;}
 .fid-txt{color:#fff;font-size:14px;font-weight:600;letter-spacing:.01em;font-family:-apple-system,'Segoe UI','Inter',sans-serif;}
+/* reajuste */
+.readjust-box{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px solid var(--border);background:var(--surface-2);margin:16px 0 4px;}
+.readjust-box.due{border-color:rgba(224,166,45,.55);background:rgba(224,166,45,.09);}
+.readjust-box > div:first-child{display:flex;flex-direction:column;gap:2px;}
+.readjust-box b{font-size:13px;} .readjust-box span{font-size:11.5px;color:var(--text-faint);}
+.readjust-actions{display:flex;gap:6px;}
+/* orçamento → cliente */
+.qc-items{display:flex;flex-direction:column;gap:6px;}
+.qc-item{display:grid;grid-template-columns:1fr 110px 96px;gap:8px;align-items:center;}
+.qc-desc{font-size:13px;} .qc-desc i{color:var(--text-faint);font-style:normal;}
+.qc-item input,.qc-item select{padding:6px 8px;font-size:12.5px;}
+.qc-similar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:1px solid rgba(224,166,45,.5);background:rgba(224,166,45,.1);font-size:12.5px;margin-bottom:14px;}
+.qc-note{font-size:11.5px;color:#E0A62D;margin-top:8px;}
+/* ka-ching */
+.kaching{position:fixed;left:50%;top:50%;z-index:2500;pointer-events:none;}
+.kc-val{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-family:var(--font-display);font-weight:700;font-size:34px;color:#3FD39E;text-shadow:0 6px 30px rgba(31,169,124,.7);white-space:nowrap;animation:kcVal 1.7s cubic-bezier(.2,.9,.3,1) forwards;}
+@keyframes kcVal{0%{opacity:0;transform:translate(-50%,-20%) scale(.7);}18%{opacity:1;transform:translate(-50%,-60%) scale(1.08);}70%{opacity:1;transform:translate(-50%,-90%) scale(1);}100%{opacity:0;transform:translate(-50%,-140%);}}
+.kaching i{position:absolute;left:0;top:0;font-style:normal;font-size:26px;opacity:0;animation:kcCoin 1.3s cubic-bezier(.2,.8,.3,1) var(--d) forwards;}
+@keyframes kcCoin{0%{opacity:1;transform:translate(-50%,40px) rotate(0) scale(.6);}60%{opacity:1;}100%{opacity:0;transform:translate(calc(-50% + var(--x)),-190px) rotate(var(--r)) scale(1);}}
+.sound-opt{display:flex;align-items:center;gap:8px;margin-top:16px;font-size:12.5px;font-weight:600;cursor:pointer;}
+.sound-opt input{width:auto;} .sound-opt span{font-weight:400;color:var(--text-faint);}
+/* boas-vindas do dia */
+.welcome-ov{position:fixed;inset:0;z-index:2800;display:flex;align-items:center;justify-content:center;padding:20px;cursor:pointer;
+  background:radial-gradient(70% 60% at 50% 40%, rgba(62,111,240,.35), transparent 70%), rgba(5,8,16,.88);backdrop-filter:blur(10px);animation:fidIn .35s ease both;}
+.welcome-ov.out{animation:fidOut .4s ease forwards;}
+.wl-box{text-align:center;max-width:520px;color:#fff;}
+.wl-logo{height:30px;margin-bottom:22px;animation:wlUp .6s cubic-bezier(.2,.9,.3,1) both;}
+.wl-date{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:#8FB0FF;animation:wlUp .6s .08s cubic-bezier(.2,.9,.3,1) both;}
+.wl-hi{font-family:var(--font-display);font-size:44px;font-weight:700;letter-spacing:-.02em;margin:8px 0 18px;animation:wlUp .6s .16s cubic-bezier(.2,.9,.3,1) both;}
+.wl-hi em{font-style:normal;background:linear-gradient(90deg,#8FB0FF,#5B8CFF 45%,#9B7BEA);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.wl-chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:20px;}
+.wl-chips span{font-size:13px;font-weight:600;padding:7px 14px;border-radius:99px;background:rgba(255,255,255,.09);border:1px solid rgba(255,255,255,.14);animation:wlUp .5s calc(.3s + var(--i,0) * .08s) cubic-bezier(.2,.9,.3,1) both;}
+.wl-line{font-size:14px;color:rgba(255,255,255,.75);font-style:italic;animation:wlUp .6s .55s ease both;}
+.wl-tap{margin-top:26px;font-size:11px;color:rgba(255,255,255,.4);letter-spacing:.08em;text-transform:uppercase;animation:wlUp .6s .8s ease both;}
+@keyframes wlUp{from{opacity:0;transform:translateY(14px);}}
+@media(max-width:600px){ .wl-hi{font-size:34px;} }
 /* mural */
 .mural{display:flex;flex-direction:column;gap:8px;margin:-8px 0 18px;}
 .mural-note{display:flex;gap:12px;align-items:flex-start;padding:12px 14px;border-radius:12px;border:1px solid rgba(91,140,255,.35);
@@ -2251,6 +2287,10 @@ function computeAlerts(){
       alerts.push({level: days<=5?'crit':'warn', icon:'📄', text:`Contrato de ${clientById(c.client_id)?.name} vence em ${days} dia(s).`, action:{type:'client', id:c.client_id}});
     }
   });
+  state.clients.filter(c=>c.status==='ativo' && c.readjust_months!==0).forEach(c=>{
+    const r = nextReadjust(c); if(!r || r.monthsAway>1) return;
+    alerts.push({level: r.monthsAway<=0 ? 'warn' : 'info', icon:'📈', text:`Reajuste de ${c.name} ${readjustLabel(r)} — cliente desde ${wrappedMonthName(r.since.m).toLowerCase()}/${r.since.m.slice(0,4)}.`, action:{type:'client', id:c.id}});
+  });
   const stuckTasks = state.tasks.filter(t=>taskStuckDays(t));
   if(stuckTasks.length===1){
     alerts.push({level:'warn', icon:'⏳', text:`"${stuckTasks[0].title}" está parada há ${taskStuckDays(stuckTasks[0])} dias em ${STATUS_LABEL[stuckTasks[0].status].toLowerCase()}.`, action:{type:'task', id:stuckTasks[0].id}});
@@ -2548,6 +2588,7 @@ function enterApp(){
   setActiveNav();
   render();
   renderNotifBell();
+  setTimeout(maybeDailyWelcome, 250);
 }
 
 // 👀 prévia da arte: passar o mouse (ou segurar o dedo) num card com link de entrega mostra a miniatura grande
@@ -2646,6 +2687,7 @@ function openProfileModal(){
         ${u.signature?'<button type="button" class="btn small ghost danger" id="sigRemove">Remover rubrica salva</button>':''}
       </div>
     </div>
+    <label class="sound-opt"><input type="checkbox" id="pf_sound" ${soundOn()?'checked':''}> 🔊 Sons do app <span>(o "ka-ching" quando um cliente paga)</span></label>
     <div class="field" style="margin-top:18px;">
       <label>Trocar código de acesso</label>
       <input type="text" id="pf_code" maxlength="4" inputmode="numeric" placeholder="0000" style="font-family:var(--font-mono);letter-spacing:3px;" autocomplete="off">
@@ -2709,6 +2751,7 @@ function openProfileModal(){
       }
       liveRef(u).access_code = codeInput;
     }
+    try{ localStorage.setItem('smkos_sound', document.getElementById('pf_sound').checked ? 'on' : 'off'); }catch(e){}
     const lu = liveRef(u);
     lu.avatar_color = pickedColor;
     if(sigRemoved) delete lu.signature;
@@ -3147,6 +3190,144 @@ function myScoreCardHTML(){
     <div class="my-score-head">⭐ Sua pontuação de ${wrappedMonthName(todayISO().slice(0,7)).toLowerCase()}</div>
     ${scoreBreakdownHTML(r, false)}
   </div>`;
+}
+
+/* ---------- 📈 REAJUSTE (aniversário de contrato) ---------- */
+// client.contract_start = 'AAAA-MM' (cliente desde); client.readjust_months = 12; client.last_readjust = 'AAAA-MM' (ciclo já resolvido)
+function clientSinceMonth(c){
+  if(c.contract_start) return {m:c.contract_start, estimated:false};
+  const pays = [...state.payments, ...Object.values(state.archived_financeiro||{}).flatMap(a=>a.payments||[])].filter(p=>p.client_id===c.id && p.due_date).map(p=>p.due_date.slice(0,7));
+  const svcs = state.client_services.filter(s=>s.client_id===c.id && s.effective_from).map(s=>s.effective_from);
+  const all = [...pays, ...svcs].sort();
+  return all.length ? {m:all[0], estimated:true} : null;
+}
+function addMonthsKey(m, n){ const d = new Date(Number(m.slice(0,4)), Number(m.slice(5,7))-1+n, 1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; }
+// próximo reajuste = primeiro aniversário (a cada N meses) depois do último reajuste resolvido
+function nextReadjust(c){
+  const since = clientSinceMonth(c); if(!since) return null;
+  const every = Number(c.readjust_months)||12;
+  let next = addMonthsKey(since.m, every);
+  while(c.last_readjust && next <= c.last_readjust) next = addMonthsKey(next, every);
+  const cur = todayISO().slice(0,7);
+  const monthsAway = (Number(next.slice(0,4))-Number(cur.slice(0,4)))*12 + (Number(next.slice(5,7))-Number(cur.slice(5,7)));
+  return {since, next, every, monthsAway};
+}
+function readjustLabel(r){
+  const mes = `${wrappedMonthName(r.next).toLowerCase()} de ${r.next.slice(0,4)}`;
+  return r.monthsAway<0 ? `atrasado desde ${mes}` : r.monthsAway===0 ? `é este mês (${mes})` : r.monthsAway===1 ? `é no mês que vem (${mes})` : `em ${mes}`;
+}
+
+/* ---------- 🤝 ORÇAMENTO ACEITO → CLIENTE ---------- */
+function openQuoteToClientModal(q){
+  const opts = q.options||[];
+  let oi = 0;
+  const monthlyGuess = d => /social|tr[aá]fego|gest[aã]o|mensal/i.test(d||'');
+  const cur = todayISO().slice(0,7), nextM = addMonthsKey(cur, 1);
+  const key = x => normSearch(x).replace(/[^a-z0-9]/g,'');
+  const qk = key(q.company||q.name);
+  const similar = qk.length>=4 ? state.clients.find(c=>{ const ck = key(c.name), ek = key(c.company_name); return (ck && (ck.includes(qk.slice(0,7)) || qk.includes(ck))) || (ek && (ek.includes(qk.slice(0,7)) || qk.includes(ek))); }) : null;
+  const draw = () => {
+    const opt = opts[oi];
+    const sub = (opt.items||[]).reduce((a,i)=>a+quoteItemLineTotal(i),0);
+    document.getElementById('itemModalTitle').textContent = '🤝 Criar cliente a partir do orçamento';
+    document.getElementById('itemModalBody').innerHTML = `
+      ${similar ? `<div class="qc-similar"><div>⚠️ Já existe um cliente parecido: <b>${escapeHTML(similar.name)}</b></div><button type="button" class="btn small" id="qc_link">Vincular a esse cliente</button></div>` : ''}
+      <div class="field"><label>Nome do cliente</label><input type="text" id="qc_name" value="${escapeHTML(q.company||q.name)}"></div>
+      ${opts.length>1?`<div class="field"><label>Opção aceita</label><select id="qc_opt">${opts.map((o,i)=>`<option value="${i}" ${i===oi?'selected':''}>Opção ${i+1}${o.title?' — '+escapeHTML(o.title):''} (${fmtMoney(quoteOptionTotal(o))})</option>`).join('')}</select></div>`:''}
+      <div class="field"><label>Serviços <span class="hint">mensal vira serviço do contrato · único vira uma cobrança avulsa</span></label>
+        <div class="qc-items">${opt.items.map((it,ii)=>`<div class="qc-item">
+          <span class="qc-desc">${escapeHTML(it.description)}${Number(it.quantity)>1?` <i>(${it.quantity}x)</i>`:''}</span>
+          <input type="number" step="0.01" class="qc-val" data-ii="${ii}" value="${quoteItemLineTotal(it)}">
+          <select class="qc-kind" data-ii="${ii}"><option value="mensal" ${(opt.recurring||monthlyGuess(it.description))?'selected':''}>Mensal</option><option value="unico" ${(opt.recurring||monthlyGuess(it.description))?'':'selected'}>Único</option></select>
+        </div>`).join('')}</div>
+        ${opt.discount>0?`<div class="qc-note">O orçamento tinha desconto de <b>${fmtMoney(opt.discount)}</b> (subtotal ${fmtMoney(sub)} → ${fmtMoney(quoteOptionTotal(opt))}). Ajuste os valores acima se quiser aplicar.</div>`:''}
+      </div>
+      <div class="field-row">
+        <div class="field"><label>Mensalidade começa em</label><select id="qc_start"><option value="${cur}">${wrappedMonthName(cur)} (este mês)</option><option value="${nextM}" selected>${wrappedMonthName(nextM)} (mês que vem)</option></select></div>
+        <div class="field"><label>Cobrança avulsa vence em</label><input type="date" id="qc_due" value="${todayISO()}"></div>
+      </div>
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="qc_save">Criar cliente</button></div>`;
+    openModal('itemModalOverlay');
+    document.getElementById('qc_opt')?.addEventListener('change', e=>{ oi = Number(e.target.value); draw(); });
+    document.getElementById('qc_link')?.addEventListener('click', ()=>{ const lq = liveRef(q); lq.client_id = similar.id; lq.status = 'aceito'; saveState(state); closeModal('itemModalOverlay'); openQuoteDetail(q.id); });
+    document.getElementById('qc_save').addEventListener('click', ()=>{
+      const name = document.getElementById('qc_name').value.trim(); if(!name) return;
+      const start = document.getElementById('qc_start').value;
+      const rows = opt.items.map((it,ii)=>({desc: it.description + (Number(it.quantity)>1?` (${it.quantity}x)`:''), value: Number(document.querySelector(`.qc-val[data-ii="${ii}"]`).value)||0, kind: document.querySelector(`.qc-kind[data-ii="${ii}"]`).value})).filter(r=>r.value>0);
+      const cid = uid();
+      state.clients.push({id:cid, name, company_name: q.company||'', whatsapp: q.whatsapp||'', instagram:'', birthday:'', status:'ativo',
+        color: autoClientColor(cid), contract_start: start, readjust_months: 12, from_quote: q.id});
+      rows.filter(r=>r.kind==='mensal').forEach(r=>state.client_services.push({id:uid(), client_id:cid, service_type:r.desc, contracted_value:r.value, frequency:'mensal', status:'ativo', effective_from:start}));
+      const once = rows.filter(r=>r.kind==='unico').reduce((a,r)=>a+r.value,0);
+      if(once>0) state.payments.push({id:uid(), client_id:cid, value:once, due_date: document.getElementById('qc_due').value || todayISO(), paid_at:null, status:'pendente', note: rows.filter(r=>r.kind==='unico').map(r=>r.desc).join(', ')});
+      const lq = liveRef(q); lq.client_id = cid; if(lq.status!=='aceito') lq.status = 'aceito';
+      saveState(state); closeModal('itemModalOverlay'); closeModal('genericModalOverlay');
+      currentView = 'clientes'; setActiveNav(); render(); openClientDetail(cid);
+    });
+  };
+  draw();
+}
+
+/* ---------- 💰 "KA-CHING" AO RECEBER ---------- */
+function soundOn(){ try{ return localStorage.getItem('smkos_sound')!=='off'; }catch(e){ return true; } }
+function playKaching(value){
+  if(soundOn()){
+    try{
+      const AC = window.AudioContext || window.webkitAudioContext; const ac = playKaching._ac || (playKaching._ac = new AC());
+      const t = ac.currentTime;
+      const tone = (f, at, dur, vol, type='triangle') => { const o = ac.createOscillator(), g = ac.createGain(); o.type = type; o.frequency.setValueAtTime(f, t+at);
+        g.gain.setValueAtTime(0.0001, t+at); g.gain.exponentialRampToValueAtTime(vol, t+at+0.01); g.gain.exponentialRampToValueAtTime(0.0001, t+at+dur); o.connect(g).connect(ac.destination); o.start(t+at); o.stop(t+at+dur+0.05); };
+      // "ka" (clique metálico) + "ching" (dois sininhos)
+      const n = ac.createBufferSource(), buf = ac.createBuffer(1, ac.sampleRate*0.05, ac.sampleRate), ch = buf.getChannelData(0);
+      for(let i=0;i<ch.length;i++) ch[i] = (Math.random()*2-1)*(1-i/ch.length);
+      const ng = ac.createGain(); ng.gain.value = 0.12; n.buffer = buf; const hp = ac.createBiquadFilter(); hp.type='highpass'; hp.frequency.value = 3000; n.connect(hp).connect(ng).connect(ac.destination); n.start(t);
+      tone(1568, 0.06, 0.35, 0.12); tone(2093, 0.13, 0.55, 0.1); tone(3136, 0.13, 0.4, 0.035, 'sine');
+    }catch(e){}
+  }
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const fx = document.createElement('div'); fx.className = 'kaching';
+  fx.innerHTML = `<div class="kc-val">+ ${fmtMoney(value)}</div>` + Array.from({length:12},(_,i)=>`<i style="--x:${Math.round(Math.random()*240-120)}px;--d:${(Math.random()*.35).toFixed(2)}s;--r:${Math.round(Math.random()*360)}deg;">🪙</i>`).join('');
+  document.body.appendChild(fx);
+  setTimeout(()=>fx.remove(), 1900);
+}
+
+/* ---------- ☀️ BOAS-VINDAS DO DIA ---------- */
+const DAILY_LINES = [
+  'Bora fazer o cliente postar com orgulho hoje.','Feito é melhor que perfeito — mas aqui a gente entrega os dois.','Cada entrega no prazo é uma renovação garantida.',
+  'Hoje é dia de deixar o feed de alguém mais bonito.','Criatividade com prazo: o combo da SMK.','Pequenas vitórias todo dia viram um mês histórico.',
+  'Briefing claro, entrega redonda.','O cliente não compra post, compra resultado. Bora!','Gravou, editou, aprovou. Repete.','Quem planeja a pauta não corre atrás do prazo.',
+];
+function maybeDailyWelcome(){
+  const u = currentUser(); if(!u) return;
+  const key = `smkos_welcome_${u.id}`, today = localDayKey();
+  try{ if(localStorage.getItem(key)===today) return; localStorage.setItem(key, today); }catch(e){ return; }
+  const recs = (state.commitments||[]).filter(c=>c.date===today && (isDono() || (c.user_ids||[]).includes(u.id)));
+  const mine = isDono() ? state.tasks : tasksScopedToUser(u);
+  const dueToday = mine.filter(t=>t.due_date===today && !DONE_STATUSES.includes(t.status)).length;
+  const late = mine.filter(isTaskLate).length;
+  const payToday = isDono() ? state.payments.filter(p=>p.due_date===today && p.status!=='pago' && p.status!=='cancelado').length : 0;
+  const doy = Math.floor((new Date() - new Date(new Date().getFullYear(),0,0))/86400000);
+  const line = DAILY_LINES[doy % DAILY_LINES.length];
+  const chips = [
+    recs.length ? `🎬 ${recs.length} gravaç${recs.length>1?'ões':'ão'} hoje` : '',
+    dueToday ? `📥 ${dueToday} demanda${dueToday>1?'s':''} vence${dueToday>1?'m':''} hoje` : '',
+    late ? `⏰ ${late} atrasada${late>1?'s':''}` : '',
+    payToday ? `💰 ${payToday} cobrança${payToday>1?'s':''} vence${payToday>1?'m':''} hoje` : '',
+  ].filter(Boolean);
+  const ov = document.createElement('div'); ov.className = 'welcome-ov';
+  const d = new Date().toLocaleDateString('pt-BR',{weekday:'long', day:'numeric', month:'long'});
+  ov.innerHTML = `<div class="wl-box">
+    <img class="wl-logo" src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK">
+    <div class="wl-date">${d.charAt(0).toUpperCase()+d.slice(1)}${seasonalTheme()?` · ${seasonalTheme().label}`:''}</div>
+    <div class="wl-hi">${greetingByHour()}, <em>${escapeHTML(u.full_name.split(' ')[0])}</em>!</div>
+    <div class="wl-chips">${chips.length ? chips.map((c,i)=>`<span style="--i:${i}">${c}</span>`).join('') : '<span>✨ Agenda tranquila hoje</span>'}</div>
+    <div class="wl-line">“${line}”</div>
+    <div class="wl-tap">toque pra começar</div>
+  </div>`;
+  document.body.appendChild(ov);
+  const close = () => { if(ov._c) return; ov._c = 1; ov.classList.add('out'); setTimeout(()=>ov.remove(), 400); };
+  ov.addEventListener('click', close);
+  setTimeout(close, 4200);
 }
 
 /* ---------- 📌 MURAL DA EQUIPE (recados fixados no topo da Mesa) ---------- */
@@ -4158,6 +4339,9 @@ function openQuoteDetail(id){
   body.innerHTML = `
     <div style="margin-bottom:14px;display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <span class="badge ${QUOTE_STATUS_COLOR[q.status]}">${QUOTE_STATUS_LABEL[q.status]}</span>
+      ${canEditClients() && q.status==='aceito' ? (q.client_id && clientById(q.client_id)
+        ? `<button class="btn small ghost" id="qOpenClient">👤 Ver cliente</button>`
+        : `<button class="btn small primary" id="qToClient">🤝 Criar cliente</button>`) : ''}
       ${canEditClients() && q.status==='aberto' ? `
         <button class="btn small" id="qMarkAccepted">Marcar como aceito</button>
         <button class="btn small ghost" id="qMarkRejected">Marcar como recusado</button>
@@ -4256,7 +4440,9 @@ function openQuoteDetail(id){
   }));
   document.getElementById('qCopyImgBtn').addEventListener('click', function(){ copyElementAsImage('quotePaper', this); });
   document.getElementById('qEditBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openQuoteModal(q); });
-  document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ q.status='aceito'; saveState(state); openQuoteDetail(id); });
+  document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ liveRef(q).status='aceito'; saveState(state); openQuoteDetail(id); });
+  document.getElementById('qToClient')?.addEventListener('click', ()=>openQuoteToClientModal(q));
+  document.getElementById('qOpenClient')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); currentView='clientes'; setActiveNav(); render(); openClientDetail(q.client_id); });
   document.getElementById('qMarkRejected')?.addEventListener('click', ()=>{ q.status='recusado'; saveState(state); openQuoteDetail(id); });
   openModal('genericModalOverlay');
 }
@@ -4313,6 +4499,10 @@ function openClientModal(existing){
     </div>
     <div class="field"><label>Aniversário <span class="hint">avisa 7 dias antes, no Dashboard</span></label><input type="date" id="cf_birthday" value="${existing?.birthday||''}"></div>
     <div class="field-row">
+      <div class="field"><label>Cliente desde <span class="hint">pro lembrete de reajuste</span></label><input type="month" id="cf_since" value="${existing ? (existing.contract_start || clientSinceMonth(existing)?.m || '') : todayISO().slice(0,7)}"></div>
+      <div class="field"><label>Reajuste a cada</label><select id="cf_readjust">${[6,12,24].map(n=>`<option value="${n}" ${(Number(existing?.readjust_months)||12)===n?'selected':''}>${n} meses</option>`).join('')}<option value="0" ${existing?.readjust_months===0?'selected':''}>Não lembrar</option></select></div>
+    </div>
+    <div class="field-row">
       <div class="field"><label>Status</label>
         <select id="cf_status">
           ${['prospect','ativo','pausado','encerrado'].map(s=>`<option value="${s}" ${existing?.status===s?'selected':''}>${s}</option>`).join('')}
@@ -4347,14 +4537,18 @@ function openClientModal(existing){
         name, company_name:document.getElementById('cf_company').value,
         whatsapp:document.getElementById('cf_wa').value, instagram:document.getElementById('cf_ig').value,
         birthday:document.getElementById('cf_birthday').value,
-        status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value
+        status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value,
+        contract_start: document.getElementById('cf_since').value || existing.contract_start || null,
+        readjust_months: Number(document.getElementById('cf_readjust').value)
       });
     } else {
       const newClientId = uid();
       state.clients.push({id:newClientId, name, company_name:document.getElementById('cf_company').value,
         whatsapp:document.getElementById('cf_wa').value, instagram:document.getElementById('cf_ig').value,
         birthday:document.getElementById('cf_birthday').value,
-        status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value});
+        status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value,
+        contract_start: document.getElementById('cf_since').value || todayISO().slice(0,7),
+        readjust_months: Number(document.getElementById('cf_readjust').value)});
 
       const serviceName = document.getElementById('cf_service_name')?.value.trim();
       const serviceValue = Number(document.getElementById('cf_service_value')?.value || 0);
@@ -4428,6 +4622,11 @@ function openClientDetail(id){
     <div style="font-size:11px;color:var(--text-faint);margin-top:8px;">Ex: diária de captação, horas de edição, ferramenta usada só nesse cliente — qualquer coisa que custa pra agência atender ele.</div>
     `:''}
 
+    ${isDono() && c.readjust_months!==0 ? (()=>{ const r = nextReadjust(c); if(!r) return '';
+      return `<div class="readjust-box ${r.monthsAway<=0?'due':''}">
+        <div><b>📈 Reajuste ${readjustLabel(r)}</b><span>Cliente desde ${wrappedMonthName(r.since.m).toLowerCase()}/${r.since.m.slice(0,4)}${r.since.estimated?' (estimado — ajuste em Editar dados do cliente)':''} · a cada ${r.every} meses</span></div>
+        ${r.monthsAway<=1?`<div class="readjust-actions"><button class="btn small" id="readjustUpdateBtn">Atualizar contrato</button><button class="btn small ghost" id="readjustDoneBtn" data-cycle="${r.next}">Marcar como resolvido</button></div>`:''}
+      </div>`; })() : ''}
     <div class="section-title">Forma de pagamento ${isDono()?`<button class="btn small" id="editPaymentScheduleBtn">${(c.payment_days&&c.payment_days.length)?'Editar':'Configurar'}</button>`:''}</div>
     <div class="card">
       ${(c.payment_days && c.payment_days.length) ?
@@ -4484,6 +4683,8 @@ function openClientDetail(id){
   `;
   document.getElementById('editClientBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openClientModal(c); });
   document.getElementById('clientReportBtn').addEventListener('click', ()=>openClientMonthReport(id));
+  document.getElementById('readjustUpdateBtn')?.addEventListener('click', ()=>document.getElementById('updateContractBtn')?.click());
+  document.getElementById('readjustDoneBtn')?.addEventListener('click', e=>{ liveRef(c).last_readjust = e.currentTarget.dataset.cycle; saveState(state); openClientDetail(id); });
   document.getElementById('clientFeedBtn').addEventListener('click', ()=>openFeedPreview(id));
   const wireTimeline = () => {
     const box = document.getElementById('clientTimeline');
@@ -7444,6 +7645,7 @@ function renderFinanceiro(el){
       p.status = 'pago';
       p.paid_at = todayISO();
       p.paid_ts = Date.now();
+      playKaching(Number(p.value)||0);
       saveState(state);
       render();
     });
@@ -7515,6 +7717,7 @@ function openPaymentModal(existing){
   });
   document.getElementById('savePaymentBtn').addEventListener('click', ()=>{
     const status = document.getElementById('pf_status').value;
+    if(status==='pago' && existing?.status!=='pago') playKaching(Number(document.getElementById('pf_value').value)||0);
     const data = {client_id:document.getElementById('pf_client').value, value:Number(document.getElementById('pf_value').value),
       due_date:document.getElementById('pf_due').value, status};
     if(existing){
