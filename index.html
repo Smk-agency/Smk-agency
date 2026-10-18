@@ -4440,7 +4440,8 @@ function openQuoteDetail(id){
   }));
   document.getElementById('qCopyImgBtn').addEventListener('click', function(){ copyElementAsImage('quotePaper', this); });
   document.getElementById('qEditBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openQuoteModal(q); });
-  document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ liveRef(q).status='aceito'; saveState(state); openQuoteDetail(id); });
+  // aceitou o orçamento: já abre a criação do cliente (ou o vínculo com um cliente parecido)
+  document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ const lq = liveRef(q); lq.status='aceito'; saveState(state); openQuoteDetail(id); if(!lq.client_id) openQuoteToClientModal(lq); });
   document.getElementById('qToClient')?.addEventListener('click', ()=>openQuoteToClientModal(q));
   document.getElementById('qOpenClient')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); currentView='clientes'; setActiveNav(); render(); openClientDetail(q.client_id); });
   document.getElementById('qMarkRejected')?.addEventListener('click', ()=>{ q.status='recusado'; saveState(state); openQuoteDetail(id); });
