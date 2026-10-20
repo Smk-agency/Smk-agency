@@ -1511,6 +1511,110 @@ html[data-theme="light"] .aurora .cursor-glow{background:radial-gradient(circle,
 .egg.formed .egg-txt{opacity:1;transform:none;}
 .egg-chev{position:absolute;font:800 64px var(--font-display);color:rgba(91,140,255,.55);pointer-events:none;animation:chevFly 1.6s cubic-bezier(.5,0,.3,1) forwards;}
 @keyframes chevFly{from{transform:translateX(-30vw);opacity:0;}20%{opacity:1;}to{transform:translateX(130vw);opacity:0;}}
+
+/* ============ LOTE ESTÉTICO 2 ============ */
+/* capa por cliente */
+.ccover{height:58px;margin:-16px -16px 12px;border-radius:var(--radius) var(--radius) 0 0;background-size:cover;background-position:center;position:relative;overflow:hidden;}
+.ccover::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,transparent 40%,rgba(0,0,0,.28));}
+.client-card:hover .ccover{filter:saturate(1.15) brightness(1.06);}
+.cd-cover{height:84px;border-radius:12px;margin-bottom:14px;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08);}
+.task-card.has-cover{background-image:var(--cov), linear-gradient(160deg, rgba(255,255,255,.045), rgba(255,255,255,0) 42%);background-size:100% 3px,auto;background-repeat:no-repeat;}
+html[data-theme="light"] .task-card.has-cover{background-image:var(--cov);background-size:100% 3px;}
+.cover-picker{display:flex;gap:8px;flex-wrap:wrap;align-items:center;}
+.cover-sw{width:46px;height:30px;border-radius:8px;border:2px solid transparent;cursor:pointer;background-size:cover;background-position:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12);transition:transform .12s;}
+.cover-sw:hover{transform:translateY(-2px);}
+.cover-sw.sel{border-color:#fff;box-shadow:0 0 0 2px var(--brand-bright,#5B8CFF);}
+.cover-sw.auto{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;text-shadow:0 1px 2px rgba(0,0,0,.5);}
+
+/* ⌘K paleta de comandos */
+.kbd-hint{position:absolute;right:9px;top:50%;transform:translateY(-50%);font:600 10.5px var(--font-mono);color:var(--text-faint);border:1px solid var(--border);border-radius:6px;padding:2px 6px;background:var(--surface-2);cursor:pointer;pointer-events:auto;}
+.search-wrap{position:relative;}
+@media (max-width:860px){ .kbd-hint{display:none;} }
+.cmdk-ov{position:fixed;inset:0;z-index:300;background:rgba(5,7,10,.55);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);display:flex;justify-content:center;align-items:flex-start;padding:14vh 16px 16px;opacity:0;transition:opacity .15s;}
+.cmdk-ov.on{opacity:1;}
+.cmdk{width:min(640px,100%);background:var(--surface);border:1px solid rgba(91,140,255,.35);border-radius:16px;box-shadow:0 40px 90px -30px rgba(0,0,0,.8),0 0 0 1px rgba(255,255,255,.04) inset,0 0 60px -20px rgba(76,126,255,.45);overflow:hidden;transform:translateY(-8px) scale(.98);transition:transform .18s cubic-bezier(.2,1,.3,1);}
+.cmdk-ov.on .cmdk{transform:none;}
+.cmdk-in{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--border);}
+.cmdk-in svg{width:18px;height:18px;color:var(--text-faint);flex-shrink:0;}
+.cmdk-in input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:16px;font-family:var(--font-body);padding:0;box-shadow:none;}
+.cmdk-list{max-height:min(420px,56vh);overflow-y:auto;padding:6px;}
+.cmdk-g{font:600 10.5px var(--font-mono);letter-spacing:.14em;text-transform:uppercase;color:var(--text-faint);padding:10px 10px 5px;}
+.cmdk-it{display:flex;align-items:center;gap:11px;padding:9px 10px;border-radius:9px;cursor:pointer;font-size:13.5px;}
+.cmdk-it .ic{width:28px;height:28px;border-radius:8px;display:flex;align-items:center;justify-content:center;background:var(--surface-2);font-size:14px;flex-shrink:0;background-size:cover;background-position:center;}
+.cmdk-it .tx{flex:1;min-width:0;}
+.cmdk-it .tx div{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmdk-it .tx small{display:block;font-size:11.5px;color:var(--text-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.cmdk-it .go{font:600 10.5px var(--font-mono);color:var(--text-faint);opacity:0;}
+.cmdk-it.act{background:var(--blue-dim,rgba(76,126,255,.14));box-shadow:inset 0 0 0 1px rgba(91,140,255,.35);}
+.cmdk-it.act .go{opacity:1;}
+.cmdk-it mark{background:none;color:var(--brand-bright,#8FB0FF);font-weight:700;}
+.cmdk-empty{padding:28px;text-align:center;color:var(--text-faint);font-size:13px;}
+.cmdk-foot{display:flex;gap:16px;padding:9px 14px;border-top:1px solid var(--border);font-size:11px;color:var(--text-faint);}
+.cmdk-foot kbd{font:600 10px var(--font-mono);border:1px solid var(--border);border-radius:4px;padding:1px 5px;margin-right:4px;background:var(--surface-2);}
+
+/* 🎯 modo foco + pomodoro */
+.focus-btn{display:flex;align-items:center;justify-content:center;}
+.focus-ov{position:fixed;inset:0;z-index:90;background:radial-gradient(80% 70% at 50% 0%, rgba(62,111,240,.18), transparent 60%), rgba(4,6,12,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);display:flex;flex-direction:column;align-items:center;overflow-y:auto;padding:5vh 18px 40px;opacity:0;transition:opacity .3s;}
+.focus-ov.on{opacity:1;}
+.focus-x{position:absolute;right:18px;top:16px;}
+.focus-kick{font:600 11px var(--font-mono);letter-spacing:.35em;color:#7f9cff;text-transform:uppercase;}
+.focus-ring{position:relative;width:min(280px,70vw);aspect-ratio:1;margin:22px 0 14px;}
+.focus-ring svg{width:100%;height:100%;transform:rotate(-90deg);overflow:visible;}
+.focus-ring circle{fill:none;stroke-width:7;}
+.focus-ring .bg{stroke:rgba(255,255,255,.07);}
+.focus-ring .fg{stroke:url(#focusGrad);stroke-linecap:round;transition:stroke-dashoffset .4s linear;}
+.focus-ring .glow{stroke:rgba(76,126,255,.35);stroke-width:12;filter:blur(6px);transition:stroke-dashoffset .4s linear;}
+.focus-time{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;}
+.focus-time b{font:700 clamp(46px,9vw,64px) var(--font-display);letter-spacing:-.03em;font-variant-numeric:tabular-nums;color:#fff;}
+.focus-time span{font-size:12px;color:var(--text-faint);margin-top:2px;}
+.focus-ctrl{display:flex;gap:8px;margin-bottom:8px;}
+.focus-modes{display:flex;gap:6px;margin-bottom:26px;}
+.focus-modes button{font-size:11.5px;padding:5px 11px;border-radius:99px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;}
+.focus-modes button.sel{border-color:rgba(91,140,255,.6);color:#fff;background:rgba(76,126,255,.15);}
+.focus-list{width:min(560px,100%);display:flex;flex-direction:column;gap:8px;}
+.focus-list h3{font-size:14px;margin-bottom:4px;color:#fff;}
+.focus-ov.running .focus-ring .glow{animation:focusPulse 2.4s ease-in-out infinite;}
+@keyframes focusPulse{50%{stroke:rgba(91,140,255,.7);}}
+.focus-pill{position:fixed;right:18px;bottom:18px;z-index:95;display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:99px;background:var(--surface);border:1px solid rgba(91,140,255,.45);box-shadow:0 14px 34px -14px rgba(0,0,0,.7),0 0 24px -8px rgba(76,126,255,.5);font:600 13px var(--font-mono);color:var(--text);cursor:pointer;}
+.focus-pill i{width:8px;height:8px;border-radius:50%;background:#5B8CFF;animation:focusBlink 1.4s ease-in-out infinite;}
+.focus-pill.pausa i{background:#1FA97C;}
+@keyframes focusBlink{50%{opacity:.25;}}
+@media (max-width:860px){ .focus-pill{bottom:84px;} }
+
+/* reações nos comentários */
+.react-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:7px;align-items:center;position:relative;}
+.react-row:not(:has(.react-chip)){margin-top:3px;margin-bottom:-6px;}
+.react-chip{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;border:1px solid var(--border);background:var(--surface);font-size:12px;cursor:pointer;line-height:1.5;color:var(--text-muted);transition:transform .12s;}
+.react-chip:hover{transform:translateY(-1px);border-color:rgba(91,140,255,.4);}
+.react-chip.mine{border-color:rgba(91,140,255,.65);background:rgba(76,126,255,.16);color:var(--text);}
+.react-chip.pop{animation:reactPop .45s cubic-bezier(.3,1.8,.5,1);}
+@keyframes reactPop{0%{transform:scale(.4);}60%{transform:scale(1.25);}100%{transform:scale(1);}}
+.react-add{opacity:0;padding:2px 7px;border-radius:99px;border:1px dashed var(--border);background:none;color:var(--text-faint);font-size:12px;cursor:pointer;transition:opacity .15s;}
+.comment-item:hover .react-add,.react-row:has(.react-chip) .react-add,.react-add.open{opacity:1;}
+@media (hover:none){ .react-add{opacity:.7;} }
+.react-pick{position:absolute;left:0;bottom:calc(100% + 6px);display:flex;gap:2px;padding:5px;border-radius:99px;background:var(--surface-3,#222);border:1px solid var(--border);box-shadow:0 12px 28px -10px rgba(0,0,0,.7);z-index:5;animation:reactIn .18s cubic-bezier(.2,1,.3,1);}
+.react-pick button{font-size:18px;width:32px;height:32px;border-radius:50%;border:none;background:none;cursor:pointer;transition:transform .12s;}
+.react-pick button:hover{transform:scale(1.3) translateY(-2px);background:rgba(255,255,255,.06);}
+@keyframes reactIn{from{opacity:0;transform:translateY(6px) scale(.9);}}
+
+/* mapa de calor de entregas */
+.heat{display:flex;flex-direction:column;gap:6px;}
+.heat-grid{display:grid;grid-auto-flow:column;grid-template-rows:repeat(7,var(--hs,11px));grid-auto-columns:var(--hs,11px);gap:3px;overflow-x:auto;padding-bottom:2px;}
+.heat-grid i{border-radius:3px;background:rgba(255,255,255,.05);display:block;}
+.heat-grid i.l1{background:rgba(76,126,255,.3);} .heat-grid i.l2{background:rgba(76,126,255,.55);} .heat-grid i.l3{background:rgba(91,140,255,.8);} .heat-grid i.l4{background:#8FB0FF;box-shadow:0 0 6px rgba(143,176,255,.6);}
+.heat-grid i.fut{background:transparent;}
+html[data-theme="light"] .heat-grid i{background:rgba(21,27,38,.07);}
+html[data-theme="light"] .heat-grid i.l1{background:rgba(62,111,240,.25);} html[data-theme="light"] .heat-grid i.l2{background:rgba(62,111,240,.5);} html[data-theme="light"] .heat-grid i.l3{background:rgba(62,111,240,.75);} html[data-theme="light"] .heat-grid i.l4{background:#2E5BDB;}
+.heat-months{display:grid;grid-auto-flow:column;grid-auto-columns:calc(var(--hs,11px) + 3px);font-size:10px;color:var(--text-faint);height:13px;}
+.heat-foot{display:flex;justify-content:space-between;align-items:center;font-size:11.5px;color:var(--text-faint);gap:10px;flex-wrap:wrap;}
+.heat-foot .lg{display:flex;align-items:center;gap:3px;}
+.heat-foot .lg i{width:10px;height:10px;border-radius:2px;display:inline-block;}
+.heat.anim .heat-grid i{animation:heatIn .4s ease backwards;animation-delay:calc(var(--c) * 14ms);}
+@keyframes heatIn{from{opacity:0;transform:scale(.3);}}
+.heat-team-row{display:grid;grid-template-columns:150px 1fr auto;gap:14px;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);}
+.heat-team-row:last-child{border-bottom:none;}
+@media (max-width:700px){ .heat-team-row{grid-template-columns:1fr;gap:6px;} }
+@media (prefers-reduced-motion: reduce){ .heat.anim .heat-grid i,.react-chip.pop,.focus-ov.running .focus-ring .glow{animation:none;} }
 </style>
 </head>
 <body>
@@ -2716,6 +2820,7 @@ function openProfileModal(){
       <div class="profile-avatar" id="profilePreviewAvatar" style="width:52px;height:52px;font-size:17px;background:${avColor}22;color:${avColor};">${initials(u.full_name)}</div>
       <div><div style="font-weight:600;font-size:14.5px;">${escapeHTML(u.full_name)}</div><div style="font-size:12px;color:var(--text-faint);">${ROLE_LABEL[u.role]}</div></div>
     </div>
+    <div class="field" style="margin-bottom:18px;"><label>🟦 Minhas ${heatKind(u.id)} <span class="hint">— cada quadradinho é um dia</span></label>${heatmapHTML(u.id, 26)}</div>
     <div class="field">
       <label>Cor do avatar</label>
       <div id="avatarColorPicker" style="display:flex;gap:9px;flex-wrap:wrap;">
@@ -4519,6 +4624,7 @@ function renderClientes(el){
     const statusBadge = {ativo:'green',prospect:'blue',pausado:'amber',encerrado:'gray'}[c.status];
     return `
     <div class="client-card" data-id="${c.id}">
+      <div class="ccover" style="background:${clientCoverBG(c)}"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div><div class="cname">${c.name}</div><div class="ccompany">${c.company_name||''}</div></div>
         <span class="badge ${statusBadge}">${c.status}</span>
@@ -4561,6 +4667,7 @@ function openClientModal(existing){
         <input type="color" id="cf_color" value="${existing?.color || autoClientColor(existing?.id)}" style="height:37px;padding:4px;">
       </div>
     </div>
+    <div class="field"><label>Capa <span class="hint">aparece no card do cliente e como faixa nas demandas</span></label>${coverPickerHTML(existing)}</div>
     ${!isEdit && isDono()?`
     <div class="section-title" style="margin:20px 0 10px;">Primeiro serviço contratado <span class="hint">opcional — dá pra adicionar mais depois</span></div>
     <div class="field-row">
@@ -4578,8 +4685,10 @@ function openClientModal(existing){
       <button class="btn primary" id="saveClientBtn">Salvar</button>
     </div>
   `;
+  wireCoverPicker();
   document.getElementById('saveClientBtn').addEventListener('click', ()=>{
     const name = document.getElementById('cf_name').value.trim();
+    const cover = document.getElementById('cf_cover')?.value || null;
     if(!name) return;
     if(isEdit){
       Object.assign((existing = liveRef(existing)), {
@@ -4588,7 +4697,7 @@ function openClientModal(existing){
         birthday:document.getElementById('cf_birthday').value,
         status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value,
         contract_start: document.getElementById('cf_since').value || existing.contract_start || null,
-        readjust_months: Number(document.getElementById('cf_readjust').value)
+        readjust_months: Number(document.getElementById('cf_readjust').value), cover
       });
     } else {
       const newClientId = uid();
@@ -4597,7 +4706,7 @@ function openClientModal(existing){
         birthday:document.getElementById('cf_birthday').value,
         status:document.getElementById('cf_status').value, color:document.getElementById('cf_color').value,
         contract_start: document.getElementById('cf_since').value || todayISO().slice(0,7),
-        readjust_months: Number(document.getElementById('cf_readjust').value)});
+        readjust_months: Number(document.getElementById('cf_readjust').value), cover});
 
       const serviceName = document.getElementById('cf_service_name')?.value.trim();
       const serviceValue = Number(document.getElementById('cf_service_value')?.value || 0);
@@ -4632,6 +4741,7 @@ function openClientDetail(id){
   const tasks = tasksForClient(id);
   const body = document.getElementById('genericModalBody');
   body.innerHTML = `
+    <div class="cd-cover" style="background:${clientCoverBG(c)}"></div>
     <div style="font-size:12.5px;color:var(--text-muted);margin-bottom:14px;">${c.company_name||''} · ${c.whatsapp||''} · ${c.instagram||''}${c.birthday?` · 🎂 ${c.birthday.slice(8,10)}/${c.birthday.slice(5,7)}`:''}</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;">
       <button type="button" class="btn small" id="clientReportBtn">📊 Relatório de entregas do mês</button>
@@ -6564,9 +6674,10 @@ function feedItemHTML(c){
         ${c.content?`<div class="cap">${c.content}</div>`:''}
         <img src="${c.image_url}" class="img-preview" onclick="openImageViewer(this.src)">
       </div>
+      ${reactRowHTML(c)}
     </div>`;
   }
-  return `<div class="comment-item">${delBtn}<div class="cauthor">${author}<span>${when}</span></div><div class="ctext">${c.content}</div></div>`;
+  return `<div class="comment-item">${delBtn}<div class="cauthor">${author}<span>${when}</span></div><div class="ctext">${c.content}</div>${reactRowHTML(c)}</div>`;
 }
 
 /* ---------- 📱 PRÉVIA DO FEED (grade do Instagram com as artes entregues) ---------- */
@@ -8169,6 +8280,7 @@ function renderEquipe(el){
 
   el.innerHTML = `
     ${teamScoresHTML()}
+    ${teamHeatHTML()}
     ${rankingHTML}
     ${artRankingHTML}
     <div class="section-title" style="margin-top:0;">Usuários <button class="btn small primary" id="addUserBtn">+ Novo usuário</button></div>
@@ -8584,6 +8696,366 @@ function playSmkEgg(){
     if(taps.length>=7){ taps = []; playSmkEgg(); }
   });
 })();
+
+/* ============ LOTE ESTÉTICO 2 ============ */
+
+/* ---------- 🖼️ CAPA POR CLIENTE (client.cover = preset | 'photo:<driveId>' | vazio = automática pela cor) ---------- */
+const COVER_PRESETS = {
+  oceano:['#3E6FF0','#00C2FF'], noite:['#1B2A6B','#7B61FF'], neon:['#7B61FF','#FF4FD8'], sol:['#FF7A45','#FF3D7F'],
+  ouro:['#F5B700','#FF7A00'], floresta:['#1FA97C','#9BE15D'], rosa:['#FF8FB1','#FFC6D9'], grafite:['#3A3F4B','#8A93A6'],
+};
+function darkenHex(hex, f){
+  const m = (hex||'').match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i); if(!m) return hex;
+  return '#' + m.slice(1).map(h=>Math.round(parseInt(h,16)*(1-f)).toString(16).padStart(2,'0')).join('');
+}
+function clientCoverColors(c){
+  const p = COVER_PRESETS[c?.cover]; if(p) return p;
+  const base = c?.color || autoClientColor(c?.id);
+  return [base, darkenHex(base, .5)];
+}
+function clientCoverPhoto(c){ return (c?.cover||'').startsWith('photo:') ? c.cover.slice(6) : null; }
+function clientCoverGrad(c){ const [a,b] = clientCoverColors(c); return `linear-gradient(120deg, ${a}, ${b})`; }
+function clientCoverBG(c){
+  const id = clientCoverPhoto(c), grad = clientCoverGrad(c);
+  return id ? `url('https://drive.google.com/thumbnail?id=${id}&sz=w800') center/cover no-repeat, ${grad}` : grad;
+}
+function coverPickerHTML(c){
+  const cur = c?.cover || '';
+  const photoId = clientCoverPhoto(c);
+  const auto = {color:c?.color, id:c?.id};
+  return `<div class="cover-picker" id="coverPicker">
+      <button type="button" class="cover-sw auto ${!cur?'sel':''}" data-cover="" style="background:${clientCoverGrad(auto)}" title="Automática (pela cor do cliente)">AUTO</button>
+      ${Object.keys(COVER_PRESETS).map(k=>`<button type="button" class="cover-sw ${cur===k?'sel':''}" data-cover="${k}" title="${k}" style="background:${clientCoverGrad({cover:k})}"></button>`).join('')}
+      <button type="button" class="cover-sw auto ${photoId?'sel':''}" data-cover="__photo" title="Usar uma foto do Drive" style="${photoId?`background:${clientCoverBG(c)}`:'background:var(--surface-3);'}">📷</button>
+    </div>
+    <input type="text" id="cf_cover_link" placeholder="Cole o link de uma foto do Google Drive (pública)" value="${photoId?`https://drive.google.com/file/d/${photoId}/view`:''}" style="margin-top:8px;${photoId?'':'display:none;'}">
+    <input type="hidden" id="cf_cover" value="${cur}">`;
+}
+function wireCoverPicker(){
+  const pick = document.getElementById('coverPicker'); if(!pick) return;
+  const hidden = document.getElementById('cf_cover'), link = document.getElementById('cf_cover_link');
+  pick.addEventListener('click', e=>{
+    const b = e.target.closest('[data-cover]'); if(!b) return;
+    pick.querySelectorAll('.cover-sw').forEach(x=>x.classList.toggle('sel', x===b));
+    if(b.dataset.cover==='__photo'){ link.style.display=''; link.focus(); hidden.value = driveFileId(link.value) ? 'photo:'+driveFileId(link.value) : ''; }
+    else { link.style.display='none'; hidden.value = b.dataset.cover; }
+  });
+  link.addEventListener('input', ()=>{ const id = driveFileId(link.value); hidden.value = id ? 'photo:'+id : ''; });
+}
+// faixinha com a capa no topo de qualquer cartão de demanda (kanban, listas, modais)
+function taskForCard(el){
+  const id = el.dataset.id || el.dataset.taskId || el.dataset.archivedId; if(!id) return null;
+  return state.tasks.find(t=>t.id===id) || Object.values(state.archived_tasks||{}).flat().find(t=>t.id===id) || null;
+}
+function applyTaskCovers(root=document){
+  root.querySelectorAll('.task-card:not([data-cov])').forEach(el=>{
+    el.dataset.cov = '1';
+    const t = taskForCard(el), c = t && clientById(t.client_id);
+    if(!c) return;
+    el.style.setProperty('--cov', clientCoverGrad(c));
+    el.classList.add('has-cover');
+  });
+}
+(function(){
+  // callback do MutationObserver já roda agrupado (microtask), então aplica direto
+  new MutationObserver(()=>applyTaskCovers())
+    .observe(document.body, {childList:true, subtree:true});
+})();
+
+/* ---------- ⌘K PALETA DE COMANDOS ---------- */
+const CMDK_VIEW_ICON = {mesa:'🪑', dashboard:'📊', clientes:'👥', orcamentos:'🧾', identidade:'🎨', demandas:'🗂️', agenda:'📅', financeiro:'💰', banco:'🏦', rentabilidade:'📈', equipe:'🧑‍🤝‍🧑', arquivadas:'🗄️'};
+function closeAllModals(){ document.querySelectorAll('.modal-overlay.open').forEach(m=>closeModal(m.id)); }
+function goToView(v){ closeFocusMode(); closeAllModals(); document.querySelector(`.nav-item[data-view="${v}"]`)?.click(); }
+function cmdkSource(){
+  const me = currentUser(); if(!me) return [];
+  const items = [];
+  const act = (icon, title, sub, run, kw='') => items.push({g:'Ações', icon, title, sub, run, kw});
+  act('➕', 'Nova demanda', 'Criar uma demanda', ()=>{ closeAllModals(); document.getElementById('newTaskBtn').click(); }, 'criar task tarefa');
+  if(canEditClients()) act('👤', 'Novo cliente', 'Cadastrar cliente', ()=>{ closeAllModals(); openClientModal(); }, 'criar cadastrar');
+  act('🎯', 'Modo foco', 'Só suas demandas + timer Pomodoro', ()=>{ closeAllModals(); openFocusMode(); }, 'pomodoro timer concentrar');
+  act('🌗', 'Alternar tema claro/escuro', '', ()=>document.getElementById('themeToggle').click(), 'dark light modo noturno');
+  act('🙂', 'Meu perfil', 'Cor do avatar, rubrica, mapa de entregas', ()=>{ closeAllModals(); openProfileModal(); }, 'perfil assinatura');
+  document.querySelectorAll('.nav-item[data-view]').forEach(b=>{
+    if(b.closest('[data-owner]') && !isDono()) return;
+    const v = b.dataset.view, [title, sub] = TITLES[v] || [v, ''];
+    items.push({g:'Telas', icon:CMDK_VIEW_ICON[v]||'›', title, sub, run:()=>goToView(v), kw:'ir abrir tela '+v});
+  });
+  state.clients.filter(c=>c.status!=='encerrado').forEach(c=>items.push({g:'Clientes', iconBG:clientCoverBG(c), icon:'', title:c.name, sub:c.company_name||c.instagram||'', run:()=>{ closeFocusMode(); closeAllModals(); openClientDetail(c.id); }, kw:'cliente '+(c.instagram||'')}));
+  state.tasks.filter(t=>t.status!=='cancelado').forEach(t=>{
+    const c = clientById(t.client_id), owner = t.assignee_id ? userById(t.assignee_id) : null;
+    items.push({g:'Demandas', icon:'', iconBG:c?clientCoverGrad(c):'', title:t.title, sub:[c?.name, STATUS_LABEL[t.status], owner?.full_name?.split(' ')[0], t.due_date?fmtDate(t.due_date).slice(0,5):''].filter(Boolean).join(' · '),
+      run:()=>{ closeAllModals(); openTaskModal(t.id); }, kw:(c?.name||'')+' '+(t.task_type||''), mine:t.assignee_id===me.id && !DONE_STATUSES.includes(t.status), due:t.due_date||'9999'});
+  });
+  return items;
+}
+function cmdkFilter(q){
+  const all = cmdkSource(), nq = normSearch(q.trim()), words = nq.split(/\s+/).filter(Boolean);
+  if(!words.length){
+    const mine = all.filter(i=>i.mine).sort((a,b)=>a.due.localeCompare(b.due)).slice(0,5).map(i=>({...i, g:'Suas demandas abertas'}));
+    return [...all.filter(i=>i.g==='Ações'), ...mine, ...all.filter(i=>i.g==='Telas')];
+  }
+  const scored = all.map(i=>{
+    const t = normSearch(i.title), hay = t+' '+normSearch(i.sub||'')+' '+normSearch(i.kw||'');
+    if(!words.every(w=>hay.includes(w))) return null;
+    return {...i, s:(t.startsWith(nq)?3:0) + (t.includes(nq)?2:0) + (i.mine?1:0)};
+  }).filter(Boolean);
+  const order = ['Ações','Telas','Clientes','Demandas'], cap = {Ações:4, Telas:4, Clientes:6, Demandas:8};
+  return order.flatMap(g=>scored.filter(i=>i.g===g).sort((a,b)=>b.s-a.s).slice(0,cap[g]));
+}
+function cmdkMark(title, q){
+  const esc = escapeHTML(title), w = q.trim().split(/\s+/)[0]; if(!w) return esc;
+  const i = esc.toLowerCase().indexOf(w.toLowerCase());
+  return i<0 ? esc : esc.slice(0,i)+'<mark>'+esc.slice(i,i+w.length)+'</mark>'+esc.slice(i+w.length);
+}
+function openCmdK(){
+  if(!currentUser() || document.querySelector('.cmdk-ov')) return;
+  const ov = document.createElement('div'); ov.className = 'cmdk-ov';
+  ov.innerHTML = `<div class="cmdk" role="dialog" aria-label="Paleta de comandos">
+    <div class="cmdk-in"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="text" id="cmdkInput" placeholder="Buscar cliente, demanda, tela ou ação..." autocomplete="off"></div>
+    <div class="cmdk-list" id="cmdkList"></div>
+    <div class="cmdk-foot"><span><kbd>↑↓</kbd>navegar</span><span><kbd>Enter</kbd>abrir</span><span><kbd>Esc</kbd>fechar</span></div></div>`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(()=>ov.classList.add('on'));
+  const input = ov.querySelector('#cmdkInput'), list = ov.querySelector('#cmdkList');
+  let items = [], sel = 0;
+  const draw = ()=>{
+    items = cmdkFilter(input.value); sel = Math.min(sel, Math.max(0, items.length-1));
+    if(!items.length){ list.innerHTML = `<div class="cmdk-empty">Nada encontrado pra “${escapeHTML(input.value)}”.</div>`; return; }
+    let g = '';
+    list.innerHTML = items.map((it,i)=>{
+      const head = it.g!==g ? `<div class="cmdk-g">${(g = it.g)}</div>` : '';
+      return head + `<div class="cmdk-it ${i===sel?'act':''}" data-i="${i}"><span class="ic" style="${it.iconBG?`background:${it.iconBG};`:''}">${it.icon||''}</span><span class="tx"><div>${cmdkMark(it.title, input.value)}</div>${it.sub?`<small>${escapeHTML(it.sub)}</small>`:''}</span><span class="go">↵</span></div>`;
+    }).join('');
+    list.querySelector('.cmdk-it.act')?.scrollIntoView({block:'nearest'});
+  };
+  const close = ()=>{ ov.classList.remove('on'); setTimeout(()=>ov.remove(), 150); };
+  const run = i=>{ const it = items[i]; if(!it) return; close(); setTimeout(()=>it.run(), 10); };
+  input.addEventListener('input', ()=>{ sel = 0; draw(); });
+  input.addEventListener('keydown', e=>{
+    if(e.key==='ArrowDown'){ e.preventDefault(); sel = (sel+1) % Math.max(1, items.length); draw(); }
+    else if(e.key==='ArrowUp'){ e.preventDefault(); sel = (sel-1+items.length) % Math.max(1, items.length); draw(); }
+    else if(e.key==='Enter'){ e.preventDefault(); run(sel); }
+    else if(e.key==='Escape'){ e.preventDefault(); close(); }
+  });
+  list.addEventListener('mousemove', e=>{ const it = e.target.closest('.cmdk-it'); if(it && Number(it.dataset.i)!==sel){ sel = Number(it.dataset.i); list.querySelectorAll('.cmdk-it').forEach(x=>x.classList.toggle('act', Number(x.dataset.i)===sel)); } });
+  list.addEventListener('click', e=>{ const it = e.target.closest('.cmdk-it'); if(it) run(Number(it.dataset.i)); });
+  ov.addEventListener('mousedown', e=>{ if(e.target===ov) close(); });
+  draw(); input.focus();
+}
+document.addEventListener('keydown', e=>{
+  if((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey && e.key.toLowerCase()==='k'){
+    if(!currentUser() || document.getElementById('app').style.display==='none') return;
+    e.preventDefault();
+    document.querySelector('.cmdk-ov') ? document.querySelector('.cmdk-ov').remove() : openCmdK();
+  }
+});
+(function(){
+  const wrap = document.getElementById('searchWrap'); if(!wrap) return;
+  const k = document.createElement('span'); k.className = 'kbd-hint'; k.title = 'Paleta de comandos';
+  k.textContent = /Mac|iPhone|iPad/.test(navigator.platform) ? '⌘K' : 'Ctrl K';
+  k.addEventListener('mousedown', e=>{ e.preventDefault(); openCmdK(); });
+  wrap.appendChild(k);
+  document.getElementById('globalSearch').addEventListener('input', e=>{ k.style.display = e.target.value ? 'none' : ''; });
+})();
+
+/* ---------- 🎯 MODO FOCO + POMODORO (timer salvo por pessoa no navegador) ---------- */
+const POMO_DUR = {foco:25*60, pausa:5*60, longa:15*60};
+const POMO_LABEL = {foco:'Foco', pausa:'Pausa curta', longa:'Pausa longa'};
+function pomoKey(){ return 'smkos_pomo_' + (currentUser()?.id||''); }
+function pomoGet(){ try{ const p = JSON.parse(localStorage.getItem(pomoKey())||'null'); if(p && POMO_DUR[p.mode]) return p; }catch(e){} return {mode:'foco', endAt:null, left:POMO_DUR.foco, cycles:0}; }
+function pomoSet(p){ try{ localStorage.setItem(pomoKey(), JSON.stringify(p)); }catch(e){} }
+function pomoLeft(p){ return p.endAt ? Math.max(0, Math.round((p.endAt-Date.now())/1000)) : p.left; }
+const fmtClock = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
+function pomoChime(){
+  buzz([60,80,60,80,120]);
+  if(!soundOn()) return;
+  try{ const AC = window.AudioContext||window.webkitAudioContext, ac = pomoChime._ac || (pomoChime._ac = new AC()), t = ac.currentTime;
+    [880,1175,1568].forEach((f,i)=>{ const o = ac.createOscillator(), g = ac.createGain(); o.type='sine'; o.frequency.value=f;
+      g.gain.setValueAtTime(.0001,t+i*.18); g.gain.exponentialRampToValueAtTime(.16,t+i*.18+.02); g.gain.exponentialRampToValueAtTime(.0001,t+i*.18+1.1);
+      o.connect(g).connect(ac.destination); o.start(t+i*.18); o.stop(t+i*.18+1.2); });
+  }catch(e){}
+}
+let pomoTimer = null;
+function pomoTick(){
+  const p = pomoGet();
+  if(p.endAt && Date.now() >= p.endAt){
+    // acabou o ciclo: toca o sininho e já deixa o próximo pronto (sem iniciar sozinho)
+    const cycles = p.mode==='foco' ? (p.cycles||0)+1 : (p.cycles||0);
+    const next = p.mode==='foco' ? (cycles%4===0 ? 'longa' : 'pausa') : 'foco';
+    pomoSet({mode:next, endAt:null, left:POMO_DUR[next], cycles});
+    pomoChime();
+    try{ if(document.hidden && 'Notification' in window && Notification.permission==='granted') new Notification(p.mode==='foco' ? 'Foco concluído! Bora de pausa ☕' : 'Pausa acabou — bora focar 🎯'); }catch(e){}
+  }
+  drawFocusTimer(); drawFocusPill();
+}
+function ensurePomoTimer(){ if(!pomoTimer) pomoTimer = setInterval(pomoTick, 1000); }
+function drawFocusPill(){
+  const p = pomoGet(), running = !!p.endAt, ovOpen = !!document.querySelector('.focus-ov');
+  let pill = document.querySelector('.focus-pill');
+  if(!running || ovOpen || !currentUser()){ pill?.remove(); return; }
+  if(!pill){ pill = document.createElement('div'); pill.className = 'focus-pill'; pill.title = 'Abrir o modo foco'; pill.addEventListener('click', openFocusMode); document.body.appendChild(pill); }
+  pill.classList.toggle('pausa', p.mode!=='foco');
+  pill.innerHTML = `<i></i>${p.mode==='foco'?'🎯':'☕'} ${fmtClock(pomoLeft(p))}`;
+}
+function drawFocusTimer(){
+  const ov = document.querySelector('.focus-ov'); if(!ov) return;
+  const p = pomoGet(), left = pomoLeft(p), total = POMO_DUR[p.mode], C = 2*Math.PI*46;
+  ov.classList.toggle('running', !!p.endAt);
+  ov.querySelector('.focus-time b').textContent = fmtClock(left);
+  ov.querySelector('.focus-time span').textContent = `${POMO_LABEL[p.mode]} · ${p.cycles||0} ${p.cycles===1?'ciclo':'ciclos'} hoje`;
+  ov.querySelectorAll('.fg,.glow').forEach(x=>x.style.strokeDashoffset = (C * (1 - left/total)).toFixed(1));
+  ov.querySelector('#pomoPlay').textContent = p.endAt ? '⏸ Pausar' : (left<total ? '▶ Continuar' : '▶ Começar');
+  ov.querySelectorAll('[data-pmode]').forEach(b=>b.classList.toggle('sel', b.dataset.pmode===p.mode));
+}
+function focusTasksHTML(){
+  const me = currentUser();
+  const mine = state.tasks.filter(t=>t.assignee_id===me.id && !DONE_STATUSES.includes(t.status))
+    .sort((a,b)=>(isTaskLate(b)-isTaskLate(a)) || (a.due_date||'9999').localeCompare(b.due_date||'9999')).slice(0,8);
+  if(!mine.length) return `<div class="focus-list">${emptyStateHTML('sun','Nada pendente com você.','Aproveita o foco pra adiantar a próxima pauta ✨')}</div>`;
+  return `<div class="focus-list"><h3>Suas demandas, por ordem de prazo</h3>${mine.map(t=>{
+    const c = clientById(t.client_id), late = isTaskLate(t);
+    return `<div class="task-card" data-id="${t.id}" style="cursor:pointer;">
+      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
+        <div style="min-width:0;"><div class="tclient"><span style="color:${clientColor(t.client_id)}">${escapeHTML(c?.name||'—')}</span></div><div class="ttitle">${escapeHTML(t.title)}</div></div>
+        <span style="flex-shrink:0;">${statusBadgeHTML(t.status)}</span></div>
+      <div class="tmeta"><span>${escapeHTML(t.task_type||'')}</span><span class="tdue" style="${late?'color:var(--red);font-weight:600;':''}">${late?'⏰ ':''}${fmtDate(t.due_date)}</span></div></div>`;
+  }).join('')}</div>`;
+}
+function openFocusMode(){
+  if(!currentUser() || document.querySelector('.focus-ov')) return;
+  const ov = document.createElement('div'); ov.className = 'focus-ov';
+  const C = (2*Math.PI*46).toFixed(1);
+  ov.innerHTML = `<button class="btn small focus-x" id="focusClose">✕ Sair do foco</button>
+    <div class="focus-kick">Modo foco · ${escapeHTML(currentUser().full_name.split(' ')[0])}</div>
+    <div class="focus-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="focusGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FB0FF"/><stop offset="1" stop-color="#3E6FF0"/></linearGradient></defs>
+      <circle class="bg" cx="50" cy="50" r="46"/><circle class="glow" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="0"/><circle class="fg" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
+      <div class="focus-time"><b>25:00</b><span></span></div></div>
+    <div class="focus-ctrl"><button class="btn primary" id="pomoPlay">▶ Começar</button><button class="btn" id="pomoReset" title="Zerar">↺</button></div>
+    <div class="focus-modes">${Object.keys(POMO_DUR).map(m=>`<button type="button" data-pmode="${m}">${POMO_LABEL[m]} · ${POMO_DUR[m]/60}min</button>`).join('')}</div>
+    ${focusTasksHTML()}`;
+  document.body.appendChild(ov);
+  requestAnimationFrame(()=>ov.classList.add('on'));
+  ov.querySelector('#focusClose').addEventListener('click', closeFocusMode);
+  ov.querySelector('#pomoPlay').addEventListener('click', ()=>{
+    const p = pomoGet();
+    if(p.endAt) pomoSet({...p, left:pomoLeft(p), endAt:null});
+    else { pomoSet({...p, endAt:Date.now() + pomoLeft(p)*1000}); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} }
+    buzz(10); ensurePomoTimer(); drawFocusTimer();
+  });
+  ov.querySelector('#pomoReset').addEventListener('click', ()=>{ const p = pomoGet(); pomoSet({...p, endAt:null, left:POMO_DUR[p.mode]}); drawFocusTimer(); });
+  ov.querySelectorAll('[data-pmode]').forEach(b=>b.addEventListener('click', ()=>{ const p = pomoGet(); pomoSet({...p, mode:b.dataset.pmode, endAt:null, left:POMO_DUR[b.dataset.pmode]}); drawFocusTimer(); }));
+  ov.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click', ()=>openTaskModal(c.dataset.id)));
+  ov._esc = e=>{ if(e.key==='Escape' && !document.querySelector('.modal-overlay.open') && !document.querySelector('.cmdk-ov')) closeFocusMode(); };
+  document.addEventListener('keydown', ov._esc);
+  ensurePomoTimer(); drawFocusTimer(); drawFocusPill();
+}
+function closeFocusMode(){
+  const ov = document.querySelector('.focus-ov'); if(!ov) return;
+  document.removeEventListener('keydown', ov._esc);
+  ov.remove(); drawFocusPill();
+}
+// retoma o timer (e a pílula flutuante) se a pessoa recarregar a página com o pomodoro rodando
+setTimeout(()=>{ if(currentUser() && pomoGet().endAt){ ensurePomoTimer(); drawFocusPill(); } }, 1500);
+(function(){
+  const tt = document.getElementById('themeToggle'); if(!tt) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'theme-toggle focus-btn'; b.id = 'focusModeBtn'; b.title = 'Modo foco (Pomodoro)'; b.setAttribute('aria-label','Modo foco');
+  b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>`;
+  b.addEventListener('click', openFocusMode);
+  tt.parentNode.insertBefore(b, tt);
+})();
+
+/* ---------- 😀 REAÇÕES NOS COMENTÁRIOS (comment.reactions = {emoji:[userIds]}) ---------- */
+const REACTIONS = ['🔥','👏','😂','❤️','👀','✅'];
+function reactRowHTML(c){
+  const me = currentUser()?.id, r = c.reactions || {};
+  const chips = Object.entries(r).filter(([,u])=>u?.length).map(([e,u])=>`<button type="button" class="react-chip ${u.includes(me)?'mine':''}" data-react="${e}" data-cid="${c.id}" title="${escapeHTML(u.map(id=>userById(id)?.full_name?.split(' ')[0]||'?').join(', '))}">${e} <b>${u.length}</b></button>`).join('');
+  return `<div class="react-row" data-react-row="${c.id}">${chips}<button type="button" class="react-add" data-react-add="${c.id}" title="Reagir">☺＋</button></div>`;
+}
+function toggleReaction(cid, emoji){
+  const c = state.task_comments.find(x=>x.id===cid), me = currentUser()?.id; if(!c || !me) return null;
+  const r = c.reactions = {...(c.reactions||{})};
+  const list = r[emoji] || [];
+  r[emoji] = list.includes(me) ? list.filter(x=>x!==me) : [...list, me];
+  if(!r[emoji].length) delete r[emoji];
+  if(!Object.keys(r).length) delete c.reactions;
+  saveState(state); buzz(8);
+  return c;
+}
+document.addEventListener('click', e=>{
+  const add = e.target.closest?.('[data-react-add]'), chip = e.target.closest?.('[data-react]');
+  document.querySelectorAll('.react-pick').forEach(p=>{ if(!add || !p.parentNode.contains(add)) { p.remove(); } });
+  if(add){
+    e.stopPropagation();
+    const row = add.parentNode;
+    if(row.querySelector('.react-pick')){ row.querySelector('.react-pick').remove(); return; }
+    const pick = document.createElement('div'); pick.className = 'react-pick';
+    pick.innerHTML = REACTIONS.map(x=>`<button type="button" data-react="${x}" data-cid="${add.dataset.reactAdd}">${x}</button>`).join('');
+    row.appendChild(pick);
+    return;
+  }
+  if(chip){
+    e.stopPropagation();
+    const emoji = chip.dataset.react, c = toggleReaction(chip.dataset.cid, emoji); if(!c) return;
+    const row = document.querySelector(`[data-react-row="${c.id}"]`); if(!row) return;
+    row.outerHTML = reactRowHTML(c);
+    document.querySelector(`[data-react-row="${c.id}"] .react-chip[data-react="${emoji}"]`)?.classList.add('pop');
+  }
+}, true);
+
+/* ---------- 🟦 MAPA DE CALOR DE ENTREGAS (1ª aprovação de cada demanda, por dia) ---------- */
+function dayKeyOf(ts){ const d = new Date(ts); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+let _heatMemo = {ref:null, len:-1, byUser:{}};
+function deliveriesByDay(userId){
+  const cm = state.task_comments || [];
+  if(_heatMemo.ref!==cm || _heatMemo.len!==cm.length){
+    const first = {};
+    taskActivity().approved.forEach(a=>{ if(!first[a.task_id] || a.at<first[a.task_id]) first[a.task_id] = a.at; });
+    const byId = new Map([...state.tasks, ...Object.values(state.archived_tasks||{}).flat()].map(t=>[t.id,t]));
+    const byUser = {}, byApprover = {}, executors = new Set([...byId.values()].map(t=>t.assignee_id).filter(Boolean));
+    Object.entries(first).forEach(([tid, at])=>{ const t = byId.get(tid); if(!t?.assignee_id) return; const m = byUser[t.assignee_id] = byUser[t.assignee_id] || {}; const k = dayKeyOf(at); m[k] = (m[k]||0)+1; });
+    // quem não executa (social media, estratégia) aparece pelas aprovações que fez
+    const toApproved = `para "${STATUS_LABEL.aprovado}"`;
+    cm.forEach(c=>{ if(!c.created_at || !c.user_id || !isStatusMove(c) || !c.content.endsWith(toApproved)) return; const m = byApprover[c.user_id] = byApprover[c.user_id] || {}; const k = dayKeyOf(c.created_at); m[k] = (m[k]||0)+1; });
+    _heatMemo = {ref:cm, len:cm.length, byUser, byApprover, executors};
+  }
+  return _heatMemo.executors.has(userId) ? (_heatMemo.byUser[userId] || {}) : (_heatMemo.byApprover[userId] || {});
+}
+function heatKind(userId, n=2){ deliveriesByDay(userId); const ex = _heatMemo.executors.has(userId); return ex ? (n===1?'entrega':'entregas') : (n===1?'aprovação':'aprovações'); }
+const MES_ABREV = ['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+function heatmapHTML(userId, weeks=26, {cell=11, anim=true, foot=true}={}){
+  const days = deliveriesByDay(userId);
+  const today = new Date(); today.setHours(0,0,0,0);
+  const start = new Date(today); start.setDate(start.getDate() - today.getDay() - (weeks-1)*7);
+  let cells = '', months = '', total = 0, best = null, lastMonth = -1;
+  for(let w=0; w<weeks; w++){
+    const colStart = new Date(start); colStart.setDate(start.getDate() + w*7);
+    const m = colStart.getMonth();
+    months += `<span>${m!==lastMonth && (w>0 || colStart.getDate()<=7) ? MES_ABREV[m] : ''}</span>`; lastMonth = m;
+    for(let d=0; d<7; d++){
+      const day = new Date(start); day.setDate(start.getDate() + w*7 + d);
+      if(day>today){ cells += `<i class="fut"></i>`; continue; }
+      const k = dayKeyOf(day.getTime()), n = days[k] || 0;
+      total += n; if(n && (!best || n>best.n)) best = {k, n};
+      const lv = n>=4 ? 4 : n;
+      cells += `<i class="${lv?'l'+lv:''}" style="--c:${w}" title="${String(day.getDate()).padStart(2,'0')}/${String(day.getMonth()+1).padStart(2,'0')} — ${n} ${heatKind(userId, n)}"></i>`;
+    }
+  }
+  return `<div class="heat ${anim?'anim':''}" style="--hs:${cell}px;">
+    <div class="heat-months">${months}</div>
+    <div class="heat-grid">${cells}</div>
+    ${foot?`<div class="heat-foot"><span><b style="color:var(--text);">${total}</b> ${heatKind(userId, total)} em ${Math.round(weeks/4.35)} meses${best?` · melhor dia: ${best.k.slice(8,10)}/${best.k.slice(5,7)} (${best.n})`:''}</span>
+      <span class="lg">menos <i style="background:rgba(255,255,255,.05)"></i><i style="background:rgba(76,126,255,.3)"></i><i style="background:rgba(76,126,255,.55)"></i><i style="background:rgba(91,140,255,.8)"></i><i style="background:#8FB0FF"></i> mais</span></div>`:''}
+  </div>`;
+}
+function teamHeatHTML(){
+  const users = scoredUsers(); if(!users.length) return '';
+  return `<div class="card" style="margin-top:16px;">
+    <div class="section-title" style="margin-bottom:6px;">🟦 Ritmo do time <span class="hint">cada quadradinho é um dia · entregas de quem executa, aprovações de quem revisa · últimas 26 semanas</span></div>
+    ${users.map(u=>{ const n = Object.entries(deliveriesByDay(u.id)).filter(([k])=>k>=dayKeyOf(Date.now()-182*86400000)).reduce((s,[,v])=>s+v,0);
+      return `<div class="heat-team-row"><div style="font-weight:600;font-size:13px;">${escapeHTML(u.full_name)}<div style="font-size:11px;color:var(--text-faint);font-weight:400;">${ROLE_LABEL[u.role]||''}</div></div>${heatmapHTML(u.id, 26, {cell:11, foot:false})}<div class="mono" style="font-size:13px;text-align:right;"><b>${n}</b><div style="font-size:10.5px;color:var(--text-faint);">${heatKind(u.id, n)}</div></div></div>`; }).join('')}
+  </div>`;
+}
 </script>
 </body>
 </html>
