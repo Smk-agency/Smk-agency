@@ -1615,6 +1615,60 @@ html[data-theme="light"] .heat-grid i.l1{background:rgba(62,111,240,.25);} html[
 .heat-team-row:last-child{border-bottom:none;}
 @media (max-width:700px){ .heat-team-row{grid-template-columns:1fr;gap:6px;} }
 @media (prefers-reduced-motion: reduce){ .heat.anim .heat-grid i,.react-chip.pop,.focus-ov.running .focus-ring .glow{animation:none;} }
+/* modo foco v2: opções de sessão + fila */
+.focus-h{font:700 clamp(24px,4vw,34px) var(--font-display);letter-spacing:-.03em;color:#fff;margin:14px 0 6px;text-align:center;}
+.focus-p{color:var(--text-muted);font-size:13.5px;text-align:center;max-width:520px;margin-bottom:26px;line-height:1.5;}
+.fo-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px;width:min(980px,100%);}
+.fo-card{text-align:left;cursor:pointer;padding:18px;border-radius:16px;border:1px solid var(--border);background:linear-gradient(160deg,rgba(255,255,255,.05),rgba(255,255,255,0) 45%),var(--surface);color:var(--text);display:flex;flex-direction:column;gap:4px;transition:transform .15s,border-color .15s,box-shadow .15s;font-family:var(--font-body);}
+.fo-card:hover{transform:translateY(-3px);border-color:rgba(91,140,255,.5);box-shadow:0 18px 40px -20px rgba(76,126,255,.55);}
+.fo-card.rec{border-color:rgba(91,140,255,.6);background:radial-gradient(120% 120% at 0% 0%,rgba(62,111,240,.25),transparent 60%),var(--surface);box-shadow:0 0 0 1px rgba(91,140,255,.25),0 20px 46px -22px rgba(76,126,255,.7);}
+.fo-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+.fo-ic{font-size:22px;}
+.fo-badge{font:600 10px var(--font-mono);letter-spacing:.12em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:rgba(76,126,255,.18);color:#AFC6FF;}
+.fo-time{font:700 34px var(--font-display);letter-spacing:-.03em;color:#fff;line-height:1.05;}
+.fo-title{font-weight:600;font-size:14px;}
+.fo-desc{font-size:12px;color:var(--text-faint);}
+.fo-list{display:flex;flex-direction:column;gap:3px;margin-top:10px;padding-top:10px;border-top:1px solid var(--border);}
+.fo-list span{font-size:12px;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.fo-list span::before{content:'› ';color:var(--text-faint);}
+.fo-list .more{color:var(--text-faint);}
+.fo-list .more::before{content:'';}
+.fq-top{width:min(860px,100%);display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;}
+.fq-head{width:min(860px,100%);display:grid;grid-template-columns:200px 1fr;gap:28px;align-items:center;padding:24px;border-radius:20px;border:1px solid rgba(91,140,255,.4);background:radial-gradient(120% 140% at 0% 0%,rgba(62,111,240,.2),transparent 60%),var(--surface);box-shadow:0 30px 70px -36px rgba(76,126,255,.6);}
+.focus-ring.sm{width:200px;margin:0;}
+.focus-ring.sm .focus-time b{font-size:36px;}
+.focus-ring.sm .focus-time span{font-size:11px;text-align:center;max-width:120px;}
+.fq-now{min-width:0;}
+.fq-label{font:600 10.5px var(--font-mono);letter-spacing:.3em;text-transform:uppercase;color:#7f9cff;margin-bottom:6px;}
+.fq-client{font:600 11.5px var(--font-mono);letter-spacing:.06em;text-transform:uppercase;}
+.fq-cur-title{font:700 clamp(20px,3vw,28px) var(--font-display);letter-spacing:-.02em;color:#fff;line-height:1.15;margin:4px 0 8px;}
+.fq-meta{display:flex;flex-wrap:wrap;gap:6px 12px;font-size:12px;color:var(--text-faint);align-items:center;}
+.fq-tag{font-size:11px;font-weight:600;padding:2px 8px;border-radius:99px;}
+.fq-tag.late{background:rgba(224,85,61,.16);color:#FF8A73;}
+.fq-tag.alt{background:rgba(224,166,45,.16);color:#F2C266;}
+.fq-tag.today{background:rgba(76,126,255,.16);color:#AFC6FF;}
+.fq-brief{margin-top:10px;font-size:12.5px;color:var(--text-muted);line-height:1.5;padding:10px 12px;border-radius:10px;background:var(--surface-2);white-space:pre-wrap;}
+.fq-tt{display:flex;align-items:baseline;gap:10px;margin-top:14px;}
+.fq-tt b{font:700 22px var(--font-mono);color:#fff;font-variant-numeric:tabular-nums;}
+.fq-tt span{font-size:12px;color:var(--text-faint);}
+.fq-bar{margin-top:6px;}
+.fq-bar i{transition:width 1s linear;}
+.fq-bar i.over{background:linear-gradient(90deg,#E0A62D,#E0553D)!important;}
+.fq-actions{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px;}
+.focus-break{width:min(860px,100%);display:none;align-items:center;justify-content:space-between;gap:10px;margin-top:12px;padding:12px 16px;border-radius:14px;border:1px solid rgba(31,169,124,.4);background:rgba(31,169,124,.1);font-size:13px;}
+.focus-break.on{display:flex;}
+.fq-list{width:min(860px,100%);margin-top:20px;display:flex;flex-direction:column;gap:8px;}
+.fq-list-h{font:600 10.5px var(--font-mono);letter-spacing:.25em;text-transform:uppercase;color:var(--text-faint);margin-bottom:2px;}
+.fq-item{display:flex;gap:14px;align-items:center;padding:12px 14px;border-radius:14px;border:1px solid var(--border);background:var(--surface);cursor:pointer;transition:border-color .15s,transform .15s;}
+.fq-item:hover{border-color:rgba(91,140,255,.4);transform:translateX(3px);}
+.fq-n{width:30px;height:30px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font:700 13px var(--font-mono);border:1px solid var(--border);color:var(--text-muted);}
+.fq-body{min-width:0;flex:1;}
+.fq-title{font-weight:600;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin:1px 0 4px;}
+.focus-done{text-align:center;margin-top:8vh;display:flex;flex-direction:column;align-items:center;gap:10px;}
+.focus-done .big{font-size:64px;animation:reactPop .7s cubic-bezier(.3,1.8,.5,1);}
+.focus-done h2{font:700 32px var(--font-display);color:#fff;letter-spacing:-.03em;}
+.focus-done p{color:var(--text-muted);font-size:14px;margin-bottom:10px;}
+@media (max-width:700px){ .fq-head{grid-template-columns:1fr;justify-items:center;text-align:center;} .fq-meta,.fq-actions,.fq-tt{justify-content:center;} .focus-ring.sm{width:170px;} }
 </style>
 </head>
 <body>
@@ -8772,7 +8826,7 @@ function cmdkSource(){
   const act = (icon, title, sub, run, kw='') => items.push({g:'Ações', icon, title, sub, run, kw});
   act('➕', 'Nova demanda', 'Criar uma demanda', ()=>{ closeAllModals(); document.getElementById('newTaskBtn').click(); }, 'criar task tarefa');
   if(canEditClients()) act('👤', 'Novo cliente', 'Cadastrar cliente', ()=>{ closeAllModals(); openClientModal(); }, 'criar cadastrar');
-  act('🎯', 'Modo foco', 'Só suas demandas + timer Pomodoro', ()=>{ closeAllModals(); openFocusMode(); }, 'pomodoro timer concentrar');
+  act('🎯', 'Modo foco', 'Sessão montada pela sua fila do dia', ()=>{ closeAllModals(); openFocusMode(); }, 'pomodoro timer concentrar');
   act('🌗', 'Alternar tema claro/escuro', '', ()=>document.getElementById('themeToggle').click(), 'dark light modo noturno');
   act('🙂', 'Meu perfil', 'Cor do avatar, rubrica, mapa de entregas', ()=>{ closeAllModals(); openProfileModal(); }, 'perfil assinatura');
   document.querySelectorAll('.nav-item[data-view]').forEach(b=>{
@@ -8859,107 +8913,220 @@ document.addEventListener('keydown', e=>{
   document.getElementById('globalSearch').addEventListener('input', e=>{ k.style.display = e.target.value ? 'none' : ''; });
 })();
 
-/* ---------- 🎯 MODO FOCO + POMODORO (timer salvo por pessoa no navegador) ---------- */
-const POMO_DUR = {foco:25*60, pausa:5*60, longa:15*60};
-const POMO_LABEL = {foco:'Foco', pausa:'Pausa curta', longa:'Pausa longa'};
-function pomoKey(){ return 'smkos_pomo_' + (currentUser()?.id||''); }
-function pomoGet(){ try{ const p = JSON.parse(localStorage.getItem(pomoKey())||'null'); if(p && POMO_DUR[p.mode]) return p; }catch(e){} return {mode:'foco', endAt:null, left:POMO_DUR.foco, cycles:0}; }
-function pomoSet(p){ try{ localStorage.setItem(pomoKey(), JSON.stringify(p)); }catch(e){} }
-function pomoLeft(p){ return p.endAt ? Math.max(0, Math.round((p.endAt-Date.now())/1000)) : p.left; }
-const fmtClock = s => String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0');
-function pomoChime(){
+/* ---------- 🎯 MODO FOCO (sessão montada a partir da fila do dia; salva por pessoa no navegador) ---------- */
+// tempo estimado por tipo de demanda (min) — alteração solicitada conta como ajuste rápido
+const FOCUS_EST = {Reels:45, 'Vídeo':60, Carrossel:35, Arte:25, Post:25, Story:15, Thumbnail:15, Copy:20, Fotografia:40, 'Estratégia':40, Outro:30};
+const FOCUS_ALT_EST = 15, FOCUS_BREAK_EVERY = 50*60;
+const FOCUS_PRIO_RANK = {urgente:0, alta:1, media:2, baixa:3};
+function focusEst(t){ return t.status==='alteracao_solicitada' ? FOCUS_ALT_EST : (FOCUS_EST[t.task_type] || 30); }
+function isFocusOpen(t){ return !!t && !DONE_STATUSES.includes(t.status) && t.status!=='em_revisao'; }
+// ordem de execução: atrasadas (mais antiga primeiro) → alterações pedidas → do dia (por prioridade) → próximas
+function focusBucket(t){
+  const today = todayISO();
+  if(t.due_date && t.due_date<today) return 0;
+  if(t.status==='alteracao_solicitada') return 1;
+  if(t.due_date===today) return 2;
+  return 3;
+}
+function focusQueue(){
+  const me = currentUser();
+  return state.tasks.filter(t=>t.assignee_id===me.id && isFocusOpen(t)).sort((a,b)=>
+    (focusBucket(a)-focusBucket(b)) || (a.due_date||'9999').localeCompare(b.due_date||'9999') ||
+    ((FOCUS_PRIO_RANK[a.priority]??2)-(FOCUS_PRIO_RANK[b.priority]??2)) || ((a.created_at||0)-(b.created_at||0)));
+}
+const fmtClock = s => { s = Math.max(0, Math.round(s)); const h = Math.floor(s/3600), m = Math.floor(s%3600/60), ss = s%60; return (h?h+':'+String(m).padStart(2,'0'):String(m).padStart(2,'0'))+':'+String(ss).padStart(2,'0'); };
+const fmtDur = min => min<60 ? `${min} min` : `${Math.floor(min/60)}h${min%60?String(min%60).padStart(2,'0'):''}`;
+function focusOptions(){
+  const q = focusQueue(), sum = ts => ts.reduce((s,t)=>s+focusEst(t),0);
+  const late = q.filter(t=>focusBucket(t)===0), urgentes = q.filter(t=>focusBucket(t)<=2);
+  const week = q.filter(t=>focusBucket(t)<=2 || (t.due_date && t.due_date<=addDaysISO(todayISO(), 7)));
+  const opts = [];
+  const sug = urgentes.length ? urgentes : q.slice(0,3);
+  if(sug.length){
+    const min = sum(sug), heavy = min>=240, mid = min>=120;
+    opts.push({key:'sug', icon:heavy?'🔥':mid?'⚡':'🌤️', title:'Sessão sugerida', badge:heavy?'Dia puxado':mid?'Dia cheio':'Dia tranquilo',
+      desc: urgentes.length ? [late.length && `${late.length} atrasada${late.length>1?'s':''}`, urgentes.filter(t=>focusBucket(t)===2).length && `${urgentes.filter(t=>focusBucket(t)===2).length} pra hoje`, urgentes.filter(t=>focusBucket(t)===1).length && `${urgentes.filter(t=>focusBucket(t)===1).length} ajuste${urgentes.filter(t=>focusBucket(t)===1).length>1?'s':''}`].filter(Boolean).join(' · ') : 'nada atrasado nem pra hoje — adianta as próximas',
+      tasks:sug, min, rec:true});
+  }
+  if(late.length && late.length<sug.length) opts.push({key:'late', icon:'⏰', title:'Só as atrasadas', desc:`apaga o incêndio primeiro`, tasks:late, min:sum(late)});
+  if(week.length>sug.length) opts.push({key:'week', icon:'🚀', title:'Adiantar a semana', desc:`tudo que vence até ${fmtDate(addDaysISO(todayISO(),7)).slice(0,5)}`, tasks:week, min:sum(week)});
+  if(q.length) opts.push({key:'sprint', icon:'⏱️', title:'Sprint de 25 min', desc:'só a primeira da fila, sem enrolação', tasks:[q[0]], min:25, fixed:true});
+  return opts;
+}
+function addDaysISO(iso, n){ const d = new Date(iso+'T12:00:00'); d.setDate(d.getDate()+n); return d.toISOString().slice(0,10); }
+
+function focusKey(){ return 'smkos_focus_' + (currentUser()?.id||''); }
+function focusGet(){ try{ const s = JSON.parse(localStorage.getItem(focusKey())||'null'); if(s && Array.isArray(s.ids)) return s; }catch(e){} return null; }
+function focusSet(s){ try{ s ? localStorage.setItem(focusKey(), JSON.stringify(s)) : localStorage.removeItem(focusKey()); }catch(e){} }
+const focusRun = s => s.since ? (Date.now()-s.since)/1000 : 0;
+const focusElapsed = s => s.acc + focusRun(s);
+const focusTaskElapsed = s => s.tacc + focusRun(s);
+function focusFlush(s){ const r = focusRun(s); s.acc += r; s.tacc += r; if(s.since) s.since = Date.now(); return s; }
+// tira da fila o que já foi pra revisão/aprovado (inclusive por outra pessoa), mantendo a demanda atual se ainda aberta
+function focusPrune(s){
+  const cur = s.ids[s.idx];
+  const keep = s.ids.filter(id=>isFocusOpen(state.tasks.find(t=>t.id===id)));
+  if(cur && !keep.includes(cur)){ focusFlush(s); s.done = (s.done||0)+1; s.tacc = 0; }
+  s.idx = Math.max(0, cur && keep.includes(cur) ? keep.indexOf(cur) : Math.min(s.idx, keep.length));
+  s.ids = keep;
+  return s;
+}
+function focusChime(){
   buzz([60,80,60,80,120]);
   if(!soundOn()) return;
-  try{ const AC = window.AudioContext||window.webkitAudioContext, ac = pomoChime._ac || (pomoChime._ac = new AC()), t = ac.currentTime;
+  try{ const AC = window.AudioContext||window.webkitAudioContext, ac = focusChime._ac || (focusChime._ac = new AC()), t = ac.currentTime;
     [880,1175,1568].forEach((f,i)=>{ const o = ac.createOscillator(), g = ac.createGain(); o.type='sine'; o.frequency.value=f;
       g.gain.setValueAtTime(.0001,t+i*.18); g.gain.exponentialRampToValueAtTime(.16,t+i*.18+.02); g.gain.exponentialRampToValueAtTime(.0001,t+i*.18+1.1);
       o.connect(g).connect(ac.destination); o.start(t+i*.18); o.stop(t+i*.18+1.2); });
   }catch(e){}
 }
-let pomoTimer = null;
-function pomoTick(){
-  const p = pomoGet();
-  if(p.endAt && Date.now() >= p.endAt){
-    // acabou o ciclo: toca o sininho e já deixa o próximo pronto (sem iniciar sozinho)
-    const cycles = p.mode==='foco' ? (p.cycles||0)+1 : (p.cycles||0);
-    const next = p.mode==='foco' ? (cycles%4===0 ? 'longa' : 'pausa') : 'foco';
-    pomoSet({mode:next, endAt:null, left:POMO_DUR[next], cycles});
-    pomoChime();
-    try{ if(document.hidden && 'Notification' in window && Notification.permission==='granted') new Notification(p.mode==='foco' ? 'Foco concluído! Bora de pausa ☕' : 'Pausa acabou — bora focar 🎯'); }catch(e){}
+function startFocusSession(opt){
+  focusSet({ids:opt.tasks.map(t=>t.id), est:Object.fromEntries(opt.tasks.map(t=>[t.id, opt.fixed ? opt.min : focusEst(t)])), planned:opt.min*60,
+    idx:0, acc:0, tacc:0, since:Date.now(), done:0, breaks:0, startedAt:Date.now(), label:opt.title});
+  buzz(15); drawFocus(); ensureFocusTimer();
+}
+
+let focusTimer = null;
+function ensureFocusTimer(){ if(!focusTimer) focusTimer = setInterval(focusTick, 1000); }
+function focusTick(){
+  const s = focusGet();
+  if(!s){ drawFocusPill(); return; }
+  if(s.since){
+    const el = focusElapsed(s), n = Math.floor(el / FOCUS_BREAK_EVERY);
+    if(n > (s.breaks||0)){ s.breaks = n; focusSet(s); focusChime(); document.querySelector('.focus-ov .focus-break')?.classList.add('on'); }
   }
-  drawFocusTimer(); drawFocusPill();
+  updateFocusNumbers(); drawFocusPill();
 }
-function ensurePomoTimer(){ if(!pomoTimer) pomoTimer = setInterval(pomoTick, 1000); }
 function drawFocusPill(){
-  const p = pomoGet(), running = !!p.endAt, ovOpen = !!document.querySelector('.focus-ov');
+  const s = focusGet(), ovOpen = !!document.querySelector('.focus-ov');
   let pill = document.querySelector('.focus-pill');
-  if(!running || ovOpen || !currentUser()){ pill?.remove(); return; }
-  if(!pill){ pill = document.createElement('div'); pill.className = 'focus-pill'; pill.title = 'Abrir o modo foco'; pill.addEventListener('click', openFocusMode); document.body.appendChild(pill); }
-  pill.classList.toggle('pausa', p.mode!=='foco');
-  pill.innerHTML = `<i></i>${p.mode==='foco'?'🎯':'☕'} ${fmtClock(pomoLeft(p))}`;
+  if(!s || !s.since || ovOpen || !currentUser()){ pill?.remove(); return; }
+  const t = state.tasks.find(x=>x.id===s.ids[s.idx]);
+  if(!pill){ pill = document.createElement('div'); pill.className = 'focus-pill'; pill.title = 'Voltar pro modo foco'; pill.addEventListener('click', openFocusMode); document.body.appendChild(pill); }
+  pill.innerHTML = `<i></i>🎯 ${escapeHTML((t?.title||'Foco').slice(0,22))} · ${fmtClock(focusTaskElapsed(s))}`;
 }
-function drawFocusTimer(){
+function updateFocusNumbers(){
+  const ov = document.querySelector('.focus-ov'), s = focusGet(); if(!ov || !s) return;
+  const cur = state.tasks.find(t=>t.id===s.ids[s.idx]); if(!cur) return;
+  const el = focusElapsed(s), tel = focusTaskElapsed(s), budget = (s.est[cur.id]||30)*60, over = tel>budget;
+  const set = (id, v) => { const e = ov.querySelector('#'+id); if(e) e.textContent = v; };
+  set('fqTaskTime', fmtClock(tel)); set('fqSessTime', fmtClock(el));
+  const tb = ov.querySelector('#fqTaskBar'); if(tb){ tb.style.width = Math.min(100, tel/budget*100).toFixed(1)+'%'; tb.classList.toggle('over', over); }
+  const ot = ov.querySelector('#fqOver'); if(ot) ot.textContent = over ? `+${fmtClock(tel-budget)} além do previsto` : `faltam ~${fmtClock(budget-tel)}`;
+  const C = 2*Math.PI*46, p = Math.min(1, el/Math.max(1, s.planned));
+  ov.querySelectorAll('.fg,.glow').forEach(x=>x.style.strokeDashoffset = (C*(1-p)).toFixed(1));
+  ov.classList.toggle('running', !!s.since);
+}
+function focusCardHTML(t, i, est, cur){
+  const c = clientById(t.client_id), late = t.due_date && t.due_date<todayISO(), b = focusBucket(t);
+  const tag = b===0 ? `<span class="fq-tag late">⏰ atrasada</span>` : b===1 ? `<span class="fq-tag alt">✏️ ajuste</span>` : b===2 ? `<span class="fq-tag today">📌 hoje</span>` : '';
+  return `<div class="fq-item ${cur?'cur':''}" data-fq="${t.id}">
+    <div class="fq-n">${cur?'▶':i}</div>
+    <div class="fq-body"><div class="fq-client" style="color:${clientColor(t.client_id)}">${escapeHTML(c?.name||'—')}</div><div class="fq-title">${escapeHTML(t.title)}</div>
+      <div class="fq-meta">${tag}<span>${escapeHTML(t.task_type||'')}</span><span style="${late?'color:var(--red);':''}">${fmtDate(t.due_date).slice(0,5)}</span><span>~${fmtDur(est)}</span></div></div>
+  </div>`;
+}
+function drawFocus(){
   const ov = document.querySelector('.focus-ov'); if(!ov) return;
-  const p = pomoGet(), left = pomoLeft(p), total = POMO_DUR[p.mode], C = 2*Math.PI*46;
-  ov.classList.toggle('running', !!p.endAt);
-  ov.querySelector('.focus-time b').textContent = fmtClock(left);
-  ov.querySelector('.focus-time span').textContent = `${POMO_LABEL[p.mode]} · ${p.cycles||0} ${p.cycles===1?'ciclo':'ciclos'} hoje`;
-  ov.querySelectorAll('.fg,.glow').forEach(x=>x.style.strokeDashoffset = (C * (1 - left/total)).toFixed(1));
-  ov.querySelector('#pomoPlay').textContent = p.endAt ? '⏸ Pausar' : (left<total ? '▶ Continuar' : '▶ Começar');
-  ov.querySelectorAll('[data-pmode]').forEach(b=>b.classList.toggle('sel', b.dataset.pmode===p.mode));
-}
-function focusTasksHTML(){
-  const me = currentUser();
-  const mine = state.tasks.filter(t=>t.assignee_id===me.id && !DONE_STATUSES.includes(t.status))
-    .sort((a,b)=>(isTaskLate(b)-isTaskLate(a)) || (a.due_date||'9999').localeCompare(b.due_date||'9999')).slice(0,8);
-  if(!mine.length) return `<div class="focus-list">${emptyStateHTML('sun','Nada pendente com você.','Aproveita o foco pra adiantar a próxima pauta ✨')}</div>`;
-  return `<div class="focus-list"><h3>Suas demandas, por ordem de prazo</h3>${mine.map(t=>{
-    const c = clientById(t.client_id), late = isTaskLate(t);
-    return `<div class="task-card" data-id="${t.id}" style="cursor:pointer;">
-      <div style="display:flex;justify-content:space-between;gap:10px;align-items:flex-start;">
-        <div style="min-width:0;"><div class="tclient"><span style="color:${clientColor(t.client_id)}">${escapeHTML(c?.name||'—')}</span></div><div class="ttitle">${escapeHTML(t.title)}</div></div>
-        <span style="flex-shrink:0;">${statusBadgeHTML(t.status)}</span></div>
-      <div class="tmeta"><span>${escapeHTML(t.task_type||'')}</span><span class="tdue" style="${late?'color:var(--red);font-weight:600;':''}">${late?'⏰ ':''}${fmtDate(t.due_date)}</span></div></div>`;
-  }).join('')}</div>`;
+  const me = currentUser(), first = escapeHTML(me.full_name.split(' ')[0]);
+  let s = focusGet(); if(s){ s = focusPrune(s); focusSet(s); }
+  const C = (2*Math.PI*46).toFixed(1);
+  const ring = (big, small) => `<div class="focus-ring sm"><svg viewBox="0 0 100 100"><defs><linearGradient id="focusGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FB0FF"/><stop offset="1" stop-color="#3E6FF0"/></linearGradient></defs>
+    <circle class="bg" cx="50" cy="50" r="46"/><circle class="glow" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="${C}"/><circle class="fg" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="${C}"/></svg>
+    <div class="focus-time"><b id="fqSessTime">${big}</b><span>${small}</span></div></div>`;
+
+  // ✅ terminou a fila
+  if(s && !s.ids[s.idx]){
+    const total = focusElapsed(s), n = s.done||0;
+    ov.innerHTML = `<button class="btn small focus-x" id="focusClose">✕ Fechar</button>
+      <div class="focus-kick">Sessão concluída</div>
+      <div class="focus-done"><div class="big">🏁</div><h2>Fila zerada, ${first}!</h2><p>${n} demanda${n===1?'':'s'} pra revisão em <b>${fmtClock(total)}</b> de foco${s.planned?` (previsto: ${fmtDur(Math.round(s.planned/60))})`:''}.</p>
+      <button class="btn primary" id="fqNew">Montar outra sessão</button></div>`;
+    ov.querySelector('#focusClose').addEventListener('click', ()=>{ focusSet(null); closeFocusMode(); });
+    ov.querySelector('#fqNew').addEventListener('click', ()=>{ focusSet(null); drawFocus(); });
+    if(!s.chimed){ s.chimed = true; focusSet(s); focusChime(); }
+    return;
+  }
+
+  // 🧭 escolher a sessão
+  if(!s){
+    const opts = focusOptions();
+    ov.innerHTML = `<button class="btn small focus-x" id="focusClose">✕ Fechar</button>
+      <div class="focus-kick">Modo foco · ${first}</div>
+      <h2 class="focus-h">Quanto tempo de foco hoje?</h2>
+      <p class="focus-p">Montei as opções com base nas suas demandas atrasadas e pro dia. A fila já vem na ordem certa de fazer.</p>
+      ${opts.length ? `<div class="fo-grid">${opts.map((o,i)=>`<button type="button" class="fo-card ${o.rec?'rec':''}" data-fo="${i}">
+          <div class="fo-top"><span class="fo-ic">${o.icon}</span>${o.badge?`<span class="fo-badge">${o.badge}</span>`:''}</div>
+          <div class="fo-time">${fmtDur(o.min)}</div>
+          <div class="fo-title">${o.title}</div>
+          <div class="fo-desc">${o.tasks.length} demanda${o.tasks.length>1?'s':''}${o.desc?' · '+o.desc:''}</div>
+          <div class="fo-list">${o.tasks.slice(0,3).map(t=>`<span>${escapeHTML(t.title)}</span>`).join('')}${o.tasks.length>3?`<span class="more">+${o.tasks.length-3}</span>`:''}</div>
+        </button>`).join('')}</div>` : `<div style="width:min(560px,100%);">${emptyStateHTML('sun','Nada pendente com você.','Sem fila hoje — aproveita pra adiantar a próxima pauta ✨')}</div>`}`;
+    ov.querySelector('#focusClose').addEventListener('click', closeFocusMode);
+    ov.querySelectorAll('[data-fo]').forEach(b=>b.addEventListener('click', ()=>startFocusSession(opts[Number(b.dataset.fo)])));
+    return;
+  }
+
+  // ▶ sessão rodando: só a fila, na ordem
+  const cur = state.tasks.find(t=>t.id===s.ids[s.idx]);
+  const next = s.ids.slice(s.idx+1).map(id=>state.tasks.find(t=>t.id===id)).filter(Boolean);
+  const briefing = String(cur.briefing?.briefing || '').trim();
+  ov.innerHTML = `<div class="fq-top"><div class="focus-kick">${escapeHTML(s.label||'Foco')} · ${s.idx+1} de ${s.ids.length}</div>
+      <div style="display:flex;gap:6px;"><button class="btn small" id="fqMin" title="Minimizar e continuar contando">↘ Minimizar</button><button class="btn small" id="fqEnd">Encerrar</button></div></div>
+    <div class="fq-head">${ring(fmtClock(focusElapsed(s)), `de ${fmtDur(Math.round(s.planned/60))} previstos`)}
+      <div class="fq-now">
+        <div class="fq-label">Agora</div>
+        <div class="fq-client" style="color:${clientColor(cur.client_id)}">${escapeHTML(clientById(cur.client_id)?.name||'—')}</div>
+        <div class="fq-cur-title">${escapeHTML(cur.title)}</div>
+        <div class="fq-meta">${focusCardHTML(cur,0,0,false).match(/<span class="fq-tag[^>]*>[^<]*<\/span>/)?.[0]||''}<span>${escapeHTML(cur.task_type||'')}</span><span>prazo ${fmtDate(cur.due_date).slice(0,5)}</span></div>
+        ${briefing?`<div class="fq-brief">${escapeHTML(briefing.slice(0,220))}${briefing.length>220?'…':''}</div>`:''}
+        <div class="fq-tt"><b id="fqTaskTime">00:00</b><span id="fqOver"></span></div>
+        <div class="bar fq-bar"><i id="fqTaskBar"></i></div>
+        <div class="fq-actions">
+          <button class="btn primary" id="fqDone">✓ Mandei pra revisão</button>
+          <button class="btn" id="fqOpen">Abrir demanda</button>
+          <button class="btn" id="fqPause">${s.since?'⏸ Pausar':'▶ Continuar'}</button>
+          ${next.length?`<button class="btn ghost" id="fqSkip" title="Joga pro fim da fila">Pular ↷</button>`:''}
+        </div>
+      </div></div>
+    <div class="focus-break" id="fqBreak">☕ Já são ${Math.max(1,s.breaks||1)*50} min de foco — bora uma pausa de 5 min? <button class="btn small" id="fqBreakBtn">Pausar agora</button></div>
+    <div class="fq-list">${next.length?`<div class="fq-list-h">Na fila, nessa ordem</div>${next.map((t,i)=>focusCardHTML(t, s.idx+i+2, s.est[t.id]||focusEst(t), false)).join('')}`:`<div class="fq-list-h">É a última da fila 💪</div>`}</div>`;
+  const save = fn => { const x = focusFlush(focusGet()); fn(x); focusSet(x); drawFocus(); };
+  ov.querySelector('#fqMin').addEventListener('click', closeFocusMode);
+  ov.querySelector('#fqEnd').addEventListener('click', ()=>{ if(!confirm('Encerrar a sessão de foco?')) return; focusSet(null); closeFocusMode(); });
+  ov.querySelector('#fqOpen').addEventListener('click', ()=>openTaskModal(cur.id));
+  ov.querySelector('#fqPause').addEventListener('click', ()=>save(x=>{ x.since = x.since ? null : Date.now(); }));
+  ov.querySelector('#fqBreakBtn').addEventListener('click', ()=>save(x=>{ x.since = null; }));
+  ov.querySelector('#fqSkip')?.addEventListener('click', ()=>save(x=>{ const [id] = x.ids.splice(x.idx,1); x.ids.push(id); x.tacc = 0; }));
+  ov.querySelector('#fqDone').addEventListener('click', ()=>{
+    changeTaskStatus(cur.id, 'em_revisao');
+    const x = focusFlush(focusGet()); x.done = (x.done||0)+1; x.tacc = 0; x.ids.splice(x.idx,1); focusSet(x);
+    render(); drawFocus();
+  });
+  ov.querySelectorAll('.fq-item[data-fq]').forEach(el=>el.addEventListener('click', ()=>openTaskModal(el.dataset.fq)));
+  updateFocusNumbers();
 }
 function openFocusMode(){
   if(!currentUser() || document.querySelector('.focus-ov')) return;
   const ov = document.createElement('div'); ov.className = 'focus-ov';
-  const C = (2*Math.PI*46).toFixed(1);
-  ov.innerHTML = `<button class="btn small focus-x" id="focusClose">✕ Sair do foco</button>
-    <div class="focus-kick">Modo foco · ${escapeHTML(currentUser().full_name.split(' ')[0])}</div>
-    <div class="focus-ring"><svg viewBox="0 0 100 100"><defs><linearGradient id="focusGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#8FB0FF"/><stop offset="1" stop-color="#3E6FF0"/></linearGradient></defs>
-      <circle class="bg" cx="50" cy="50" r="46"/><circle class="glow" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="0"/><circle class="fg" cx="50" cy="50" r="46" stroke-dasharray="${C}" stroke-dashoffset="0"/></svg>
-      <div class="focus-time"><b>25:00</b><span></span></div></div>
-    <div class="focus-ctrl"><button class="btn primary" id="pomoPlay">▶ Começar</button><button class="btn" id="pomoReset" title="Zerar">↺</button></div>
-    <div class="focus-modes">${Object.keys(POMO_DUR).map(m=>`<button type="button" data-pmode="${m}">${POMO_LABEL[m]} · ${POMO_DUR[m]/60}min</button>`).join('')}</div>
-    ${focusTasksHTML()}`;
   document.body.appendChild(ov);
   requestAnimationFrame(()=>ov.classList.add('on'));
-  ov.querySelector('#focusClose').addEventListener('click', closeFocusMode);
-  ov.querySelector('#pomoPlay').addEventListener('click', ()=>{
-    const p = pomoGet();
-    if(p.endAt) pomoSet({...p, left:pomoLeft(p), endAt:null});
-    else { pomoSet({...p, endAt:Date.now() + pomoLeft(p)*1000}); try{ if('Notification' in window && Notification.permission==='default') Notification.requestPermission(); }catch(e){} }
-    buzz(10); ensurePomoTimer(); drawFocusTimer();
-  });
-  ov.querySelector('#pomoReset').addEventListener('click', ()=>{ const p = pomoGet(); pomoSet({...p, endAt:null, left:POMO_DUR[p.mode]}); drawFocusTimer(); });
-  ov.querySelectorAll('[data-pmode]').forEach(b=>b.addEventListener('click', ()=>{ const p = pomoGet(); pomoSet({...p, mode:b.dataset.pmode, endAt:null, left:POMO_DUR[b.dataset.pmode]}); drawFocusTimer(); }));
-  ov.querySelectorAll('.task-card[data-id]').forEach(c=>c.addEventListener('click', ()=>openTaskModal(c.dataset.id)));
   ov._esc = e=>{ if(e.key==='Escape' && !document.querySelector('.modal-overlay.open') && !document.querySelector('.cmdk-ov')) closeFocusMode(); };
   document.addEventListener('keydown', ov._esc);
-  ensurePomoTimer(); drawFocusTimer(); drawFocusPill();
+  drawFocus(); ensureFocusTimer(); drawFocusPill();
 }
 function closeFocusMode(){
   const ov = document.querySelector('.focus-ov'); if(!ov) return;
   document.removeEventListener('keydown', ov._esc);
   ov.remove(); drawFocusPill();
 }
-// retoma o timer (e a pílula flutuante) se a pessoa recarregar a página com o pomodoro rodando
-setTimeout(()=>{ if(currentUser() && pomoGet().endAt){ ensurePomoTimer(); drawFocusPill(); } }, 1500);
+// quando chegam dados novos (ex.: alguém aprovou), a fila se atualiza sozinha
+(function(){ const orig = render; render = function(){ const r = orig.apply(this, arguments); if(document.querySelector('.focus-ov') && !document.querySelector('.modal-overlay.open')) drawFocus(); return r; }; })();
+// retoma a sessão (e a pílula flutuante) se a pessoa recarregar a página
+setTimeout(()=>{ if(currentUser() && focusGet()){ ensureFocusTimer(); drawFocusPill(); } }, 1500);
 (function(){
   const tt = document.getElementById('themeToggle'); if(!tt) return;
-  const b = document.createElement('button'); b.type = 'button'; b.className = 'theme-toggle focus-btn'; b.id = 'focusModeBtn'; b.title = 'Modo foco (Pomodoro)'; b.setAttribute('aria-label','Modo foco');
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'theme-toggle focus-btn'; b.id = 'focusModeBtn'; b.title = 'Modo foco'; b.setAttribute('aria-label','Modo foco');
   b.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/></svg>`;
   b.addEventListener('click', openFocusMode);
   tt.parentNode.insertBefore(b, tt);
