@@ -1744,6 +1744,68 @@ html[data-theme="light"] .heat-grid i.l1{background:rgba(62,111,240,.25);} html[
 .fq-head.arrive{animation:fqArrive .5s cubic-bezier(.2,1,.3,1);}
 @keyframes fqArrive{from{transform:translateY(40px);opacity:0;}}
 @media (prefers-reduced-motion: reduce){ .passcode-dot.active,.passcode-dot.filled{animation:none;} .fq-head.leaving,.fq-head.arrive{animation:none;} .island{transition:opacity .2s;} }
+
+/* ============ INSPORA · LOTE B ============ */
+/* 6) seletor com pílula deslizante */
+.seg{position:relative;display:inline-flex;gap:2px;padding:3px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);isolation:isolate;}
+.seg-pill{position:absolute;top:3px;bottom:3px;left:0;width:0;border-radius:99px;z-index:-1;background:linear-gradient(180deg,rgba(255,255,255,.14),rgba(255,255,255,0)),var(--brand,#3E6FF0);box-shadow:0 6px 16px -6px rgba(62,111,240,.7),inset 0 1px 0 rgba(255,255,255,.25);transition:transform .42s cubic-bezier(.34,1.35,.5,1),width .42s cubic-bezier(.34,1.35,.5,1);}
+.seg-pill.no-anim{transition:none;}
+.seg-btn{border:none;background:transparent;color:var(--text-muted);font:600 12.5px var(--font-body);padding:6px 13px;border-radius:99px;cursor:pointer;transition:color .25s;white-space:nowrap;}
+.seg-btn:hover{color:var(--text);}
+.seg-btn.on{color:#fff;}
+.sb-tabs.seg{gap:2px;margin:4px 0 12px;}
+.sb-tabs.seg button{border:none!important;background:transparent!important;}
+.sb-tabs.seg button.on{color:#fff;}
+
+/* 7) movimento do mês em barrinhas (SMK Bank) */
+.sb-bars{margin:0 0 14px;padding:16px 18px 12px;border-radius:16px;border:1px solid var(--border);background:var(--surface);}
+.sb-bars-h{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:10px;font-size:12px;color:var(--text-faint);}
+.sb-bars-h b{font-size:13px;color:var(--text);font-weight:600;}
+.sb-bars-h .lg{display:flex;gap:12px;align-items:center;}
+.sb-bars-h .lg i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:middle;}
+.sb-bars-plot{position:relative;height:120px;display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;align-items:stretch;}
+.sb-bars-plot::before{content:'';position:absolute;left:0;right:0;top:50%;border-top:1px dashed var(--border);}
+.sb-bar{position:relative;display:flex;flex-direction:column;justify-content:center;cursor:default;}
+.sb-bar .up,.sb-bar .dn{width:100%;max-width:7px;margin:0 auto;border-radius:3px;transform:scaleY(0);transition:transform .7s cubic-bezier(.22,1,.36,1);transition-delay:calc(var(--i) * 18ms);}
+.sb-bar .up{transform-origin:50% 100%;background:linear-gradient(0deg,#3E6FF0,#8FB0FF);box-shadow:0 0 10px -2px rgba(91,140,255,.6);}
+.sb-bar .dn{transform-origin:50% 0;background:linear-gradient(180deg,rgba(224,85,61,.55),rgba(224,85,61,.15));}
+.sb-bar .half{height:50%;display:flex;}
+.sb-bar .half.top{align-items:flex-end;} .sb-bar .half.bot{align-items:flex-start;}
+.sb-bars.go .sb-bar .up,.sb-bars.go .sb-bar .dn{transform:scaleY(1);}
+.sb-bar.today .half.top::after{content:'';position:absolute;left:50%;top:-6px;width:4px;height:4px;margin-left:-2px;border-radius:50%;background:#8FB0FF;}
+.sb-bar:hover .up,.sb-bar:hover .dn{filter:brightness(1.35);}
+.sb-bar.nil .half{opacity:0;}
+.sb-bars-x{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:3px;margin-top:6px;font:500 9.5px var(--font-mono);color:var(--text-faint);text-align:center;}
+
+/* 8) anexar imagem: botão vira anel de progresso */
+.up-ring{display:inline-flex;align-items:center;gap:8px;}
+.up-ring svg{width:18px;height:18px;transform:rotate(-90deg);}
+.up-ring circle{fill:none;stroke-width:3;}
+.up-ring .bg{stroke:rgba(255,255,255,.12);}
+.up-ring .fg{stroke:#5B8CFF;stroke-linecap:round;stroke-dasharray:50.3;stroke-dashoffset:50.3;transition:stroke-dashoffset 2.4s cubic-bezier(.1,.6,.3,1);}
+.up-ring.go .fg{stroke-dashoffset:7;}
+.up-ring.done .fg{stroke-dashoffset:0;stroke:var(--accent);transition:stroke-dashoffset .25s ease,stroke .2s;}
+.up-ring .ck{display:none;}
+.up-ring.done .ck{display:inline;}
+.up-ring.done .lb{display:none;}
+#attachImageBtn.uploading{pointer-events:none;border-color:rgba(91,140,255,.45);}
+
+/* 9) excluir vira poeira */
+.dust-host{position:fixed;left:0;top:0;width:0;height:0;z-index:10040;pointer-events:none;}
+.dust{position:absolute;border-radius:1px;will-change:transform,opacity;animation:dustFly var(--t,.9s) cubic-bezier(.3,.1,.4,1) var(--dl,0s) forwards;}
+@keyframes dustFly{to{transform:translate(var(--dx),var(--dy)) rotate(var(--r)) scale(.3);opacity:0;}}
+.dissolving{animation:dissolveOut .75s ease forwards;}
+@keyframes dissolveOut{0%{clip-path:inset(0 0 0 0);opacity:1;}100%{clip-path:inset(0 0 0 100%);opacity:.2;}}
+
+/* 10) nome da Máquina do mês brilhando */
+.wr-glam{display:flex;flex-wrap:wrap;justify-content:flex-start;gap:0;}
+.wr-glam span{display:inline-block;white-space:pre;background:linear-gradient(100deg,#8FB0FF 0%,#B79CFF 25%,#FF8FD1 45%,#FFD27A 60%,#8FB0FF 80%);background-size:300% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;-webkit-text-fill-color:transparent;
+  filter:drop-shadow(0 0 12px rgba(143,176,255,.35));opacity:0;}
+.wr-slide.active .wr-glam span{animation:glamIn .7s cubic-bezier(.2,1.4,.4,1) forwards, glamFlow 4s linear 1s infinite;animation-delay:calc(.3s + var(--k) * 45ms), calc(1s + var(--k) * 45ms);}
+@keyframes glamIn{0%{opacity:0;transform:translateY(40%) scale(.4) rotate(-12deg);filter:blur(8px) drop-shadow(0 0 0 transparent);}100%{opacity:1;transform:none;filter:blur(0) drop-shadow(0 0 12px rgba(143,176,255,.35));}}
+@keyframes glamFlow{0%{background-position:0% 0;}100%{background-position:300% 0;}}
+.wr-capture .wr-glam span{animation:none!important;opacity:1;transform:none;filter:none;background:none;-webkit-text-fill-color:#B7CBFF;color:#B7CBFF;}
+@media (prefers-reduced-motion: reduce){ .seg-pill,.sb-bar .up,.sb-bar .dn{transition:none;} .dust{display:none;} .dissolving{animation:none;opacity:0;} .wr-slide.active .wr-glam span{animation:none;opacity:1;} }
 </style>
 </head>
 <body>
@@ -5428,7 +5490,7 @@ function buildWrappedSlides(d){
     slides.push(frame(`<div class="wr-kicker wr-anim">Premiação 🏆</div>
       <div class="wr-title wr-anim" style="--d:.1s;font-size:11cqw;margin-bottom:6cqw;">Máquina<br><em>do mês.</em></div>
       <div class="wr-award-avatars">${w.map(r=>avatar(r.u)).join('')}</div>
-      <div class="wr-name wr-anim" style="--d:.25s;">${w.map(r=>escapeHTML(r.u.full_name)).join(' & ')}</div>
+      <div class="wr-name wr-glam">${glamNameHTML(w.map(r=>r.u.full_name).join(' & '))}</div>
       <div class="wr-sub wr-anim" style="--d:.4s;"><b data-count="${top.total}">${top.total}</b> entregas${w.length>1?' cada — empate!':''}</div>
       ${w.length===1?`<div class="wr-sub wr-anim" style="--d:.5s;font-size:4cqw;color:#8FB0FF;">${parts(top)}</div>`:''}
       ${d.award.ranking.length>w.length?`<div class="wr-podium">${d.award.ranking.slice(w.length, w.length+2).map((r,i)=>`<div class="wr-anim" style="--d:${.6+i*.12}s;"><span class="pos">${w.length+i+1}º</span>${escapeHTML(r.u.full_name)}<span class="n">${r.total}</span></div>`).join('')}</div>`:''}`));
@@ -6029,8 +6091,7 @@ function renderDemandas(el){
       <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}" ${demandaFilterClient===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
       <select id="filterType"><option value="">Todos os tipos</option>${TASK_TYPES.map(ty=>`<option ${demandaFilterType===ty?'selected':''}>${ty}</option>`).join('')}</select>
       ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}" ${demandaFilterOwner===u.id?'selected':''}>${u.full_name}</option>`).join('')}</select>`:''}
-      <button class="btn small ${demandaView==='kanban'?'primary':''}" id="viewKanbanBtn">☰ Quadro</button>
-      <button class="btn small ${demandaView==='calendar'?'primary':''}" id="viewCalendarBtn">▦ Calendário</button>
+      <div class="seg" data-seg-from="${segFrom('demView', demandaView==='calendar'?1:0)}"><button type="button" class="seg-btn ${demandaView==='kanban'?'on':''}" id="viewKanbanBtn">☰ Quadro</button><button type="button" class="seg-btn ${demandaView==='calendar'?'on':''}" id="viewCalendarBtn">▦ Calendário</button></div>
       ${demandaView==='kanban'?`<select id="kanbanWidthSelect" title="Largura das colunas">
         <option value="190" ${kanbanColWidth==='190'?'selected':''}>Colunas compactas</option>
         <option value="250" ${kanbanColWidth==='250'?'selected':''}>Colunas padrão</option>
@@ -6051,6 +6112,7 @@ function renderDemandas(el){
   });
   document.getElementById('viewKanbanBtn').addEventListener('click', ()=>{ demandaView='kanban'; render(); });
   document.getElementById('viewCalendarBtn').addEventListener('click', ()=>{ demandaView='calendar'; render(); });
+  wireSegs(el);
   document.getElementById('todayOnlyBtn')?.addEventListener('click', ()=>{ demandaTodayOnly=!demandaTodayOnly; render(); });
   drawDemandas();
 }
@@ -7182,17 +7244,21 @@ function openTaskModal(id){
     document.getElementById('commentList')?.addEventListener('click', (e)=>{
       const btn = e.target.closest('[data-del-comment]');
       if(!btn) return;
-      state.task_comments = state.task_comments.filter(c=>c.id!==btn.dataset.delComment);
-      saveState(state);
-      openTaskModal(id);
+      dissolveEl(btn.closest('.comment-item'), ()=>{
+        state.task_comments = state.task_comments.filter(c=>c.id!==btn.dataset.delComment);
+        saveState(state);
+        openTaskModal(id);
+      });
     });
     const addImages = async (files) => {
       try{
         liveTask();
         const caption = document.getElementById('newComment')?.value.trim() || '';
+        var ring = uploadRingStart();
         const n = await attachImagesToTask(files, t, caption);
-        if(n){ openTaskModal(id); }
+        if(n){ ring.done(); setTimeout(()=>openTaskModal(id), REDUCED_MOTION() ? 0 : 550); } else ring.fail();
       }catch(err){
+        ring?.fail();
         console.error('Erro ao processar imagem do comentário:', err);
         alert('Não consegui processar essa imagem: ' + (err?.message || err) + '\nTenta outra ou avisa o suporte com essa mensagem.');
       }
@@ -7215,10 +7281,13 @@ function openTaskModal(id){
       addImages(files);
     };
     document.getElementById('deleteTaskBtn').addEventListener('click', ()=>{
-      state.tasks = state.tasks.filter(x=>x.id!==t.id);
-      saveState(state);
-      closeModal('taskModalOverlay');
-      render();
+      dissolveEl(document.querySelector('#taskModalOverlay .modal'), ()=>{
+        state.tasks = state.tasks.filter(x=>x.id!==t.id);
+        saveState(state);
+        closeModal('taskModalOverlay');
+        document.querySelector('#taskModalOverlay .modal')?.classList.remove('dissolving');
+        render();
+      });
     });
   }
 
@@ -7613,7 +7682,7 @@ function renderBanco(el){
       </div>
       ${hide ? '' : spark}
     </div>
-    <div class="sb-tabs">
+    <div class="sb-tabs seg" data-seg-from="${segFrom('bankTab', bankTab==='pessoal'?1:0)}">
       <button type="button" data-bank-tab="conta" class="${bankTab==='conta'?'on':''}">🏦 Conta</button>
       <button type="button" data-bank-tab="pessoal" class="${bankTab==='pessoal'?'on':''}">🏠 Gastos pessoais</button>
     </div>
@@ -7625,6 +7694,7 @@ function renderBanco(el){
       <div><i>⏳</i><span>A receber</span><b>${money(aReceber)}</b></div>
       <div><i>📌</i><span>A pagar</span><b>${money(aPagar)}</b></div>
     </div>
+    ${bankBarsHTML(L, bankFilter.month, hide)}
     <div class="section-title" id="sbExtrato">Extrato</div>
     <div class="bank-filters">
       <select id="bankMonth">${(months.length?months:[m]).map(x=>`<option value="${x}" ${x===bankFilter.month?'selected':''}>${wrappedMonthName(x)} ${x.slice(0,4)}</option>`).join('')}</select>
@@ -7646,6 +7716,8 @@ function renderBanco(el){
     card.style.setProperty('--ry', (x*14).toFixed(2)+'deg'); card.style.setProperty('--rx', (-y*12).toFixed(2)+'deg'); card.style.setProperty('--gx', ((x+.5)*100).toFixed(0)+'%'); });
   card.addEventListener('pointerleave', ()=>{ card.style.setProperty('--ry','0deg'); card.style.setProperty('--rx','0deg'); });
   el.querySelectorAll('[data-bank-tab]').forEach(b=>b.addEventListener('click', ()=>{ bankTab = b.dataset.bankTab; render(); }));
+  wireSegs(el);
+  setTimeout(()=>document.getElementById('sbBars')?.classList.add('go'), 40);
   document.getElementById('bankPersonal').addEventListener('click', ()=>openBankEntryModal('personal'));
   el.querySelectorAll('[data-bank-scope]').forEach(b=>b.addEventListener('click', ()=>{ bankFilter.scope = b.dataset.bankScope; render(); }));
   el.querySelectorAll('[data-personal-del]').forEach(b=>b.addEventListener('click', ()=>{
@@ -9417,6 +9489,80 @@ function brandFolderHTML(c){
     </div>
   </div>`;
 }
+
+/* ============ INSPORA · LOTE B ============ */
+
+/* ---------- 💊 SELETOR COM PÍLULA DESLIZANTE (.seg com data-seg-from = índice anterior) ---------- */
+function wireSegs(root){
+  root.querySelectorAll('.seg').forEach(seg=>{
+    let pill = seg.querySelector('.seg-pill');
+    if(!pill){ pill = document.createElement('span'); pill.className = 'seg-pill'; seg.prepend(pill); }
+    const btns = [...seg.querySelectorAll('button')], on = btns.find(b=>b.classList.contains('on')) || btns[0];
+    const from = btns[Number(seg.dataset.segFrom)] || on;
+    const place = b => { pill.style.width = b.offsetWidth+'px'; pill.style.transform = `translateX(${b.offsetLeft}px)`; };
+    pill.classList.add('no-anim'); place(from); void pill.offsetWidth; pill.classList.remove('no-anim');
+    setTimeout(()=>place(on), 16);
+  });
+}
+const segPrev = {};
+function segFrom(key, idx){ const p = segPrev[key]; segPrev[key] = idx; return p===undefined ? idx : p; }
+
+/* ---------- ▮▮ MOVIMENTO DO MÊS EM BARRINHAS (SMK Bank) ---------- */
+function bankBarsHTML(L, month, hide){
+  const [y, mo] = month.split('-').map(Number), days = new Date(y, mo, 0).getDate();
+  const today = todayISO(), inM = L.filter(x=>x.date.startsWith(month) && x.kind!=='adjust');
+  const byDay = Array.from({length:days}, (_,i)=>{ const k = `${month}-${String(i+1).padStart(2,'0')}`, xs = inM.filter(x=>x.date===k);
+    return {k, d:i+1, inn:xs.filter(x=>x.value>0).reduce((s,x)=>s+x.value,0), out:-xs.filter(x=>x.value<0).reduce((s,x)=>s+x.value,0)}; });
+  const mx = Math.max(1, ...byDay.map(x=>Math.max(x.inn, x.out)));
+  const tin = byDay.reduce((s,x)=>s+x.inn,0), tout = byDay.reduce((s,x)=>s+x.out,0);
+  const pct = v => v ? Math.max(6, v/mx*100) : 0;
+  return `<div class="sb-bars" id="sbBars">
+    <div class="sb-bars-h"><b>Movimento de ${wrappedMonthName(month).toLowerCase()}</b>
+      <span class="lg"><span><i style="background:#5B8CFF"></i>entradas${hide?'':' '+fmtMoney(tin)}</span><span><i style="background:rgba(224,85,61,.55)"></i>saídas${hide?'':' '+fmtMoney(tout)}</span></span></div>
+    <div class="sb-bars-plot">${byDay.map((x,i)=>`<div class="sb-bar ${x.k===today?'today':''} ${x.inn||x.out?'':'nil'}" style="--i:${i}" title="${String(x.d).padStart(2,'0')}/${String(mo).padStart(2,'0')}${hide?'':` — entrou ${fmtMoney(x.inn)} · saiu ${fmtMoney(x.out)}`}">
+      <div class="half top"><div class="up" style="height:${pct(x.inn)}%"></div></div><div class="half bot"><div class="dn" style="height:${pct(x.out)}%"></div></div></div>`).join('')}</div>
+    <div class="sb-bars-x">${byDay.map(x=>`<span>${x.d===1||x.d%5===0?x.d:''}</span>`).join('')}</div>
+  </div>`;
+}
+
+/* ---------- ⭕ ANEXAR IMAGEM COM ANEL DE PROGRESSO ---------- */
+function uploadRingStart(){
+  const btn = document.getElementById('attachImageBtn'); if(!btn) return {done(){}, fail(){}};
+  const orig = btn.innerHTML;
+  btn.classList.add('uploading');
+  btn.innerHTML = `<span class="up-ring"><svg viewBox="0 0 20 20"><circle class="bg" cx="10" cy="10" r="8"/><circle class="fg" cx="10" cy="10" r="8"/></svg><span class="lb">Enviando…</span><span class="ck">✓ Anexado</span></span>`;
+  const ring = btn.querySelector('.up-ring'); void ring.offsetWidth; ring.classList.add('go');
+  return {
+    done(){ ring.classList.add('done'); buzz(10); },
+    fail(){ btn.classList.remove('uploading'); btn.innerHTML = orig; },
+  };
+}
+
+/* ---------- ✨ EXCLUIR QUE VIRA POEIRA ---------- */
+function dissolveEl(el, then){
+  if(!el || REDUCED_MOTION()){ then?.(); return; }
+  const r = el.getBoundingClientRect();
+  if(!r.width || !r.height){ then?.(); return; }
+  const cs = getComputedStyle(el);
+  const palette = [cs.backgroundColor, cs.backgroundColor, parseFloat(cs.borderTopWidth) ? cs.borderTopColor : 'rgba(255,255,255,.08)', 'rgba(143,176,255,.5)', 'rgba(200,210,235,.28)'].filter(c=>c && c!=='rgba(0, 0, 0, 0)' && c!=='transparent');
+  const host = document.createElement('div'); host.className = 'dust-host'; document.body.appendChild(host);
+  const size = Math.max(3, Math.round(Math.sqrt(r.width*r.height/1100)));
+  for(let y=0; y<r.height; y+=size) for(let x=0; x<r.width; x+=size){
+    if(Math.random() < .45) continue;
+    const p = document.createElement('i'); p.className = 'dust';
+    const f = x / r.width;
+    p.style.cssText = `left:${r.left+x}px;top:${r.top+y}px;width:${size}px;height:${size}px;background:${palette[(Math.random()*palette.length)|0]};`
+      + `--dx:${(40+Math.random()*140).toFixed(0)}px;--dy:${(-70+Math.random()*90).toFixed(0)}px;--r:${(Math.random()*180-90).toFixed(0)}deg;--dl:${(f*.45+Math.random()*.12).toFixed(2)}s;--t:${(.6+Math.random()*.5).toFixed(2)}s;`;
+    host.appendChild(p);
+  }
+  el.classList.add('dissolving');
+  buzz([8,30,8]);
+  setTimeout(()=>{ then?.(); }, 700);
+  setTimeout(()=>host.remove(), 1700);
+}
+
+/* ---------- 🌈 NOME DA MÁQUINA DO MÊS ---------- */
+function glamNameHTML(text){ return [...text].map((ch,k)=>`<span style="--k:${k}">${ch===' '?' ':escapeHTML(ch)}</span>`).join(''); }
 </script>
 </body>
 </html>
