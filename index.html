@@ -1669,6 +1669,81 @@ html[data-theme="light"] .heat-grid i.l1{background:rgba(62,111,240,.25);} html[
 .focus-done h2{font:700 32px var(--font-display);color:#fff;letter-spacing:-.03em;}
 .focus-done p{color:var(--text-muted);font-size:14px;margin-bottom:10px;}
 @media (max-width:700px){ .fq-head{grid-template-columns:1fr;justify-items:center;text-align:center;} .fq-meta,.fq-actions,.fq-tt{justify-content:center;} .focus-ring.sm{width:170px;} }
+
+/* ============ INSPORA · LOTE A ============ */
+/* 1) código de login: número aparece e vira bolinha, cursor piscando, caixas se juntam no ✓ */
+.passcode-dot{position:relative;}
+.passcode-dot::before{content:attr(data-n);position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font:700 24px var(--font-display);color:#fff;opacity:0;transform:translateY(8px) scale(.7);transition:opacity .15s,transform .2s cubic-bezier(.34,1.56,.64,1);pointer-events:none;}
+.passcode-dot.reveal::before{opacity:1;transform:none;}
+.passcode-dot.reveal::after{transform:scale(0)!important;}
+.passcode-dot.filled{animation:pdPop .28s cubic-bezier(.34,1.56,.64,1);}
+@keyframes pdPop{40%{transform:scale(1.08);}}
+.passcode-dot.success{animation:boxPop .3s ease;}
+.passcode-dot.active{border-color:rgba(91,140,255,.7)!important;box-shadow:0 0 0 3px rgba(76,126,255,.16);background-image:linear-gradient(#5B8CFF,#5B8CFF);background-size:2px 24px;background-position:center;background-repeat:no-repeat;animation:caretBlink 1s steps(1) infinite;}
+@keyframes caretBlink{50%{background-size:0 24px;}}
+.passcode-ok{position:absolute;left:50%;top:50%;width:58px;height:58px;margin:-29px 0 0 -29px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;transform:scale(0);opacity:0;box-shadow:0 0 0 6px rgba(31,169,124,.18),0 12px 30px -8px rgba(31,169,124,.6);pointer-events:none;}
+.passcode-ok svg{width:28px;height:28px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;}
+.passcode-wrap.unlocked .passcode-dot{transform:translateX(var(--to-c,0)) scale(.5)!important;opacity:0;transition:transform .35s cubic-bezier(.6,0,.4,1),opacity .3s .1s;}
+.passcode-wrap.unlocked .passcode-ok{animation:okIn .45s .25s cubic-bezier(.34,1.56,.64,1) forwards;}
+.passcode-wrap.unlocked .passcode-ok svg{animation:okDraw .35s .5s ease forwards;}
+@keyframes okIn{to{transform:scale(1);opacity:1;}}
+@keyframes okDraw{to{stroke-dashoffset:0;}}
+
+/* 2) avisos estilo Dynamic Island */
+.island{position:fixed;left:50%;top:10px;z-index:10050;transform:translateX(-50%) translateY(-70px) scale(.6);background:#000;color:#fff;border-radius:99px;box-shadow:0 18px 40px -12px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.08);
+  max-width:46px;height:46px;overflow:hidden;display:flex;align-items:center;cursor:pointer;opacity:0;
+  transition:transform .45s cubic-bezier(.34,1.4,.5,1),max-width .5s cubic-bezier(.6,0,.2,1),height .4s cubic-bezier(.6,0,.2,1),border-radius .4s,opacity .25s;}
+.island.show{transform:translateX(-50%) translateY(0) scale(1);opacity:1;}
+.island.open{max-width:min(520px,calc(100vw - 24px));}
+.island.open.has-sub{height:58px;border-radius:30px;}
+.isl-in{display:flex;align-items:center;gap:11px;padding:0 18px 0 7px;white-space:nowrap;}
+.isl-ic{width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:16px;background:rgba(255,255,255,.1);}
+.isl-tx{min-width:0;opacity:0;transform:translateY(4px);transition:opacity .25s .18s,transform .3s .18s;}
+.island.open .isl-tx{opacity:1;transform:none;}
+.isl-tx b{display:block;font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;max-width:min(440px,calc(100vw - 110px));}
+.isl-tx small{display:block;font-size:11.5px;color:rgba(255,255,255,.6);overflow:hidden;text-overflow:ellipsis;max-width:min(440px,calc(100vw - 110px));}
+.isl-dot{width:7px;height:7px;border-radius:50%;background:#5B8CFF;margin-left:auto;flex-shrink:0;box-shadow:0 0 8px #5B8CFF;animation:focusBlink 1.4s ease-in-out infinite;}
+.island.tone-green .isl-ic{background:rgba(31,169,124,.25);} .island.tone-green .isl-dot{background:#1FA97C;box-shadow:0 0 8px #1FA97C;}
+.island.tone-amber .isl-ic{background:rgba(224,166,45,.25);} .island.tone-amber .isl-dot{background:#E0A62D;box-shadow:0 0 8px #E0A62D;}
+.island.tone-blue .isl-ic{background:rgba(76,126,255,.28);}
+
+/* 3) pastas 3D na Identidade Visual */
+.brand-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:26px 20px;padding-top:14px;}
+.brand-folder{cursor:pointer;perspective:900px;outline:none;}
+.bf-stage{position:relative;height:178px;}
+.bf-back{position:absolute;left:0;right:0;top:14px;bottom:0;border-radius:6px 14px 14px 14px;background:linear-gradient(160deg,var(--fc2),var(--fc3));box-shadow:inset 0 1px 0 rgba(255,255,255,.18);}
+.bf-back::before{content:'';position:absolute;left:0;top:-14px;width:44%;height:22px;border-radius:10px 12px 0 0;background:var(--fc2);clip-path:polygon(0 0,82% 0,100% 100%,0 100%);}
+.bf-paper{position:absolute;left:12%;right:12%;height:120px;top:24px;border-radius:8px;background:#fff;box-shadow:0 6px 16px -6px rgba(0,0,0,.45);transition:transform .45s cubic-bezier(.34,1.3,.5,1);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.bf-paper.p1{transform:translateY(12px) rotate(-2deg);z-index:2;}
+.bf-paper.p2{transform:translateY(16px) rotate(3deg);z-index:1;background:#f3f4f7;flex-direction:column;align-items:stretch;justify-content:flex-start;padding:8px;gap:4px;}
+.bf-paper.p1{align-items:flex-start;padding-top:10px;}
+.bf-paper.p1 img{max-width:70%;max-height:38px;object-fit:contain;}
+.bf-paper.p1 > span{margin-top:6px;}
+.bf-paper .sw{flex:1;border-radius:4px;}
+.bf-front{position:absolute;left:0;right:0;bottom:0;height:112px;border-radius:10px 10px 14px 14px;z-index:3;transform-origin:50% 100%;transition:transform .45s cubic-bezier(.34,1.2,.5,1),box-shadow .3s;
+  background:linear-gradient(170deg,var(--fc1),var(--fc2));box-shadow:0 -1px 0 rgba(255,255,255,.25) inset,0 14px 28px -14px rgba(0,0,0,.7);padding:14px 14px 12px;display:flex;flex-direction:column;justify-content:flex-end;}
+.bf-front::after{content:'';position:absolute;inset:0;border-radius:inherit;background:linear-gradient(180deg,rgba(255,255,255,.18),transparent 40%,rgba(0,0,0,.28));pointer-events:none;}
+.bf-name{position:relative;z-index:1;font-weight:700;font-size:14px;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.45);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.bf-sub{position:relative;z-index:1;font-size:11px;color:rgba(255,255,255,.82);text-shadow:0 1px 2px rgba(0,0,0,.4);display:flex;gap:6px;align-items:center;}
+.bf-sub i{width:9px;height:9px;border-radius:3px;display:inline-block;border:1px solid rgba(255,255,255,.5);}
+.brand-folder:hover .bf-front,.brand-folder:focus-visible .bf-front{transform:rotateX(-28deg);box-shadow:0 -1px 0 rgba(255,255,255,.25) inset,0 26px 30px -16px rgba(0,0,0,.8);}
+.brand-folder:hover .bf-paper.p1,.brand-folder:focus-visible .bf-paper.p1{transform:translate(-14px,-30px) rotate(-8deg);}
+.brand-folder:hover .bf-paper.p2,.brand-folder:focus-visible .bf-paper.p2{transform:translate(16px,-18px) rotate(7deg);}
+@media (hover:none){ .bf-paper.p1{transform:translate(-8px,-10px) rotate(-5deg);} .bf-paper.p2{transform:translate(10px,-4px) rotate(5deg);} }
+
+/* 5) modo foco: check + risco ao mandar pra revisão */
+.fq-now{position:relative;}
+.fq-check{position:absolute;right:0;top:0;width:54px;height:54px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;transform:scale(0);box-shadow:0 0 0 8px rgba(31,169,124,.16);}
+.fq-check svg{width:26px;height:26px;stroke:#fff;stroke-width:3;fill:none;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:30;stroke-dashoffset:30;}
+.fq-head.leaving .fq-check{animation:okIn .35s cubic-bezier(.34,1.56,.64,1) forwards;}
+.fq-head.leaving .fq-check svg{animation:okDraw .3s .2s ease forwards;}
+.fq-cur-title span{background:linear-gradient(#5B8CFF,#5B8CFF) no-repeat 0 55%/0 3px;transition:background-size .35s .15s ease,color .3s .15s;}
+.fq-head.leaving .fq-cur-title span{background-size:100% 3px;color:var(--text-faint);}
+.fq-head.leaving{animation:fqLeave .4s .55s ease forwards;}
+@keyframes fqLeave{to{transform:translateX(50px);opacity:0;}}
+.fq-head.arrive{animation:fqArrive .5s cubic-bezier(.2,1,.3,1);}
+@keyframes fqArrive{from{transform:translateY(40px);opacity:0;}}
+@media (prefers-reduced-motion: reduce){ .passcode-dot.active,.passcode-dot.filled{animation:none;} .fq-head.leaving,.fq-head.arrive{animation:none;} .island{transition:opacity .2s;} }
 </style>
 </head>
 <body>
@@ -2390,6 +2465,7 @@ async function initApp(){
       updateOverduePayments();
       const appVisible = document.getElementById('app').style.display !== 'none';
       if(state.currentUserId && appVisible){ render(); renderNotifBell(); }
+      if(state.currentUserId) islandSnapshotDiff();
     });
 
     document.getElementById('loadingScreen').style.display='none';
@@ -2665,9 +2741,23 @@ document.addEventListener('click', (e)=>{
 
 /* ================= LOGIN ================= */
 function updatePasscodeDots(){
-  const val = document.getElementById('loginCode').value;
-  document.querySelectorAll('.passcode-dot').forEach((d,i)=> d.classList.toggle('filled', i < val.length));
+  const el = document.getElementById('loginCode'), val = el.value, focused = document.activeElement===el;
+  document.querySelectorAll('.passcode-dot').forEach((d,i)=>{
+    const was = d.classList.contains('filled');
+    d.classList.toggle('filled', i < val.length);
+    d.classList.toggle('active', focused && val.length<4 && i===val.length);
+    // mostra o número digitado por um instante antes de virar bolinha
+    if(i < val.length && !was){ d.dataset.n = val[i]; d.classList.add('reveal'); clearTimeout(d._rt); d._rt = setTimeout(()=>d.classList.remove('reveal'), 450); }
+    if(i >= val.length){ d.classList.remove('reveal'); delete d.dataset.n; }
+  });
 }
+(function(){
+  const wrap = document.getElementById('passcodeWrap'), code = document.getElementById('loginCode');
+  if(!wrap || !code) return;
+  const ok = document.createElement('div'); ok.className = 'passcode-ok'; ok.innerHTML = '<svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>';
+  wrap.appendChild(ok);
+  code.addEventListener('focus', updatePasscodeDots); code.addEventListener('blur', ()=>setTimeout(updatePasscodeDots, 0));
+})();
 function shakePasscode(){
   const wrap = document.getElementById('passcodeWrap');
   wrap.classList.remove('shake');
@@ -2717,6 +2807,7 @@ function renderLogin(){
   document.getElementById('loginBtn').disabled = false;
   document.getElementById('loginError').style.display = 'none';
   document.querySelectorAll('.passcode-dot').forEach(d=> d.classList.remove('success'));
+  document.getElementById('passcodeWrap').classList.remove('unlocked');
   updatePasscodeDots();
 }
 
@@ -2742,10 +2833,14 @@ function attemptLogin(){
   document.getElementById('loginBtn').disabled = true;
   const dots = document.querySelectorAll('.passcode-dot');
   dots.forEach((d,i)=>{ setTimeout(()=> d.classList.add('success'), i*70); });
+  // as caixas se juntam no centro e viram um ✓ antes de abrir o app
+  const wrapEl = document.getElementById('passcodeWrap'), wr = wrapEl.getBoundingClientRect();
+  dots.forEach(d=>{ const r = d.getBoundingClientRect(); d.style.setProperty('--to-c', ((wr.left+wr.width/2)-(r.left+r.width/2)).toFixed(0)+'px'); d.classList.remove('active'); });
+  setTimeout(()=>wrapEl.classList.add('unlocked'), dots.length*70 + 120);
   setTimeout(()=>{
     saveState(state);
     enterApp();
-  }, dots.length*70 + 280);
+  }, dots.length*70 + (REDUCED_MOTION() ? 280 : 1050));
 }
 document.getElementById('loginBtn').addEventListener('click', attemptLogin);
 document.getElementById('loginCode').addEventListener('input', ()=>{
@@ -3478,6 +3573,7 @@ function openQuoteToClientModal(q){
 function soundOn(){ try{ return localStorage.getItem('smkos_sound')!=='off'; }catch(e){ return true; } }
 function playKaching(value){
   buzz([30,40,30,40,70]);
+  if(value) island('Pagamento recebido', {icon:'💰', sub:fmtMoney(value), tone:'green'});
   if(soundOn()){
     try{
       const AC = window.AudioContext || window.webkitAudioContext; const ac = playKaching._ac || (playKaching._ac = new AC());
@@ -5008,7 +5104,7 @@ function openClientDetail(id){
 function renderBrandKit(el){
   el.innerHTML = `
     <div style="font-size:11.5px;color:var(--text-faint);margin:-8px 0 14px;">Logo, cores da marca e guia completo de cada cliente — útil pra quem for criar uma arte sem ter os arquivos em mãos.</div>
-    <div class="client-grid" id="brandGrid"></div>
+    <div class="brand-grid" id="brandGrid"></div>
   `;
   const grid = document.getElementById('brandGrid');
   const list = state.clients.filter(c=>c.status!=='encerrado');
@@ -5016,21 +5112,11 @@ function renderBrandKit(el){
     grid.innerHTML = `<div class="empty">Nenhum cliente cadastrado ainda.</div>`;
     return;
   }
-  grid.innerHTML = list.map(c=>{
-    const brand = c.brand || {};
-    const colors = brand.colors || [];
-    return `
-    <div class="client-card" data-id="${c.id}">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:10px;">
-        <div style="width:48px;height:48px;border-radius:9px;background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;overflow:hidden;">
-          ${brand.logo_url ? `<img src="${brand.logo_url}" style="max-width:100%;max-height:100%;object-fit:contain;">` : `<span style="color:#bbb;font-size:18px;">—</span>`}
-        </div>
-        <div style="min-width:0;"><div class="cname">${c.name}</div><div class="ccompany">${c.company_name||''}</div></div>
-      </div>
-      ${colors.length ? `<div style="display:flex;gap:5px;">${colors.slice(0,6).map(col=>`<div style="width:16px;height:16px;border-radius:4px;background:${col.hex};border:1px solid rgba(255,255,255,.15);" title="${escapeHTML(col.label||col.hex)}"></div>`).join('')}</div>` : `<div style="font-size:11px;color:var(--text-faint);">Sem identidade cadastrada ainda</div>`}
-    </div>`;
-  }).join('');
-  grid.querySelectorAll('.client-card').forEach(c=>c.addEventListener('click',()=>openBrandKitDetail(c.dataset.id)));
+  grid.innerHTML = list.map(brandFolderHTML).join('');
+  grid.querySelectorAll('.brand-folder').forEach(f=>{
+    f.addEventListener('click', ()=>openBrandKitDetail(f.dataset.id));
+    f.addEventListener('keydown', e=>{ if(e.key==='Enter') openBrandKitDetail(f.dataset.id); });
+  });
 }
 
 function openBrandKitDetail(id){
@@ -6489,41 +6575,7 @@ function openCommitmentCard(id){
   const mapsUrl = mapsLink(c.location);
   document.getElementById('genericModalTitle').textContent = 'Cartão da gravação';
   document.getElementById('genericModalBody').innerHTML = `
-    <div id="commitCard" style="background:#0A1128;color:#fff;padding:36px;border-radius:16px;font-family:inherit;">
-      <div style="display:flex;align-items:center;gap:10px;margin-bottom:26px;">
-        <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:22px;width:auto;">
-        <div style="font-size:10.5px;letter-spacing:1.5px;text-transform:uppercase;color:#8B95AC;font-weight:600;">${COMMITMENT_TYPES[c.type]||'Compromisso'} confirmado</div>
-      </div>
-      <div style="font-size:24px;font-weight:800;line-height:1.25;margin-bottom:4px;">${escapeHTML(c.title||COMMITMENT_TYPES[c.type]||'Compromisso')}</div>
-      <div style="font-size:13px;color:#8B95AC;margin-bottom:24px;">${client?escapeHTML(client.name):'&nbsp;'}</div>
-      <div style="display:flex;flex-direction:column;gap:10px;">
-        <div style="display:flex;gap:14px;align-items:center;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
-          <div style="font-size:18px;">📅</div>
-          <div><div style="font-size:11px;color:#8B95AC;">Data</div><div style="font-size:14px;font-weight:600;">${fmtDate(c.date)}</div></div>
-        </div>
-        ${c.time?`<div style="display:flex;gap:14px;align-items:center;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
-          <div style="font-size:18px;">🕐</div>
-          <div><div style="font-size:11px;color:#8B95AC;">Horário</div><div style="font-size:14px;font-weight:600;">${c.time}</div></div>
-        </div>`:''}
-        ${c.location?`<a href="${mapsUrl}" target="_blank" rel="noopener" style="display:flex;gap:14px;align-items:center;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;color:inherit;text-decoration:none;">
-          <div style="font-size:18px;">📍</div>
-          <div><div style="font-size:11px;color:#8B95AC;">Local</div><div style="font-size:14px;font-weight:600;color:#5B8CFF;">${escapeHTML(c.location)}</div></div>
-        </a>`:''}
-      </div>
-      ${(c.shot_list||[]).length?`<div style="margin-top:14px;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
-        <div style="font-size:11px;color:#8B95AC;margin-bottom:8px;">🎬 ${isSimplePauta(c)?'Vídeos que vamos gravar':'Pauta da gravação'} · ${c.shot_list.length} vídeo${c.shot_list.length>1?'s':''}</div>
-        ${c.shot_list.map((s,i)=>`<div style="display:flex;gap:12px;align-items:baseline;padding:7px 0;${i<c.shot_list.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13.5px;">
-          <span style="font-family:'IBM Plex Mono',monospace;color:#5B8CFF;font-weight:600;min-width:${isSimplePauta(c)?'24':'44'}px;">${isSimplePauta(c)?String(i+1).padStart(2,'0'):(s.time||'—')}</span>
-          <span style="font-weight:700;">${escapeHTML(s.who||'')}</span>
-          <span style="color:#AEB9DC;">${escapeHTML(s.detail||'')}</span>
-        </div>`).join('')}
-      </div>`:''}
-      ${c.notes?`<div style="margin-top:14px;background:#111A2E;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:14px 16px;">
-        <div style="font-size:11px;color:#8B95AC;margin-bottom:4px;">Observações</div>
-        <div style="font-size:13.5px;line-height:1.5;white-space:pre-line;">${escapeHTML(c.notes)}</div>
-      </div>`:''}
-      <div style="margin-top:24px;padding-top:16px;border-top:1px solid rgba(255,255,255,.1);font-size:13px;color:#8B95AC;">Qualquer dúvida, é só chamar 🙂</div>
-    </div>
+    ${commitTicketHTML(c, client)}
     <div class="modal-foot">
       <button class="btn ghost" data-close="genericModalOverlay">Fechar</button>
       <button type="button" class="btn" id="copyCommitCardBtn">📋 Copiar imagem</button>
@@ -6536,7 +6588,7 @@ function openCommitmentCard(id){
   // gera a imagem já ao abrir, pra o clique no WhatsApp ser instantâneo (navegador só deixa compartilhar logo após o toque)
   const cardBlob = new Promise(resolve=>{
     if(!window.html2canvas) return resolve(null);
-    setTimeout(()=>html2canvas(document.getElementById('commitCard'), {backgroundColor:'#0A1128', scale:2})
+    setTimeout(()=>html2canvas(document.getElementById('commitCard'), {backgroundColor:'#070B18', scale:2})
       .then(cv=>cv.toBlob(b=>resolve(b), 'image/png')).catch(()=>resolve(null)), 350);
   });
   document.getElementById('waCommitCardBtn').addEventListener('click', ()=>shareCommitCardWhatsApp(c, client, cardBlob));
@@ -9077,7 +9129,8 @@ function drawFocus(){
       <div class="fq-now">
         <div class="fq-label">Agora</div>
         <div class="fq-client" style="color:${clientColor(cur.client_id)}">${escapeHTML(clientById(cur.client_id)?.name||'—')}</div>
-        <div class="fq-cur-title">${escapeHTML(cur.title)}</div>
+        <div class="fq-check"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+        <div class="fq-cur-title"><span>${escapeHTML(cur.title)}</span></div>
         <div class="fq-meta">${focusCardHTML(cur,0,0,false).match(/<span class="fq-tag[^>]*>[^<]*<\/span>/)?.[0]||''}<span>${escapeHTML(cur.task_type||'')}</span><span>prazo ${fmtDate(cur.due_date).slice(0,5)}</span></div>
         ${briefing?`<div class="fq-brief">${escapeHTML(briefing.slice(0,220))}${briefing.length>220?'…':''}</div>`:''}
         <div class="fq-tt"><b id="fqTaskTime">00:00</b><span id="fqOver"></span></div>
@@ -9099,9 +9152,14 @@ function drawFocus(){
   ov.querySelector('#fqBreakBtn').addEventListener('click', ()=>save(x=>{ x.since = null; }));
   ov.querySelector('#fqSkip')?.addEventListener('click', ()=>save(x=>{ const [id] = x.ids.splice(x.idx,1); x.ids.push(id); x.tacc = 0; }));
   ov.querySelector('#fqDone').addEventListener('click', ()=>{
-    changeTaskStatus(cur.id, 'em_revisao');
-    const x = focusFlush(focusGet()); x.done = (x.done||0)+1; x.tacc = 0; x.ids.splice(x.idx,1); focusSet(x);
-    render(); drawFocus();
+    const head = ov.querySelector('.fq-head'); if(head.classList.contains('leaving')) return;
+    head.classList.add('leaving'); buzz([15,35,15]);
+    setTimeout(()=>{
+      changeTaskStatus(cur.id, 'em_revisao');
+      const x = focusFlush(focusGet()); x.done = (x.done||0)+1; x.tacc = 0; x.ids.splice(x.idx,1); focusSet(x);
+      render(); drawFocus();
+      document.querySelector('.focus-ov .fq-head')?.classList.add('arrive');
+    }, REDUCED_MOTION() ? 0 : 900);
   });
   ov.querySelectorAll('.fq-item[data-fq]').forEach(el=>el.addEventListener('click', ()=>openTaskModal(el.dataset.fq)));
   updateFocusNumbers();
@@ -9221,6 +9279,142 @@ function teamHeatHTML(){
     <div class="section-title" style="margin-bottom:6px;">🟦 Ritmo do time <span class="hint">cada quadradinho é um dia · entregas de quem executa, aprovações de quem revisa · últimas 26 semanas</span></div>
     ${users.map(u=>{ const n = Object.entries(deliveriesByDay(u.id)).filter(([k])=>k>=dayKeyOf(Date.now()-182*86400000)).reduce((s,[,v])=>s+v,0);
       return `<div class="heat-team-row"><div style="font-weight:600;font-size:13px;">${escapeHTML(u.full_name)}<div style="font-size:11px;color:var(--text-faint);font-weight:400;">${ROLE_LABEL[u.role]||''}</div></div>${heatmapHTML(u.id, 26, {cell:11, foot:false})}<div class="mono" style="font-size:13px;text-align:right;"><b>${n}</b><div style="font-size:10.5px;color:var(--text-faint);">${heatKind(u.id, n)}</div></div></div>`; }).join('')}
+  </div>`;
+}
+
+/* ============ INSPORA · LOTE A ============ */
+
+/* ---------- 🏝️ AVISOS ESTILO DYNAMIC ISLAND ---------- */
+const islandQueue = []; let islandBusy = false;
+function island(text, {icon='✨', sub='', tone='blue', ms=3800, onClick=null}={}){
+  islandQueue.push({text, icon, sub, tone, ms, onClick});
+  if(islandQueue.length > 4) islandQueue.splice(0, islandQueue.length-4);
+  if(!islandBusy) nextIsland();
+}
+function nextIsland(){
+  const it = islandQueue.shift(); if(!it){ islandBusy = false; return; }
+  islandBusy = true;
+  const el = document.createElement('div');
+  el.className = `island tone-${it.tone}${it.sub?' has-sub':''}`;
+  el.setAttribute('role','status');
+  el.innerHTML = `<div class="isl-in"><span class="isl-ic">${it.icon}</span><span class="isl-tx"><b>${escapeHTML(it.text)}</b>${it.sub?`<small>${escapeHTML(it.sub)}</small>`:''}</span><span class="isl-dot"></span></div>`;
+  document.body.appendChild(el);
+  let closed = false;
+  const close = ()=>{ if(closed) return; closed = true; el.classList.remove('open'); setTimeout(()=>el.classList.remove('show'), 380); setTimeout(()=>{ el.remove(); nextIsland(); }, 820); };
+  el.addEventListener('click', ()=>{ it.onClick?.(); close(); });
+  void el.offsetWidth; el.classList.add('show');
+  setTimeout(()=>el.classList.add('open'), 260);
+  let t = setTimeout(close, it.ms);
+  el.addEventListener('mouseenter', ()=>clearTimeout(t));
+  el.addEventListener('mouseleave', ()=>{ clearTimeout(t); t = setTimeout(close, 1600); });
+}
+// o que chegou de outras pessoas desde o último snapshot vira aviso (só o que importa pra quem está logado)
+let islandSeen = null;
+const ISLAND_MOVE = {
+  em_revisao:{verb:'mandou pra revisão', icon:'👀', tone:'blue'}, aprovado:{verb:'aprovou', icon:'✅', tone:'green'},
+  alteracao_solicitada:{verb:'pediu alteração em', icon:'✏️', tone:'amber'}, concluido:{verb:'concluiu', icon:'🏁', tone:'green'},
+  a_fazer:{verb:'voltou pra A Fazer', icon:'↩️', tone:'blue'},
+};
+function islandSnapshotDiff(){
+  const me = currentUser(); if(!me) return;
+  const key = me.id;
+  const comments = state.task_comments || [], tasks = state.tasks || [];
+  if(!islandSeen || islandSeen.key!==key){ islandSeen = {key, c:new Set(comments.map(c=>c.id)), t:new Set(tasks.map(t=>t.id))}; return; }
+  const out = [];
+  tasks.forEach(t=>{
+    if(islandSeen.t.has(t.id)) return; islandSeen.t.add(t.id);
+    if(t.assignee_id===me.id && t.created_by && t.created_by!==me.id)
+      out.push({text:`Nova demanda pra você: ${t.title}`, icon:'📥', sub:`${clientById(t.client_id)?.name||''} · por ${userById(t.created_by)?.full_name?.split(' ')[0]||'alguém'}`, tone:'blue', onClick:()=>openTaskModal(t.id)});
+  });
+  comments.forEach(c=>{
+    if(islandSeen.c.has(c.id)) return; islandSeen.c.add(c.id);
+    if(!c.user_id || c.user_id===me.id || Date.now()-(c.created_at||0) > 10*60000) return;
+    const t = tasks.find(x=>x.id===c.task_id); if(!t) return;
+    const mine = t.assignee_id===me.id || t.created_by===me.id;
+    const who = userById(c.user_id)?.full_name?.split(' ')[0] || 'Alguém';
+    if(isStatusMove(c)){
+      const to = Object.keys(STATUS_LABEL).find(k=>c.content.endsWith(`para "${STATUS_LABEL[k]}"`));
+      const m = ISLAND_MOVE[to]; if(!m) return;
+      if(!(mine || (isDono() && (to==='em_revisao' || to==='aprovado')))) return;
+      out.push({text:`${who} ${m.verb} ${t.title}`, icon:m.icon, sub:clientById(t.client_id)?.name||'', tone:m.tone, onClick:()=>openTaskModal(t.id)});
+    } else if((c.type==='comment' || c.type==='image') && mine){
+      out.push({text:`${who} comentou em ${t.title}`, icon:c.type==='image'?'🖼️':'💬', sub:c.type==='image'?'anexou uma imagem':String(c.content||'').replace(/\s+/g,' ').slice(0,70), tone:'blue', onClick:()=>openTaskModal(t.id)});
+    }
+  });
+  out.slice(-3).forEach(o=>island(o.text, o));
+}
+
+/* ---------- 🎟️ CARTÃO DE GRAVAÇÃO ESTILO INGRESSO ---------- */
+function ticketCode(name){ return (normSearch(name||'').replace(/[^a-z]/g,'').slice(0,3) || 'CLI').toUpperCase(); }
+function ticketBarcodeHTML(seed){
+  let h = 7, bars = '';
+  for(let i=0;i<46;i++){ h = (h*31 + (seed.charCodeAt(i % seed.length)||7) + i) % 997; const w = 1 + h%3, gap = 1 + (h>>3)%2; bars += `<span style="display:inline-block;width:${w}px;height:34px;background:#DCE4FF;margin-right:${gap}px;vertical-align:top;"></span>`; }
+  return bars;
+}
+function commitTicketHTML(c, client){
+  const d = new Date((c.date||todayISO())+'T12:00:00');
+  const wd = d.toLocaleDateString('pt-BR',{weekday:'long'}), mon = d.toLocaleDateString('pt-BR',{month:'short'}).replace('.','').toUpperCase();
+  const typeLabel = COMMITMENT_TYPES[c.type]||'Compromisso';
+  const simple = isSimplePauta(c), shots = c.shot_list || [];
+  const lbl = 'font-size:10px;letter-spacing:1.6px;text-transform:uppercase;color:#7F8CB5;font-weight:700;';
+  const mapsUrl = mapsLink(c.location);
+  const notch = side => `<div style="position:absolute;${side}:-15px;top:-15px;width:30px;height:30px;border-radius:50%;background:#070B18;"></div>`;
+  return `<div id="commitCard" style="background:#070B18;padding:22px;border-radius:20px;font-family:inherit;">
+    <div style="background:linear-gradient(160deg,#16244F 0%,#0D1633 55%,#0A1128 100%);color:#fff;border-radius:18px;border:1px solid rgba(143,176,255,.22);overflow:hidden;">
+      <div style="padding:22px 26px 20px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px;">
+          <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:20px;width:auto;">
+          <div style="${lbl}color:#8FB0FF;">🎬 ${escapeHTML(typeLabel)} confirmad${['gravacao','reuniao','folga'].includes(c.type)?'a':'o'}</div>
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:20px;">
+          <div><div style="font:700 40px 'Space Grotesk',sans-serif;letter-spacing:-1px;line-height:1;">SMK</div><div style="font-size:11px;color:#7F8CB5;margin-top:4px;">SMK Agency</div></div>
+          <div style="flex:1;display:flex;align-items:center;gap:6px;padding:0 6px;"><div style="flex:1;border-top:2px dashed rgba(143,176,255,.4);"></div><div style="font-size:18px;">🎥</div><div style="flex:1;border-top:2px dashed rgba(143,176,255,.4);"></div></div>
+          <div style="text-align:right;"><div style="font:700 40px 'Space Grotesk',sans-serif;letter-spacing:-1px;line-height:1;color:#8FB0FF;">${ticketCode(client?.name)}</div><div style="font-size:11px;color:#7F8CB5;margin-top:4px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escapeHTML(client?.name||c.title||'')}</div></div>
+        </div>
+        ${c.title?`<div style="font-size:17px;font-weight:700;line-height:1.3;margin-bottom:18px;">${escapeHTML(c.title)}</div>`:''}
+        <div style="display:flex;gap:10px;">
+          <div style="flex:1.2;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;">
+            <div style="${lbl}">Data</div>
+            <div style="display:flex;align-items:baseline;gap:6px;margin-top:4px;"><span style="font:700 30px 'Space Grotesk',sans-serif;line-height:1;">${String(d.getDate()).padStart(2,'0')}</span><span style="font-weight:700;font-size:14px;color:#8FB0FF;">${mon}</span></div>
+            <div style="font-size:11.5px;color:#AEB9DC;margin-top:3px;text-transform:capitalize;">${wd}</div>
+          </div>
+          <div style="flex:1;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;">
+            <div style="${lbl}">Horário</div>
+            <div style="font:700 30px 'IBM Plex Mono',monospace;line-height:1;margin-top:4px;">${c.time||'--:--'}</div>
+          </div>
+        </div>
+        ${c.location?`<a href="${mapsUrl}" target="_blank" rel="noopener" style="display:flex;gap:12px;align-items:center;margin-top:10px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:12px 14px;color:inherit;text-decoration:none;">
+          <div style="font-size:18px;">📍</div><div style="min-width:0;"><div style="${lbl}">Local</div><div style="font-size:14px;font-weight:600;color:#8FB0FF;margin-top:2px;">${escapeHTML(c.location)}</div></div></a>`:''}
+      </div>
+      <div style="position:relative;height:0;border-top:2px dashed rgba(143,176,255,.28);margin:0 16px;">${notch('left')}${notch('right')}</div>
+      <div style="padding:18px 26px 20px;">
+        ${shots.length?`<div style="${lbl}margin-bottom:8px;">${simple?'Vídeos que vamos gravar':'Pauta da gravação'} · ${shots.length} vídeo${shots.length>1?'s':''}</div>
+          ${shots.map((s,i)=>`<div style="display:flex;gap:12px;align-items:baseline;padding:6px 0;${i<shots.length-1?'border-bottom:1px solid rgba(255,255,255,.06);':''}font-size:13px;">
+            <span style="font-family:'IBM Plex Mono',monospace;color:#8FB0FF;font-weight:600;min-width:${simple?'24':'44'}px;">${simple?String(i+1).padStart(2,'0'):(s.time||'—')}</span>
+            ${s.who?`<span style="font-weight:700;">${escapeHTML(s.who)}</span>`:''}<span style="color:#AEB9DC;">${escapeHTML(s.detail||'')}</span></div>`).join('')}`:''}
+        ${c.notes?`<div style="${shots.length?'margin-top:14px;':''}"><div style="${lbl}margin-bottom:4px;">Observações</div><div style="font-size:13px;line-height:1.5;white-space:pre-line;color:#DCE4FF;">${escapeHTML(c.notes)}</div></div>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:14px;${shots.length||c.notes?'margin-top:18px;':''}">
+          <div style="font-size:12.5px;color:#AEB9DC;">Qualquer dúvida, é só chamar 🙂</div>
+          <div style="text-align:right;white-space:nowrap;"><div style="line-height:0;">${ticketBarcodeHTML(c.id||'smk')}</div><div style="font:600 9.5px 'IBM Plex Mono',monospace;letter-spacing:2px;color:#7F8CB5;margin-top:5px;">SMK-${(c.id||'').toUpperCase().slice(0,6)}</div></div>
+        </div>
+      </div>
+    </div>
+  </div>`;
+}
+
+/* ---------- 📁 IDENTIDADE VISUAL EM PASTAS ---------- */
+function brandFolderHTML(c){
+  const brand = c.brand || {}, colors = brand.colors || [];
+  const base = colors[0]?.hex || clientColor(c.id) || '#4C7EFF';
+  const fc1 = base, fc2 = darkenHex(base, .18), fc3 = darkenHex(base, .42);
+  return `<div class="brand-folder" data-id="${c.id}" tabindex="0" style="--fc1:${fc1};--fc2:${fc2};--fc3:${fc3};">
+    <div class="bf-stage">
+      <div class="bf-back"></div>
+      <div class="bf-paper p1">${brand.logo_url ? `<img src="${brand.logo_url}" alt="">` : `<span style="color:#aaa;font-size:12px;">sem logo</span>`}</div>
+      <div class="bf-paper p2">${colors.length ? colors.slice(0,5).map(col=>`<div class="sw" style="background:${col.hex};"></div>`).join('') : `<div class="sw" style="background:repeating-linear-gradient(45deg,#e4e6ec 0 6px,#f3f4f7 6px 12px);"></div>`}</div>
+      <div class="bf-front"><div class="bf-name">${escapeHTML(c.name)}</div>
+        <div class="bf-sub">${colors.length ? colors.slice(0,4).map(col=>`<i style="background:${col.hex}"></i>`).join('') + ` ${colors.length} cor${colors.length>1?'es':''}` : 'sem cores'}${brand.logo_url?' · logo':''}</div></div>
+    </div>
   </div>`;
 }
 </script>
