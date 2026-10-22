@@ -1827,6 +1827,97 @@ html[data-theme="light"] .heat-grid i.l1{background:rgba(62,111,240,.25);} html[
 html[data-theme="light"] .pull-toggle .pt-track{stroke:rgba(21,27,38,.08);}
 html[data-theme="light"] .pt-knob{background:linear-gradient(180deg,#FFFFFF,#EEF1F6);border-color:rgba(21,27,38,.12);box-shadow:0 4px 10px -3px rgba(21,27,38,.35),inset 0 1px 0 #fff;color:#3E4A63;}
 @media (max-width:860px){ .pull-toggle{width:60px;height:36px;} }
+
+/* ============ ACABAMENTO: mais fluido, mesmo layout ============ */
+:root{--ease-out:cubic-bezier(.22,1,.36,1);--ease-spring:cubic-bezier(.34,1.45,.55,1);}
+html{-webkit-tap-highlight-color:transparent;}
+body{text-rendering:optimizeLegibility;font-feature-settings:"cv11","ss01";}
+::selection{background:rgba(76,126,255,.38);color:#fff;}
+html[data-theme="light"] ::selection{background:rgba(62,111,240,.22);color:inherit;}
+@media (prefers-reduced-motion: no-preference){ html{scroll-behavior:smooth;} }
+
+/* rolagem mais discreta */
+*{scrollbar-width:thin;scrollbar-color:rgba(255,255,255,.12) transparent;}
+::-webkit-scrollbar-thumb{background:rgba(255,255,255,.10);border-radius:8px;border:2px solid transparent;background-clip:padding-box;}
+::-webkit-scrollbar-thumb:hover{background:rgba(91,140,255,.45);background-clip:padding-box;}
+html[data-theme="light"] *{scrollbar-color:rgba(21,27,38,.18) transparent;}
+html[data-theme="light"] ::-webkit-scrollbar-thumb{background:rgba(21,27,38,.16);background-clip:padding-box;}
+
+/* botões: mola no clique, leve subida no hover */
+.btn{transition:transform .22s var(--ease-spring),box-shadow .25s var(--ease-out),border-color .2s ease,background-color .2s ease,color .2s ease,filter .2s ease;}
+.btn:hover{transform:translateY(-1px);}
+.btn:active{transform:translateY(0) scale(.96);transition-duration:.08s;}
+.btn.primary:hover{filter:brightness(1.08);box-shadow:0 1px 0 0 rgba(255,255,255,.25) inset,0 10px 24px -10px rgba(62,111,240,.9);}
+.btn:disabled,.btn[disabled]{transform:none;filter:none;}
+.btn:focus-visible,.nav-item:focus-visible,.seg-btn:focus-visible{outline:2px solid rgba(91,140,255,.8);outline-offset:2px;}
+
+/* campos: foco com brilho que acende suave */
+input,select,textarea{transition:border-color .2s ease,box-shadow .3s var(--ease-out),background-color .2s ease;}
+.search-input{padding-right:64px;}
+#newTaskBtn,.topbar .btn{white-space:nowrap;flex-shrink:0;}
+.search-wrap{min-width:0;}
+
+/* cards: hover mais macio e com profundidade */
+.kpi-card,.mesa-stat,.task-card,.client-card,.chart-card,.card,.week-card,.agcal-day,.fq-item,.react-chip{transition:transform .35s var(--ease-out),box-shadow .35s var(--ease-out),border-color .25s ease,background-color .25s ease;}
+.task-card:hover{transform:translateY(-2px);box-shadow:0 1px 0 0 rgba(255,255,255,.06) inset,0 16px 28px -18px rgba(0,0,0,.75);}
+.kpi-card:hover,.chart-card:hover,.week-card:hover{transform:translateY(-2px);box-shadow:0 18px 34px -22px rgba(0,0,0,.75);}
+.task-card:active{transform:translateY(0) scale(.985);transition-duration:.1s;}
+
+/* modais: entram com mola e saem suave (o fundo desfoca aos poucos) */
+.modal-overlay{transition:background-color .25s ease;}
+.modal-overlay.open{animation:overlayIn2 .28s ease both;}
+.modal-overlay.open .modal{animation:modalPop2 .42s var(--ease-out) both;}
+.modal-overlay.closing{animation:overlayOut2 .2s ease forwards;pointer-events:none;}
+.modal-overlay.closing .modal{animation:modalOut2 .2s ease forwards;}
+@keyframes overlayIn2{from{opacity:0;backdrop-filter:blur(0);-webkit-backdrop-filter:blur(0);}to{opacity:1;}}
+@keyframes overlayOut2{to{opacity:0;}}
+@keyframes modalPop2{from{opacity:0;transform:translateY(16px) scale(.965);filter:blur(4px);}to{opacity:1;transform:none;filter:none;}}
+@keyframes modalOut2{to{opacity:0;transform:translateY(10px) scale(.98);}}
+@media (max-width:860px){
+  .modal-overlay.open .modal{animation:sheetUp .42s cubic-bezier(.32,.72,0,1) both;}
+  .modal-overlay.closing .modal{animation:sheetDown .22s ease-in forwards;}
+  @keyframes sheetDown{to{transform:translateY(100%);}}
+}
+
+/* troca de tela: o conteúdo antigo sai e o novo entra (navegadores com View Transitions) */
+#content{view-transition-name:smk-content;}
+::view-transition-old(smk-content){animation:vtOut .18s ease forwards;}
+::view-transition-new(smk-content){animation:vtIn .34s var(--ease-out) both;}
+::view-transition-old(root),::view-transition-new(root){animation:none;}
+@keyframes vtOut{to{opacity:0;transform:translateY(-6px);filter:blur(2px);}}
+@keyframes vtIn{from{opacity:0;transform:translateY(10px);}}
+#app{transition:opacity .4s ease;}
+#app.app-enter{animation:appIn .55s var(--ease-out);}
+@keyframes appIn{from{opacity:0;transform:scale(.985);filter:blur(6px);}}
+
+/* menu lateral: hover desliza */
+.nav-item{transition:background-color .2s ease,color .2s ease,transform .25s var(--ease-out);}
+.nav-item:hover{transform:translateX(2px);}
+.nav-item:active{transform:translateX(2px) scale(.98);}
+
+/* dropdowns (busca, sino) abrem com fade */
+.search-dropdown.open,.notif-dropdown.open,.notif-panel.open{animation:dropIn .22s var(--ease-out);transform-origin:top;}
+@keyframes dropIn{from{opacity:0;transform:translateY(-6px) scale(.98);}}
+
+/* agenda: chips legíveis (cor do cliente vira faixa + fundo translúcido) */
+.agcal-chip{background:color-mix(in srgb, var(--c, #5B8CFF) 24%, transparent)!important;color:var(--text)!important;border-left:3px solid var(--c, #5B8CFF);border-radius:4px 5px 5px 4px;font-weight:600;transition:background-color .2s ease,transform .2s var(--ease-out);}
+.agcal-chip:hover{background:color-mix(in srgb, var(--c, #5B8CFF) 40%, transparent)!important;transform:translateX(1px);}
+
+/* tabelas: valores não quebram linha, linhas com hover suave */
+.table-wrap td.mono,.table-wrap td .mono{white-space:nowrap;}
+.table-wrap tbody tr{transition:background-color .2s ease;}
+.table-wrap tbody tr:hover{background:rgba(91,140,255,.05);}
+.view-enter .table-wrap tbody tr{animation:riseIn .45s var(--ease-out) backwards;}
+.view-enter .table-wrap tbody tr:nth-child(1){animation-delay:.04s}.view-enter .table-wrap tbody tr:nth-child(2){animation-delay:.08s}.view-enter .table-wrap tbody tr:nth-child(3){animation-delay:.12s}.view-enter .table-wrap tbody tr:nth-child(4){animation-delay:.16s}.view-enter .table-wrap tbody tr:nth-child(5){animation-delay:.2s}.view-enter .table-wrap tbody tr:nth-child(n+6){animation-delay:.24s}
+
+/* badges e chips com transição */
+.badge{transition:background-color .25s ease,color .25s ease,transform .25s var(--ease-spring);}
+
+@media (prefers-reduced-motion: reduce){
+  .btn:hover,.task-card:hover,.kpi-card:hover,.chart-card:hover,.week-card:hover,.nav-item:hover{transform:none;}
+  .modal-overlay.open,.modal-overlay.open .modal,.modal-overlay.closing,.modal-overlay.closing .modal,#app.app-enter{animation:none!important;}
+  ::view-transition-old(smk-content),::view-transition-new(smk-content){animation:none;}
+}
 </style>
 </head>
 <body>
@@ -3040,6 +3131,7 @@ function enterApp(){
   applyTheme();
   document.getElementById('loginScreen').style.display='none';
   document.getElementById('app').style.display='block';
+  { const app = document.getElementById('app'); app.classList.remove('app-enter'); void app.offsetWidth; app.classList.add('app-enter'); setTimeout(()=>app.classList.remove('app-enter'), 700); }
   refreshSidebarProfile();
   document.querySelectorAll('[data-owner]').forEach(el=>{
     el.style.display = isDono() ? '' : 'none';
@@ -3227,9 +3319,8 @@ function openProfileModal(){
 /* ================= NAV ================= */
 document.querySelectorAll('.nav-item[data-view]').forEach(btn=>{
   btn.addEventListener('click', ()=>{
-    currentView = btn.dataset.view;
-    setActiveNav();
-    render();
+    const go = ()=>{ currentView = btn.dataset.view; setActiveNav(); render(); };
+    if(document.startViewTransition && !REDUCED_MOTION() && currentView!==btn.dataset.view) document.startViewTransition(go); else go();
     document.getElementById('sidebar').classList.remove('open');
     document.getElementById('sidebarBackdrop').classList.remove('open');
   });
@@ -6510,7 +6601,7 @@ function drawAgendaCalendar(board){
 
     cells += `<div class="agcal-day ${agendaSelectedDay===iso?'sel':''} ${isToday?'today':''}" data-day="${iso}">
       <div class="agcal-daynum">${d}</div>
-      ${visibleChips.map(ch=>`<div class="agcal-chip" style="background:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}" title="${escapeHTML(ch.text)}">${ch.text}</div>`).join('')}
+      ${visibleChips.map(ch=>`<div class="agcal-chip" style="--c:${ch.color};" data-chip-kind="${ch.kind}" data-chip-id="${ch.id}" title="${escapeHTML(ch.text)}">${ch.text}</div>`).join('')}
       ${extra>0?`<div class="agcal-more" data-day="${iso}">+${extra} mais</div>`:''}
     </div>`;
   }
@@ -8811,8 +8902,14 @@ function openTeamCostModal(existing){
 
 /* ---------- MODAL UTIL ---------- */
 function openImageViewer(url){ document.getElementById('imgViewerImg').src = url; openModal('imgViewerOverlay'); }
-function openModal(id){ document.getElementById(id).classList.add('open'); }
-function closeModal(id){ document.getElementById(id).classList.remove('open'); }
+function openModal(id){ const el = document.getElementById(id); clearTimeout(el._closeT); el.classList.remove('closing'); el.classList.add('open'); }
+function closeModal(id){
+  const el = document.getElementById(id);
+  if(!el.classList.contains('open')) return;
+  if(REDUCED_MOTION()){ el.classList.remove('open','closing'); return; }
+  el.classList.add('closing'); clearTimeout(el._closeT);
+  el._closeT = setTimeout(()=>el.classList.remove('open','closing'), 190);
+}
 // delegado (não um forEach fixo) porque o conteúdo dos modais é recriado toda hora via innerHTML —
 // um listener preso direto no botão não sobrevive a isso
 document.addEventListener('click', (e)=>{
