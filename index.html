@@ -1114,6 +1114,19 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .qc-item input,.qc-item select{padding:6px 8px;font-size:12.5px;}
 .qc-similar{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;padding:10px 12px;border-radius:10px;border:1px solid rgba(224,166,45,.5);background:rgba(224,166,45,.1);font-size:12.5px;margin-bottom:14px;}
 .qc-note{font-size:11.5px;color:#E0A62D;margin-top:8px;}
+.qc-deal-q{font-weight:600;font-size:13px;margin-bottom:10px;}
+.qc-deal{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;}
+.qc-deal-opt{display:flex;flex-direction:column;align-items:flex-start;gap:3px;padding:14px;border-radius:14px;border:1px solid var(--border);background:var(--surface-2);color:var(--text);cursor:pointer;text-align:left;font-family:var(--font-body);transition:border-color .2s,background-color .2s,transform .25s cubic-bezier(.34,1.45,.55,1),box-shadow .25s;}
+.qc-deal-opt:hover{border-color:rgba(91,140,255,.45);transform:translateY(-2px);}
+.qc-deal-opt .ic{font-size:22px;margin-bottom:4px;}
+.qc-deal-opt b{font-size:14px;}
+.qc-deal-opt small{font-size:11.5px;color:var(--text-faint);line-height:1.4;}
+.qc-deal-opt.on{border-color:rgba(91,140,255,.7);background:radial-gradient(120% 140% at 0% 0%,rgba(62,111,240,.22),transparent 60%),var(--surface-2);box-shadow:0 0 0 1px rgba(91,140,255,.35),0 12px 26px -16px rgba(62,111,240,.8);}
+@media (max-width:520px){ .qc-deal{grid-template-columns:1fr;} }
+.qc-pay{display:flex;gap:8px;flex-wrap:wrap;}
+.qc-pay-opt{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;font-size:13px;font-weight:600;transition:border-color .2s,background-color .2s;}
+.qc-pay-opt input{accent-color:#5B8CFF;margin:0;}
+.qc-pay-opt:has(input:checked){border-color:rgba(91,140,255,.7);background:rgba(76,126,255,.14);}
 /* ka-ching */
 .kaching{position:fixed;left:50%;top:50%;z-index:2500;pointer-events:none;}
 .kc-val{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-family:var(--font-display);font-weight:700;font-size:34px;color:#3FD39E;text-shadow:0 6px 30px rgba(31,169,124,.7);white-space:nowrap;animation:kcVal 1.7s cubic-bezier(.2,.9,.3,1) forwards;}
@@ -3775,7 +3788,7 @@ function readjustLabel(r){
 /* ---------- 🤝 ORÇAMENTO ACEITO → CLIENTE ---------- */
 function openQuoteToClientModal(q){
   const opts = q.options||[];
-  let oi = 0;
+  let oi = 0, deal = q.deal_type || null; // 'recorrente' | 'freela'
   const monthlyGuess = d => /social|tr[aá]fego|gest[aã]o|mensal/i.test(d||'');
   const cur = todayISO().slice(0,7), nextM = addMonthsKey(cur, 1);
   const key = x => normSearch(x).replace(/[^a-z0-9]/g,'');
@@ -3784,8 +3797,16 @@ function openQuoteToClientModal(q){
   const draw = () => {
     const opt = opts[oi];
     const sub = (opt.items||[]).reduce((a,i)=>a+quoteItemLineTotal(i),0);
-    document.getElementById('itemModalTitle').textContent = '🤝 Criar cliente a partir do orçamento';
+    document.getElementById('itemModalTitle').textContent = '🤝 Orçamento aceito!';
+    const isFreela = deal==='freela';
+    const kindSel = it => deal==='freela' ? 'unico' : (opt.recurring||monthlyGuess(it.description)) ? 'mensal' : 'unico';
     document.getElementById('itemModalBody').innerHTML = `
+      <div class="qc-deal-q">Esse trabalho vai ser…</div>
+      <div class="qc-deal">
+        <button type="button" class="qc-deal-opt ${deal==='recorrente'?'on':''}" data-deal="recorrente"><span class="ic">🔁</span><b>Recorrente</b><small>Cliente fixo, com mensalidade todo mês</small></button>
+        <button type="button" class="qc-deal-opt ${deal==='freela'?'on':''}" data-deal="freela"><span class="ic">⚡</span><b>Freela</b><small>Trabalho único, cobrança só uma vez</small></button>
+      </div>
+      ${!deal ? `<div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button></div>` : `
       ${similar ? `<div class="qc-similar"><div>⚠️ Já existe um cliente parecido: <b>${escapeHTML(similar.name)}</b></div><button type="button" class="btn small" id="qc_link">Vincular a esse cliente</button></div>` : ''}
       <div class="field"><label>Nome do cliente</label><input type="text" id="qc_name" value="${escapeHTML(q.company||q.name)}"></div>
       ${opts.length>1?`<div class="field"><label>Opção aceita</label><select id="qc_opt">${opts.map((o,i)=>`<option value="${i}" ${i===oi?'selected':''}>Opção ${i+1}${o.title?' — '+escapeHTML(o.title):''} (${fmtMoney(quoteOptionTotal(o))})</option>`).join('')}</select></div>`:''}
@@ -3793,30 +3814,53 @@ function openQuoteToClientModal(q){
         <div class="qc-items">${opt.items.map((it,ii)=>`<div class="qc-item">
           <span class="qc-desc">${escapeHTML(it.description)}${Number(it.quantity)>1?` <i>(${it.quantity}x)</i>`:''}</span>
           <input type="number" step="0.01" class="qc-val" data-ii="${ii}" value="${quoteItemLineTotal(it)}">
-          <select class="qc-kind" data-ii="${ii}"><option value="mensal" ${(opt.recurring||monthlyGuess(it.description))?'selected':''}>Mensal</option><option value="unico" ${(opt.recurring||monthlyGuess(it.description))?'':'selected'}>Único</option></select>
+          <select class="qc-kind" data-ii="${ii}"><option value="mensal" ${kindSel(it)==='mensal'?'selected':''}>Mensal</option><option value="unico" ${kindSel(it)==='unico'?'selected':''}>Único</option></select>
         </div>`).join('')}</div>
         ${opt.discount>0?`<div class="qc-note">O orçamento tinha desconto de <b>${fmtMoney(opt.discount)}</b> (subtotal ${fmtMoney(sub)} → ${fmtMoney(quoteOptionTotal(opt))}). Ajuste os valores acima se quiser aplicar.</div>`:''}
       </div>
+      ${isFreela ? `
+      <div class="field"><label>Pagamento do freela</label>
+        <div class="qc-pay">
+          <label class="qc-pay-opt"><input type="radio" name="qc_paid" value="0" checked><span>⏳ Ainda vai pagar</span></label>
+          <label class="qc-pay-opt"><input type="radio" name="qc_paid" value="1"><span>✅ Já pagou</span></label>
+        </div>
+      </div>
+      <div class="field"><label id="qc_due_lbl">Data do pagamento combinada</label><input type="date" id="qc_due" value="${todayISO()}"></div>
+      <select id="qc_start" style="display:none;"><option value="${cur}" selected></option></select>` : `
       <div class="field-row">
         <div class="field"><label>Mensalidade começa em</label><select id="qc_start"><option value="${cur}">${wrappedMonthName(cur)} (este mês)</option><option value="${nextM}" selected>${wrappedMonthName(nextM)} (mês que vem)</option></select></div>
-        <div class="field"><label>Cobrança avulsa vence em</label><input type="date" id="qc_due" value="${todayISO()}"></div>
+        <div class="field"><label>Dia do pagamento <span class="hint">todo mês</span></label><input type="number" id="qc_payday" min="1" max="31" placeholder="último dia do mês"></div>
       </div>
-      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="qc_save">Criar cliente</button></div>`;
+      <div class="field"><label>Itens únicos (se tiver) vencem em</label><input type="date" id="qc_due" value="${todayISO()}"></div>`}
+      <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="qc_save">${isFreela?'Criar freela':'Criar cliente'}</button></div>`}`;
     openModal('itemModalOverlay');
+    document.querySelectorAll('[data-deal]').forEach(b=>b.addEventListener('click', ()=>{ deal = b.dataset.deal; draw(); }));
+    if(!deal) return;
+    document.querySelectorAll('input[name="qc_paid"]').forEach(r=>r.addEventListener('change', ()=>{
+      document.getElementById('qc_due_lbl').textContent = r.value==='1' && r.checked ? 'Pago em' : 'Data do pagamento combinada';
+    }));
     document.getElementById('qc_opt')?.addEventListener('change', e=>{ oi = Number(e.target.value); draw(); });
-    document.getElementById('qc_link')?.addEventListener('click', ()=>{ const lq = liveRef(q); lq.client_id = similar.id; lq.status = 'aceito'; saveState(state); closeModal('itemModalOverlay'); openQuoteDetail(q.id); });
+    document.getElementById('qc_link')?.addEventListener('click', ()=>{ const lq = liveRef(q); lq.client_id = similar.id; lq.status = 'aceito'; lq.deal_type = deal; saveState(state); closeModal('itemModalOverlay'); openQuoteDetail(q.id); });
     document.getElementById('qc_save').addEventListener('click', ()=>{
       const name = document.getElementById('qc_name').value.trim(); if(!name) return;
       const start = document.getElementById('qc_start').value;
       const rows = opt.items.map((it,ii)=>({desc: it.description + (Number(it.quantity)>1?` (${it.quantity}x)`:''), value: Number(document.querySelector(`.qc-val[data-ii="${ii}"]`).value)||0, kind: document.querySelector(`.qc-kind[data-ii="${ii}"]`).value})).filter(r=>r.value>0);
       const cid = uid();
       state.clients.push({id:cid, name, company_name: q.company||'', whatsapp: q.whatsapp||'', instagram:'', birthday:'', status:'ativo',
-        color: autoClientColor(cid), contract_start: start, readjust_months: 12, from_quote: q.id});
+        color: autoClientColor(cid), contract_start: start, readjust_months: deal==='freela' ? 0 : 12, from_quote: q.id, ...(deal==='freela' ? {freela:true} : {})});
       rows.filter(r=>r.kind==='mensal').forEach(r=>state.client_services.push({id:uid(), client_id:cid, service_type:r.desc, contracted_value:r.value, frequency:'mensal', status:'ativo', effective_from:start}));
+      // recorrente: dia fixo de pagamento → a mensalidade é gerada todo mês nesse dia (sem dia = último dia do mês)
+      const payday = Number(document.getElementById('qc_payday')?.value) || 0;
+      if(deal==='recorrente' && payday>=1 && payday<=31) state.clients.find(c=>c.id===cid).payment_days = [{day:payday, percent:100}];
       const once = rows.filter(r=>r.kind==='unico').reduce((a,r)=>a+r.value,0);
-      if(once>0) state.payments.push({id:uid(), client_id:cid, value:once, due_date: document.getElementById('qc_due').value || todayISO(), paid_at:null, status:'pendente', note: rows.filter(r=>r.kind==='unico').map(r=>r.desc).join(', ')});
-      const lq = liveRef(q); lq.client_id = cid; if(lq.status!=='aceito') lq.status = 'aceito';
+      const date = document.getElementById('qc_due').value || todayISO();
+      const paidNow = deal==='freela' && document.querySelector('input[name="qc_paid"]:checked')?.value==='1';
+      if(once>0) state.payments.push({id:uid(), client_id:cid, value:once, due_date: date, note: rows.filter(r=>r.kind==='unico').map(r=>r.desc).join(', '),
+        ...(paidNow ? {paid_at:date, paid_ts:Date.now(), status:'pago'} : {paid_at:null, status:'pendente'})});
+      if(deal==='recorrente') generateMonthlyInvoices(); // se a mensalidade começa este mês, a cobrança já aparece
+      const lq = liveRef(q); lq.client_id = cid; lq.deal_type = deal; if(lq.status!=='aceito') lq.status = 'aceito';
       saveState(state); closeModal('itemModalOverlay'); closeModal('genericModalOverlay');
+      if(paidNow && once>0) playKaching(once);
       currentView = 'clientes'; setActiveNav(); render(); openClientDetail(cid);
     });
   };
@@ -5031,15 +5075,15 @@ function renderClientes(el){
       <div class="ccover" style="background:${clientCoverBG(c)}"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div><div class="cname">${c.name}</div><div class="ccompany">${c.company_name||''}</div></div>
-        <span class="badge ${statusBadge}">${c.status}</span>
+        <span style="display:flex;gap:5px;flex-shrink:0;white-space:nowrap;align-items:flex-start;">${c.freela?'<span class="badge amber" title="Trabalho único, sem mensalidade">⚡ freela</span>':''}<span class="badge ${statusBadge}">${c.status}</span></span>
       </div>
-      ${isDono()?`<div class="crow"><span class="l">Receita mensal</span><span class="v mono">${fmtMoney(receita)}</span></div>`:''}
+      ${isDono()?(c.freela ? `<div class="crow"><span class="l">Valor do freela</span><span class="v mono">${fmtMoney(state.payments.filter(p=>p.client_id===c.id).reduce((a,p)=>a+(Number(p.value)||0),0))}</span></div>` : `<div class="crow"><span class="l">Receita mensal</span><span class="v mono">${fmtMoney(receita)}</span></div>`):''}
       <div class="crow"><span class="l">Demandas abertas</span><span class="v">${openTasks}</span></div>
       ${(()=>{ const p = clientPackageProgress(c.id); if(!p.hasPackage) return '';
         const color = packagePaceColor(p.done, p.goal, p.monthPct);
         return `<div class="crow"><span class="l">Pacote do mês</span><span class="v mono" style="color:${color};">${p.done}/${p.goal}</span></div>
           ${packageRingsHTML(p)}`; })()}
-      ${isDono()?`<div class="crow"><span class="l">Margem</span><span class="v" style="color:${margemClass(clientMargem(c.id)).hex}">${clientMargem(c.id).toFixed(1)}%</span></div>`:''}
+      ${isDono() && !c.freela?`<div class="crow"><span class="l">Margem</span><span class="v" style="color:${margemClass(clientMargem(c.id)).hex}">${clientMargem(c.id).toFixed(1)}%</span></div>`:''}
     </div>`;
   }).join('');
   grid.querySelectorAll('.client-card').forEach(c=>c.addEventListener('click',()=>openClientDetail(c.dataset.id)));
