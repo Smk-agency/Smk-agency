@@ -5139,6 +5139,7 @@ function openClientModal(existing){
     const cover = document.getElementById('cf_cover')?.value || null;
     if(!name) return;
     if(isEdit){
+      const wasClosed = liveRef(existing).status==='encerrado';
       Object.assign((existing = liveRef(existing)), {
         name, company_name:document.getElementById('cf_company').value,
         whatsapp:document.getElementById('cf_wa').value, instagram:document.getElementById('cf_ig').value,
@@ -5147,6 +5148,7 @@ function openClientModal(existing){
         contract_start: document.getElementById('cf_since').value || existing.contract_start || null,
         readjust_months: Number(document.getElementById('cf_readjust').value), cover
       });
+      if(wasClosed && existing.status!=='encerrado') generateMonthlyInvoices(); // reativou: a cobrança do mês já aparece no financeiro
     } else {
       const newClientId = uid();
       state.clients.push({id:newClientId, name, company_name:document.getElementById('cf_company').value,
@@ -5322,6 +5324,7 @@ function openClientDetail(id){
   });
   document.getElementById('reactivateClientBtn')?.addEventListener('click', ()=>{
     c.status = 'ativo';
+    generateMonthlyInvoices(); // a cobrança do mês já aparece no financeiro, sem esperar alguém recarregar o app
     saveState(state);
     openClientDetail(id);
     render();
