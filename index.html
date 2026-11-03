@@ -6324,7 +6324,7 @@ function filteredTasks(){
 function renderDemandas(el){
   el.innerHTML = `
     <div class="filter-bar">
-      <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.map(c=>`<option value="${c.id}" ${demandaFilterClient===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
+      <select id="filterClient"><option value="">Todos os clientes</option>${state.clients.filter(c=>c.status!=='encerrado' || demandaFilterClient===c.id).map(c=>`<option value="${c.id}" ${demandaFilterClient===c.id?'selected':''}>${c.name}</option>`).join('')}</select>
       <select id="filterType"><option value="">Todos os tipos</option>${TASK_TYPES.map(ty=>`<option ${demandaFilterType===ty?'selected':''}>${ty}</option>`).join('')}</select>
       ${isDono()?`<select id="filterOwner"><option value="">Todos os responsáveis</option>${assignableUsers().map(u=>`<option value="${u.id}" ${demandaFilterOwner===u.id?'selected':''}>${u.full_name}</option>`).join('')}</select>`:''}
       <div class="seg" data-seg-from="${segFrom('demView', demandaView==='calendar'?1:0)}"><button type="button" class="seg-btn ${demandaView==='kanban'?'on':''}" id="viewKanbanBtn">☰ Quadro</button><button type="button" class="seg-btn ${demandaView==='calendar'?'on':''}" id="viewCalendarBtn">▦ Calendário</button></div>
@@ -8278,7 +8278,7 @@ function renderFinanceiro(el){
 function openPaymentModal(existing){
   document.getElementById('genericModalTitle').textContent = existing ? 'Editar receita' : 'Nova receita';
   document.getElementById('genericModalBody').innerHTML = `
-    <div class="field"><label>Cliente</label><select id="pf_client">${state.clients.map(c=>`<option value="${c.id}" ${existing?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
+    <div class="field"><label>Cliente</label><select id="pf_client">${state.clients.filter(c=>c.status!=='encerrado' || existing?.client_id===c.id).map(c=>`<option value="${c.id}" ${existing?.client_id===c.id?'selected':''}>${c.name}</option>`).join('')}</select></div>
     <div class="field-row">
       <div class="field"><label>Valor</label><input type="number" id="pf_value" value="${existing?.value||0}"></div>
       <div class="field"><label>Vencimento</label><input type="date" id="pf_due" value="${existing?.due_date||todayISO()}"></div>
