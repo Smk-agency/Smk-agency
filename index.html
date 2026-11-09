@@ -4952,8 +4952,9 @@ function openQuoteDetail(id){
         <button type="button" data-qlayout="proposta" class="${quoteLayout==='proposta'?'on':''}">✨ Proposta</button>
         <button type="button" data-qlayout="simples" class="${quoteLayout==='simples'?'on':''}">🧾 Simples</button>
       </div>
-      <button class="btn small primary" id="qPrintBtn">🖨️ Imprimir / Salvar PDF</button>
-      <button type="button" class="btn small" id="qCopyImgBtn">📋 Copiar imagem</button>
+      <button class="btn small primary" id="qPrintBtn">${isPhoneLike()?'📄 Salvar PDF':'🖨️ Imprimir / Salvar PDF'}</button>
+      <button type="button" class="btn small" id="qSaveImgBtn">🖼️ Salvar imagem</button>
+      ${isPhoneLike()?'':'<button type="button" class="btn small" id="qCopyImgBtn">📋 Copiar imagem</button>'}
     </div>
     ${quoteLayout==='simples' ? quoteSimpleHTML(q) : `<div id="quotePaper" class="printable-card" style="background:radial-gradient(circle at 12% 0%, rgba(76,126,255,.14), transparent 40%), radial-gradient(circle at 92% 15%, rgba(76,126,255,.08), transparent 45%), #0A1128;color:#fff;padding:40px;border-radius:16px;font-family:inherit;">
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:32px;">
@@ -5033,13 +5034,15 @@ function openQuoteDetail(id){
     </div>`}
     <div class="modal-foot"><button class="btn" data-close="genericModalOverlay">Fechar</button></div>
   `;
-  document.getElementById('qPrintBtn').addEventListener('click', ()=>window.print());
+  // no celular o "imprimir" do navegador usa a tela estreita e corta o orçamento — lá gera o PDF direto
+  document.getElementById('qPrintBtn').addEventListener('click', function(){ isPhoneLike() ? exportQuote(q, 'pdf', this) : window.print(); });
+  document.getElementById('qSaveImgBtn').addEventListener('click', function(){ exportQuote(q, 'png', this); });
   body.querySelectorAll('[data-qlayout]').forEach(b=>b.addEventListener('click', ()=>{
     quoteLayout = b.dataset.qlayout;
     try{ localStorage.setItem('smkos_quote_layout', quoteLayout); }catch(e){}
     openQuoteDetail(id);
   }));
-  document.getElementById('qCopyImgBtn').addEventListener('click', function(){ copyElementAsImage('quotePaper', this); });
+  document.getElementById('qCopyImgBtn')?.addEventListener('click', function(){ copyElementAsImage('quotePaper', this); });
   document.getElementById('qEditBtn')?.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openQuoteModal(q); });
   // aceitou o orçamento: já abre a criação do cliente (ou o vínculo com um cliente parecido)
   document.getElementById('qMarkAccepted')?.addEventListener('click', ()=>{ const lq = liveRef(q); lq.status='aceito'; saveState(state); openQuoteDetail(id); if(!lq.client_id) openQuoteToClientModal(lq); });
@@ -9808,6 +9811,57 @@ function dissolveEl(el, then){
 
 /* ---------- 🌈 NOME DA MÁQUINA DO MÊS ---------- */
 function glamNameHTML(text){ return [...text].map((ch,k)=>`<span style="--k:${k}">${ch===' '?' ':escapeHTML(ch)}</span>`).join(''); }
+
+// 📄 exportar orçamento: monta uma cópia fora da tela sempre em largura de computador (760px), assim
+// no celular a imagem/PDF sai igual ao do PC — sem tabela espremida nem pedaço cortado pelo print do navegador
+const isPhoneLike = () => matchMedia('(max-width:860px)').matches || matchMedia('(pointer:coarse)').matches;
+async function renderPaperFixed(elId, width=760){
+  const src = document.getElementById(elId); if(!src || !window.html2canvas) return null;
+  const holder = document.createElement('div');
+  holder.style.cssText = `position:absolute;left:-10000px;top:0;width:${width}px;pointer-events:none;`;
+  const clone = src.cloneNode(true); clone.removeAttribute('id'); clone.style.borderRadius = '0';
+  holder.appendChild(clone); document.body.appendChild(holder);
+  try{
+    await document.fonts?.ready;
+    const bg = getComputedStyle(clone).backgroundColor;
+    return await html2canvas(clone, {backgroundColor: bg && bg!=='rgba(0, 0, 0, 0)' ? bg : '#0A1128', scale:2, useCORS:true, logging:false, windowWidth:1280});
+  } finally { holder.remove(); }
+}
+async function saveBlobToDevice(blob, filename){
+  const file = new File([blob], filename, {type:blob.type});
+  if(isPhoneLike() && navigator.canShare?.({files:[file]})){
+    try{ await navigator.share({files:[file], title:filename}); return; }catch(e){ if(e?.name==='AbortError') return; }
+  }
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = filename;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(a.href), 4000);
+}
+function loadJsPDF(){
+  if(window.jspdf) return Promise.resolve();
+  return new Promise((res, rej)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+}
+async function exportQuote(q, kind, btnEl){
+  const label = btnEl.textContent;
+  btnEl.disabled = true; btnEl.textContent = 'Gerando...';
+  try{
+    const canvas = await renderPaperFixed('quotePaper');
+    if(!canvas) throw new Error('sem canvas');
+    const base = `${quoteNumber(q)} - ${(q.company||q.name||'orcamento').replace(/[\/:*?"<>|]/g,'')}`;
+    if(kind==='png'){
+      const blob = await new Promise(r=>canvas.toBlob(r, 'image/png'));
+      await saveBlobToDevice(blob, base+'.png');
+    } else {
+      await loadJsPDF();
+      // uma página A4 de largura, com a altura do orçamento — nada é cortado entre páginas
+      const w = 210, h = canvas.height * w / canvas.width;
+      const pdf = new window.jspdf.jsPDF({unit:'mm', format:[w, h], orientation:'portrait'});
+      pdf.addImage(canvas.toDataURL('image/jpeg', .92), 'JPEG', 0, 0, w, h);
+      await saveBlobToDevice(pdf.output('blob'), base+'.pdf');
+    }
+  }catch(e){
+    alert('Não consegui gerar o arquivo. Confere a internet e tenta de novo.');
+  }
+  btnEl.disabled = false; btnEl.textContent = label;
+}
 </script>
 </body>
 </html>
