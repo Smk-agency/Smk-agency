@@ -1127,6 +1127,8 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .qc-pay-opt{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;font-size:13px;font-weight:600;transition:border-color .2s,background-color .2s;}
 .qc-pay-opt input{accent-color:#5B8CFF;margin:0;}
 .qc-pay-opt:has(input:checked){border-color:rgba(91,140,255,.7);background:rgba(76,126,255,.14);}
+.qc-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);cursor:pointer;margin:-4px 0 14px;}
+.qc-check input{accent-color:#5B8CFF;margin:0;}
 /* ka-ching */
 .kaching{position:fixed;left:50%;top:50%;z-index:2500;pointer-events:none;}
 .kc-val{position:absolute;left:0;top:0;transform:translate(-50%,-50%);font-family:var(--font-display);font-weight:700;font-size:34px;color:#3FD39E;text-shadow:0 6px 30px rgba(31,169,124,.7);white-space:nowrap;animation:kcVal 1.7s cubic-bezier(.2,.9,.3,1) forwards;}
@@ -3800,6 +3802,9 @@ function openQuoteToClientModal(q){
     document.getElementById('itemModalTitle').textContent = '🤝 Orçamento aceito!';
     const isFreela = deal==='freela';
     const kindSel = it => deal==='freela' ? 'unico' : (opt.recurring||monthlyGuess(it.description)) ? 'mensal' : 'unico';
+    const total = quoteOptionTotal(opt), factor = sub>0 ? total/sub : 1;
+    const vals = opt.items.map(it=>Math.round(quoteItemLineTotal(it)*factor*100)/100);
+    if(factor!==1 && vals.length){ const li = vals.map(v=>v>0).lastIndexOf(true); if(li>=0) vals[li] = Math.round((vals[li] + total - vals.reduce((a,v)=>a+v,0))*100)/100; }
     document.getElementById('itemModalBody').innerHTML = `
       <div class="qc-deal-q">Esse trabalho vai ser…</div>
       <div class="qc-deal">
@@ -3813,19 +3818,27 @@ function openQuoteToClientModal(q){
       <div class="field"><label>Serviços <span class="hint">mensal vira serviço do contrato · único vira uma cobrança avulsa</span></label>
         <div class="qc-items">${opt.items.map((it,ii)=>`<div class="qc-item">
           <span class="qc-desc">${escapeHTML(it.description)}${Number(it.quantity)>1?` <i>(${it.quantity}x)</i>`:''}</span>
-          <input type="number" step="0.01" class="qc-val" data-ii="${ii}" value="${quoteItemLineTotal(it)}">
+          <input type="number" step="0.01" class="qc-val" data-ii="${ii}" value="${vals[ii]}">
           <select class="qc-kind" data-ii="${ii}"><option value="mensal" ${kindSel(it)==='mensal'?'selected':''}>Mensal</option><option value="unico" ${kindSel(it)==='unico'?'selected':''}>Único</option></select>
         </div>`).join('')}</div>
-        ${opt.discount>0?`<div class="qc-note">O orçamento tinha desconto de <b>${fmtMoney(opt.discount)}</b> (subtotal ${fmtMoney(sub)} → ${fmtMoney(quoteOptionTotal(opt))}). Ajuste os valores acima se quiser aplicar.</div>`:''}
+        ${opt.discount>0?`<div class="qc-note">Desconto de <b>${fmtMoney(opt.discount)}</b> já aplicado nos valores acima (subtotal ${fmtMoney(sub)} → <b>${fmtMoney(total)}</b>).</div>`:''}
       </div>
       ${isFreela ? `
       <div class="field"><label>Pagamento do freela</label>
         <div class="qc-pay">
-          <label class="qc-pay-opt"><input type="radio" name="qc_paid" value="0" checked><span>⏳ Ainda vai pagar</span></label>
+          <label class="qc-pay-opt"><input type="radio" name="qc_paid" value="half" checked><span>✂️ 50% antes + 50% na captação</span></label>
+          <label class="qc-pay-opt"><input type="radio" name="qc_paid" value="0"><span>⏳ Paga tudo de uma vez</span></label>
           <label class="qc-pay-opt"><input type="radio" name="qc_paid" value="1"><span>✅ Já pagou</span></label>
         </div>
       </div>
-      <div class="field"><label id="qc_due_lbl">Data do pagamento combinada</label><input type="date" id="qc_due" value="${todayISO()}"></div>
+      <div class="field" id="qc_single" style="display:none;"><label id="qc_due_lbl">Data do pagamento combinada</label><input type="date" id="qc_due" value="${todayISO()}"></div>
+      <div id="qc_half">
+        <div class="field-row">
+          <div class="field"><label>1ª metade · antes <span class="hint qc-half-v"></span></label><input type="date" id="qc_h1" value="${todayISO()}"></div>
+          <div class="field"><label>2ª metade · dia da captação <span class="hint qc-half-v"></span></label><input type="date" id="qc_h2"></div>
+        </div>
+        <label class="qc-check"><input type="checkbox" id="qc_h1paid"> A 1ª metade já foi paga</label>
+      </div>
       <select id="qc_start" style="display:none;"><option value="${cur}" selected></option></select>` : `
       <div class="field-row">
         <div class="field"><label>Mensalidade começa em</label><select id="qc_start"><option value="${cur}">${wrappedMonthName(cur)} (este mês)</option><option value="${nextM}" selected>${wrappedMonthName(nextM)} (mês que vem)</option></select></div>
@@ -3837,12 +3850,21 @@ function openQuoteToClientModal(q){
     document.querySelectorAll('[data-deal]').forEach(b=>b.addEventListener('click', ()=>{ deal = b.dataset.deal; draw(); }));
     if(!deal) return;
     document.querySelectorAll('input[name="qc_paid"]').forEach(r=>r.addEventListener('change', ()=>{
-      document.getElementById('qc_due_lbl').textContent = r.value==='1' && r.checked ? 'Pago em' : 'Data do pagamento combinada';
+      if(!r.checked) return;
+      document.getElementById('qc_due_lbl').textContent = r.value==='1' ? 'Pago em' : 'Data do pagamento combinada';
+      document.getElementById('qc_single').style.display = r.value==='half' ? 'none' : '';
+      document.getElementById('qc_half').style.display = r.value==='half' ? '' : 'none';
     }));
+    // mostra quanto dá cada metade (soma dos itens únicos), atualizando quando mexe nos valores
+    const onceNow = () => [...document.querySelectorAll('.qc-val')].filter(i=>document.querySelector(`.qc-kind[data-ii="${i.dataset.ii}"]`).value==='unico').reduce((a,i)=>a+(Number(i.value)||0),0);
+    const showHalves = () => document.querySelectorAll('.qc-half-v').forEach(el=>el.textContent = fmtMoney(onceNow()/2));
+    document.querySelectorAll('.qc-val,.qc-kind').forEach(i=>i.addEventListener('input', showHalves));
+    showHalves();
     document.getElementById('qc_opt')?.addEventListener('change', e=>{ oi = Number(e.target.value); draw(); });
     document.getElementById('qc_link')?.addEventListener('click', ()=>{ const lq = liveRef(q); lq.client_id = similar.id; lq.status = 'aceito'; lq.deal_type = deal; saveState(state); closeModal('itemModalOverlay'); openQuoteDetail(q.id); });
     document.getElementById('qc_save').addEventListener('click', ()=>{
       const name = document.getElementById('qc_name').value.trim(); if(!name) return;
+      if(deal==='freela' && document.querySelector('input[name="qc_paid"]:checked')?.value==='half' && !document.getElementById('qc_h2').value){ alert('Coloca a data da captação (2ª metade do pagamento).'); document.getElementById('qc_h2').focus(); return; }
       const start = document.getElementById('qc_start').value;
       const rows = opt.items.map((it,ii)=>({desc: it.description + (Number(it.quantity)>1?` (${it.quantity}x)`:''), value: Number(document.querySelector(`.qc-val[data-ii="${ii}"]`).value)||0, kind: document.querySelector(`.qc-kind[data-ii="${ii}"]`).value})).filter(r=>r.value>0);
       const cid = uid();
@@ -3854,13 +3876,23 @@ function openQuoteToClientModal(q){
       if(deal==='recorrente' && payday>=1 && payday<=31) state.clients.find(c=>c.id===cid).payment_days = [{day:payday, percent:100}];
       const once = rows.filter(r=>r.kind==='unico').reduce((a,r)=>a+r.value,0);
       const date = document.getElementById('qc_due').value || todayISO();
-      const paidNow = deal==='freela' && document.querySelector('input[name="qc_paid"]:checked')?.value==='1';
-      if(once>0) state.payments.push({id:uid(), client_id:cid, value:once, due_date: date, note: rows.filter(r=>r.kind==='unico').map(r=>r.desc).join(', '),
+      const payMode = deal==='freela' ? document.querySelector('input[name="qc_paid"]:checked')?.value : '0';
+      const onceNote = rows.filter(r=>r.kind==='unico').map(r=>r.desc).join(', ');
+      let paidNow = payMode==='1', paidValue = once;
+      if(once>0 && payMode==='half'){
+        const d1 = document.getElementById('qc_h1').value || todayISO(), d2 = document.getElementById('qc_h2').value;
+        
+        const v1 = Math.round(once/2*100)/100, h1paid = document.getElementById('qc_h1paid').checked;
+        state.payments.push({id:uid(), client_id:cid, value:v1, due_date:d1, note:`${onceNote} — 1ª metade (50%)`,
+          ...(h1paid ? {paid_at:d1, paid_ts:Date.now(), status:'pago'} : {paid_at:null, status:'pendente'})});
+        state.payments.push({id:uid(), client_id:cid, value:Math.round((once-v1)*100)/100, due_date:d2, note:`${onceNote} — 2ª metade (50%, captação)`, paid_at:null, status:'pendente'});
+        paidNow = h1paid; paidValue = v1;
+      } else if(once>0) state.payments.push({id:uid(), client_id:cid, value:once, due_date: date, note: onceNote,
         ...(paidNow ? {paid_at:date, paid_ts:Date.now(), status:'pago'} : {paid_at:null, status:'pendente'})});
       if(deal==='recorrente') generateMonthlyInvoices(); // se a mensalidade começa este mês, a cobrança já aparece
       const lq = liveRef(q); lq.client_id = cid; lq.deal_type = deal; if(lq.status!=='aceito') lq.status = 'aceito';
       saveState(state); closeModal('itemModalOverlay'); closeModal('genericModalOverlay');
-      if(paidNow && once>0) playKaching(once);
+      if(paidNow && once>0) playKaching(paidValue);
       currentView = 'clientes'; setActiveNav(); render(); openClientDetail(cid);
     });
   };
