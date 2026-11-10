@@ -1141,6 +1141,7 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .pv-empty{font-size:12px;color:var(--text-faint);margin-top:10px;}
 .pv-close-sum{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(76,126,255,.12);border:1px solid rgba(91,140,255,.4);margin-bottom:6px;font-size:13px;}
 .pv-close-sum b{font:700 18px 'IBM Plex Mono',monospace;}
+.rv-label .rv-copy{margin-left:8px;padding:2px 9px;font-size:11px;text-transform:none;letter-spacing:0;}
 .qc-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);cursor:pointer;margin:-4px 0 14px;}
 .qc-check input{accent-color:#5B8CFF;margin:0;}
 /* ka-ching */
@@ -7280,7 +7281,7 @@ function taskReadViewHTML(t, fields){
   const c = clientById(t.client_id), owner = t.assignee_id ? userById(t.assignee_id) : null, creator = userById(t.created_by);
   const late = isTaskLate(t);
   const item = (label, value, extra='') => `<div class="rv-item ${extra}"><span>${label}</span><b>${value}</b></div>`;
-  const show = fields.filter(f=>f.id!=='tf_legenda' && f.value);
+  const show = fields.filter(f=>f.value);
   return `<div class="tf-readview">
     <div class="rv-grid">
       ${item('Cliente', `<i class="rv-dot" style="background:${clientColor(t.client_id)}"></i>${escapeHTML(c?.name||'—')}`)}
@@ -7296,7 +7297,7 @@ function taskReadViewHTML(t, fields){
     <div class="rv-meta">
       <span>Criado por <b>${escapeHTML(creator?.full_name||'—')}</b></span>
     </div>
-    ${show.map(f=>`<div class="rv-block"><div class="rv-label">${f.label}</div><div class="rv-text">${linkifyText(f.value)}</div></div>`).join('')
+    ${show.map(f=>`<div class="rv-block"><div class="rv-label">${f.label}${f.id==='tf_legenda'?' <button type="button" class="btn small ghost rv-copy" data-copy-legenda>📋 Copiar</button>':''}</div><div class="rv-text">${linkifyText(f.value)}</div></div>`).join('')
       || '<div class="rv-block rv-empty">Sem briefing ainda. Toque em ✏️ Editar pra preencher.</div>'}
     <div class="rv-block rv-delivery">
       <div class="rv-label">Link de entrega</div>
@@ -7449,6 +7450,11 @@ function openTaskModal(id){
     openTaskModal(t.id);
   });
   document.getElementById('rv_delivery')?.addEventListener('keydown', e=>{ if(e.key==='Enter') document.getElementById('rv_delivery_save').click(); });
+  body.querySelector('[data-copy-legenda]')?.addEventListener('click', async e=>{
+    const b = e.currentTarget;
+    try{ await navigator.clipboard.writeText(t.briefing?.legenda||''); b.textContent = '✓ Copiada'; }catch(err){ b.textContent = 'Não deu pra copiar'; }
+    setTimeout(()=>b.textContent = '📋 Copiar', 1600);
+  });
   document.getElementById('rv_status')?.addEventListener('change', e=>{
     changeTaskStatus(t.id, e.target.value);
     render();
