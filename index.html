@@ -1127,6 +1127,20 @@ select:focus,input:focus,textarea:focus{border-color:var(--brand-bright);box-sha
 .qc-pay-opt{display:flex;align-items:center;gap:8px;padding:9px 14px;border-radius:99px;border:1px solid var(--border);background:var(--surface-2);cursor:pointer;font-size:13px;font-weight:600;transition:border-color .2s,background-color .2s;}
 .qc-pay-opt input{accent-color:#5B8CFF;margin:0;}
 .qc-pay-opt:has(input:checked){border-color:rgba(91,140,255,.7);background:rgba(76,126,255,.14);}
+.pv-pend{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px 14px;border-radius:12px;border:1px solid rgba(224,166,45,.4);background:rgba(224,166,45,.08);margin-bottom:10px;}
+.pv-pend b{display:block;font-size:13px;} .pv-pend span{font-size:11.5px;color:var(--text-muted);}
+.pv-actions{display:flex;gap:6px;}
+.pv-box{padding:14px;border-radius:14px;border:1px solid var(--border);background:var(--surface-2);margin-bottom:8px;}
+.pv-count{display:flex;align-items:center;gap:12px;}
+.pv-n{font:700 34px/1 var(--font-display);color:#8FB0FF;min-width:44px;text-align:center;}
+.pv-count b{display:block;font-size:13.5px;} .pv-count span{font-size:11.5px;color:var(--text-faint);}
+.pv-total{margin-left:auto;font:700 18px 'IBM Plex Mono',monospace;}
+.pv-list{margin-top:12px;max-height:220px;overflow:auto;border-top:1px solid var(--border);}
+.pv-list div{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;border-bottom:1px solid var(--border);font-size:12.5px;}
+.pv-list i{font-style:normal;color:var(--text-faint);font-family:'IBM Plex Mono',monospace;font-size:11.5px;}
+.pv-empty{font-size:12px;color:var(--text-faint);margin-top:10px;}
+.pv-close-sum{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-radius:12px;background:rgba(76,126,255,.12);border:1px solid rgba(91,140,255,.4);margin-bottom:6px;font-size:13px;}
+.pv-close-sum b{font:700 18px 'IBM Plex Mono',monospace;}
 .qc-check{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--text-muted);cursor:pointer;margin:-4px 0 14px;}
 .qc-check input{accent-color:#5B8CFF;margin:0;}
 /* ka-ching */
@@ -2475,7 +2489,7 @@ function generateMonthlyInvoices(){
   let changed = false;
   const monthKey = todayISO().slice(0,7);
   const lastDay = new Date(Number(monthKey.slice(0,4)), Number(monthKey.slice(5,7)), 0).getDate();
-  state.clients.filter(c=>c.status!=='encerrado').forEach(c=>{
+  state.clients.filter(c=>c.status!=='encerrado' && !c.per_video).forEach(c=>{
     const receita = clientReceita(c.id);
     if(receita<=0) return;
     const hasSchedule = c.payment_days && c.payment_days.length;
@@ -5110,7 +5124,7 @@ function renderClientes(el){
       <div class="ccover" style="background:${clientCoverBG(c)}"></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div><div class="cname">${c.name}</div><div class="ccompany">${c.company_name||''}</div></div>
-        <span style="display:flex;gap:5px;flex-shrink:0;white-space:nowrap;align-items:flex-start;">${c.freela?'<span class="badge amber" title="Trabalho único, sem mensalidade">⚡ freela</span>':''}<span class="badge ${statusBadge}">${c.status}</span></span>
+        <span style="display:flex;gap:5px;flex-shrink:0;white-space:nowrap;align-items:flex-start;">${c.freela?'<span class="badge amber" title="Trabalho único, sem mensalidade">⚡ freela</span>':''}${c.per_video && isDono()?`<span class="badge blue" title="Vídeos editados desde o último fechamento">🎬 ${perVideoOpen(c).length} · ${fmtMoney(perVideoOpen(c).length*(Number(c.per_video.rate)||0))}</span>`:''}<span class="badge ${statusBadge}">${c.status}</span></span>
       </div>
       ${isDono()?(c.freela ? `<div class="crow"><span class="l">Valor do freela</span><span class="v mono">${fmtMoney(state.payments.filter(p=>p.client_id===c.id).reduce((a,p)=>a+(Number(p.value)||0),0))}</span></div>` : `<div class="crow"><span class="l">Receita mensal</span><span class="v mono">${fmtMoney(receita)}</span></div>`):''}
       <div class="crow"><span class="l">Demandas abertas</span><span class="v">${openTasks}</span></div>
@@ -5140,6 +5154,11 @@ function openClientModal(existing){
       <div class="field"><label>Cliente desde <span class="hint">pro lembrete de reajuste</span></label><input type="month" id="cf_since" value="${existing ? (existing.contract_start || clientSinceMonth(existing)?.m || '') : todayISO().slice(0,7)}"></div>
       <div class="field"><label>Reajuste a cada</label><select id="cf_readjust">${[6,12,24].map(n=>`<option value="${n}" ${(Number(existing?.readjust_months)||12)===n?'selected':''}>${n} meses</option>`).join('')}<option value="0" ${existing?.readjust_months===0?'selected':''}>Não lembrar</option></select></div>
     </div>
+    ${isDono() && existing ? `<div class="field-row">
+      <div class="field"><label>Cobra por vídeo editado <span class="hint">R$ por vídeo · vazio = não</span></label><input type="number" step="0.01" id="cf_pv_rate" placeholder="ex: 50" value="${existing.per_video?.rate||''}"></div>
+      <div class="field"><label>Contar vídeos a partir de</label><input type="date" id="cf_pv_from" value="${existing.per_video?.from||todayISO()}"></div>
+    </div>
+    ${!existing.per_video && activeServicesInMonth(existing.id, todayISO().slice(0,7)).length ? `<label class="qc-check" id="cf_pv_swap_wrap" style="display:none;"><input type="checkbox" id="cf_pv_swap" checked> Trocar a mensalidade fixa (${fmtMoney(clientReceita(existing.id))}) pelo por vídeo: encerra os serviços e cancela a cobrança automática pendente</label>` : ''}` : ''}
     <div class="field-row">
       <div class="field"><label>Status</label>
         <select id="cf_status">
@@ -5183,6 +5202,18 @@ function openClientModal(existing){
         contract_start: document.getElementById('cf_since').value || existing.contract_start || null,
         readjust_months: Number(document.getElementById('cf_readjust').value), cover
       });
+      if(document.getElementById('cf_pv_rate')){
+        const pvRate = Number(document.getElementById('cf_pv_rate').value)||0, hadPV = !!existing.per_video;
+        if(pvRate>0) existing.per_video = {rate:pvRate, from: document.getElementById('cf_pv_from').value || todayISO()};
+        else delete existing.per_video;
+        // trocou a mensalidade fixa pelo por vídeo: serviços saem a partir deste mês e a cobrança automática pendente é cancelada
+        if(!hadPV && pvRate>0 && document.getElementById('cf_pv_swap')?.checked){
+          const cm = todayISO().slice(0,7);
+          activeServicesInMonth(existing.id, cm).forEach(sv=>{ sv.effective_until = cm; });
+          state.payments.filter(p=>p.client_id===existing.id && p.status!=='pago' && p.status!=='cancelado' && !p.note && !p.per_video_close && (p.due_date||'')>=cm)
+            .forEach(p=>{ p.status = 'cancelado'; });
+        }
+      }
       if(wasClosed && existing.status!=='encerrado') generateMonthlyInvoices(); // reativou: a cobrança do mês já aparece no financeiro
     } else {
       const newClientId = uid();
@@ -5209,6 +5240,8 @@ function openClientModal(existing){
     closeModal('clientModalOverlay');
     render();
   });
+  const pvIn = document.getElementById('cf_pv_rate'), pvSwap = document.getElementById('cf_pv_swap_wrap');
+  if(pvIn && pvSwap){ const f = ()=>pvSwap.style.display = Number(pvIn.value)>0 ? '' : 'none'; pvIn.addEventListener('input', f); f(); }
   openModal('clientModalOverlay');
 }
 
@@ -5232,6 +5265,7 @@ function openClientDetail(id){
       <button type="button" class="btn small" id="clientReportBtn">📊 Relatório de entregas do mês</button>
       <button type="button" class="btn small" id="clientFeedBtn">📱 Prévia do feed</button>
     </div>
+    ${perVideoSectionHTML(c)}
     ${(()=>{
       const p = clientPackageProgress(id);
       const monthName = new Date().toLocaleDateString('pt-BR',{month:'long'});
@@ -5330,6 +5364,7 @@ function openClientDetail(id){
   document.getElementById('readjustUpdateBtn')?.addEventListener('click', ()=>document.getElementById('updateContractBtn')?.click());
   document.getElementById('readjustDoneBtn')?.addEventListener('click', e=>{ liveRef(c).last_readjust = e.currentTarget.dataset.cycle; saveState(state); openClientDetail(id); });
   document.getElementById('clientFeedBtn').addEventListener('click', ()=>openFeedPreview(id));
+  wirePerVideo(c);
   const wireTimeline = () => {
     const box = document.getElementById('clientTimeline');
     box.querySelectorAll('[data-tl-task]').forEach(r=>r.addEventListener('click', ()=>{ closeModal('genericModalOverlay'); openTaskModal(r.dataset.tlTask); }));
@@ -9871,13 +9906,14 @@ function loadJsPDF(){
   if(window.jspdf) return Promise.resolve();
   return new Promise((res, rej)=>{ const s = document.createElement('script'); s.src = 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js'; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
 }
-async function exportQuote(q, kind, btnEl){
+function exportQuote(q, kind, btnEl){ return exportPaper('quotePaper', `${quoteNumber(q)} - ${q.company||q.name||'orcamento'}`, kind, btnEl); }
+async function exportPaper(elId, baseName, kind, btnEl){
   const label = btnEl.textContent;
   btnEl.disabled = true; btnEl.textContent = 'Gerando...';
   try{
-    const canvas = await renderPaperFixed('quotePaper');
+    const canvas = await renderPaperFixed(elId);
     if(!canvas) throw new Error('sem canvas');
-    const base = `${quoteNumber(q)} - ${(q.company||q.name||'orcamento').replace(/[\/:*?"<>|]/g,'')}`;
+    const base = baseName.replace(/[\\/:*?"<>|]/g,'');
     if(kind==='png'){
       const blob = await new Promise(r=>canvas.toBlob(r, 'image/png'));
       await saveBlobToDevice(blob, base+'.png');
@@ -9893,6 +9929,136 @@ async function exportQuote(q, kind, btnEl){
     alert('Não consegui gerar o arquivo. Confere a internet e tenta de novo.');
   }
   btnEl.disabled = false; btnEl.textContent = label;
+}
+
+/* ---------- 🎬 COBRANÇA POR VÍDEO EDITADO (ex: Fabricia, R$ 50/vídeo, fecha todo dia 20) ----------
+   client.per_video = {rate, from}: conta os vídeos (Vídeo/Reels) aprovados/concluídos a partir de "from" que ainda
+   não entraram num fechamento. "Fechar mês" gera a cobrança com a lista dos vídeos e marca cada um com billed_payment;
+   quando a cobrança é marcada como paga, o contador já está zerado e volta a contar só os novos. */
+function videoDoneDate(t){
+  const ts = taskActivity().approvedLast[t.id];
+  return ts ? localKeyOf(ts) : (t.due_date || (t.completed_month ? t.completed_month+'-01' : null));
+}
+function perVideoOpen(c){
+  if(!c?.per_video) return [];
+  const from = c.per_video.from || '0000-00-00';
+  return [...state.tasks, ...Object.values(state.archived_tasks||{}).flat()]
+    .filter(t=>t.client_id===c.id && VIDEO_TASK_TYPES.includes(t.task_type) && (t.status==='aprovado' || t.status==='concluido') && !t.billed_payment)
+    .map(t=>({t, date: videoDoneDate(t)}))
+    .filter(x=>x.date && x.date>=from)
+    .sort((a,b)=>a.date.localeCompare(b.date));
+}
+function perVideoPending(c){
+  return state.payments.filter(p=>p.client_id===c.id && p.per_video_close && p.status!=='pago' && p.status!=='cancelado');
+}
+function nextPayDayISO(c){
+  const day = c.payment_days?.[0]?.day || 20, t = todayISO();
+  const mk = (y,m)=>{ const last = new Date(y, m, 0).getDate(); return `${y}-${String(m).padStart(2,'0')}-${String(Math.min(day,last)).padStart(2,'0')}`; };
+  let y = Number(t.slice(0,4)), m = Number(t.slice(5,7));
+  let d = mk(y,m); if(d < t){ m++; if(m>12){ m=1; y++; } d = mk(y,m); }
+  return d;
+}
+function perVideoListHTML(open){
+  return `<div class="pv-list">${open.map(x=>`<div><span>${escapeHTML(x.t.title||'(sem título)')}</span><i>${fmtDate(x.date).slice(0,5)}</i></div>`).join('')}</div>`;
+}
+function perVideoSectionHTML(c){
+  if(!isDono() || !c.per_video) return '';
+  const open = perVideoOpen(c), rate = Number(c.per_video.rate)||0, pend = perVideoPending(c);
+  return `<div class="section-title">🎬 Cobrança por vídeo <span class="hint">${fmtMoney(rate)} por vídeo editado</span></div>
+    ${pend.map(p=>`<div class="pv-pend">
+      <div><b>Fechamento de ${fmtDate(p.per_video_close.to)} · ${p.per_video_close.count} ${p.per_video_close.count===1?'vídeo':'vídeos'} · ${fmtMoney(p.value)}</b><span>Aguardando pagamento · vence ${fmtDate(p.due_date)}</span></div>
+      <div class="pv-actions"><button class="btn small ghost" data-pv-report="${p.id}">📄 Relatório</button><button class="btn small primary" data-pv-paid="${p.id}">✅ Ela pagou</button></div>
+    </div>`).join('')}
+    <div class="pv-box">
+      <div class="pv-count"><div class="pv-n">${open.length}</div><div><b>${open.length===1?'vídeo editado':'vídeos editados'}</b><span>desde ${fmtDate(open[0]?.date || c.per_video.from || todayISO())}</span></div>
+        <div class="pv-total">${fmtMoney(open.length*rate)}</div></div>
+      ${open.length ? perVideoListHTML(open) : '<div class="pv-empty">Nenhum vídeo editado desde o último fechamento.</div>'}
+      <button class="btn primary" id="pvCloseBtn" ${open.length?'':'disabled'} style="width:100%;margin-top:12px;">🧾 Fechar mês</button>
+    </div>`;
+}
+function wirePerVideo(c){
+  document.getElementById('pvCloseBtn')?.addEventListener('click', ()=>openPerVideoClose(c));
+  document.querySelectorAll('[data-pv-report]').forEach(b=>b.addEventListener('click', ()=>openPerVideoReport(state.payments.find(p=>p.id===b.dataset.pvReport))));
+  document.querySelectorAll('[data-pv-paid]').forEach(b=>b.addEventListener('click', ()=>{
+    const p = state.payments.find(x=>x.id===b.dataset.pvPaid); if(!p) return;
+    p.status = 'pago'; p.paid_at = todayISO(); p.paid_ts = Date.now();
+    saveState(state); playKaching(p.value); openClientDetail(c.id);
+  }));
+}
+function openPerVideoClose(c){
+  const open = perVideoOpen(c), rate = Number(c.per_video.rate)||0;
+  if(!open.length) return;
+  document.getElementById('itemModalTitle').textContent = '🧾 Fechar mês — '+c.name;
+  document.getElementById('itemModalBody').innerHTML = `
+    <div class="pv-close-sum"><span>${open.length} ${open.length===1?'vídeo':'vídeos'} × ${fmtMoney(rate)}</span><b>${fmtMoney(open.length*rate)}</b></div>
+    <div style="margin-bottom:14px;">${perVideoListHTML(open)}</div>
+    <div class="field"><label>Vencimento da cobrança</label><input type="date" id="pv_due" value="${nextPayDayISO(c)}"></div>
+    <div style="font-size:12px;color:var(--text-faint);margin-bottom:14px;">Gera a cobrança no Financeiro e o relatório pra mandar pra ela. Os próximos vídeos já começam a contar do zero.</div>
+    <div class="modal-foot"><button class="btn ghost" data-close="itemModalOverlay">Cancelar</button><button class="btn primary" id="pv_confirm">Fechar e gerar relatório</button></div>`;
+  openModal('itemModalOverlay');
+  document.getElementById('pv_confirm').addEventListener('click', ()=>{
+    const due = document.getElementById('pv_due').value || nextPayDayISO(c);
+    const live = perVideoOpen(c); // recalcula na hora (pode ter entrado vídeo novo com o modal aberto)
+    if(!live.length) return;
+    const pid = uid();
+    const p = {id:pid, client_id:c.id, value: live.length*rate, due_date: due, paid_at:null, status:'pendente',
+      note: `${live.length} ${live.length===1?'vídeo editado':'vídeos editados'} × ${fmtMoney(rate)}`,
+      per_video_close: {from: live[0].date, to: todayISO(), count: live.length, rate, videos: live.map(x=>({id:x.t.id, title:x.t.title||'', date:x.date}))}};
+    state.payments.push(p);
+    live.forEach(x=>{ x.t.billed_payment = pid; });
+    saveState(state);
+    closeModal('itemModalOverlay');
+    openClientDetail(c.id);
+    setTimeout(()=>openPerVideoReport(p), 250);
+  });
+}
+function perVideoReportHTML(p){
+  const c = clientById(p.client_id) || {}, ag = state.settings.agency_info || {}, r = p.per_video_close;
+  const ink = '#151B26', muted = '#5B6475', line = '#E3E7EE';
+  const label = t => `<div style="font-size:9.5px;letter-spacing:1.2px;text-transform:uppercase;color:${muted};font-weight:700;margin-bottom:4px;">${t}</div>`;
+  const td = `font-size:12.5px;padding:9px 10px;border-bottom:1px solid ${line};color:${ink};`;
+  const th = `font-size:10px;letter-spacing:.8px;text-transform:uppercase;color:${muted};font-weight:700;padding:9px 10px;border-bottom:1.5px solid ${ink};text-align:left;`;
+  return `<div id="pvPaper" class="printable-card" style="background:#fff;color:${ink};border-radius:10px;overflow:hidden;font-family:'Inter',Arial,sans-serif;">
+    <div style="background:#0A1128;padding:22px 30px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+      <img src="${document.querySelector('.brand-logo-sm')?.src||''}" alt="SMK" style="height:24px;width:auto;">
+      <div style="text-align:right;color:#fff;"><div style="font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#8FB0FF;font-weight:700;">Fechamento</div>
+        <div style="font-size:15px;font-weight:700;">Vídeos editados</div></div>
+    </div>
+    <div style="padding:26px 30px 30px;">
+      <div style="display:flex;gap:28px;flex-wrap:wrap;padding-bottom:18px;border-bottom:1px solid ${line};margin-bottom:18px;">
+        <div>${label('Cliente')}<div style="font-size:14px;font-weight:700;">${escapeHTML(c.name||'')}</div></div>
+        <div>${label('Período')}<div style="font-size:12.5px;font-weight:600;">${fmtDate(r.from)} a ${fmtDate(r.to)}</div></div>
+        <div>${label('Vencimento')}<div style="font-size:12.5px;font-weight:600;">${fmtDate(p.due_date)}</div></div>
+      </div>
+      <table style="width:100%;border-collapse:collapse;">
+        <tr><th style="${th}width:34px;">#</th><th style="${th}">Vídeo</th><th style="${th}width:90px;">Entregue</th><th style="${th}text-align:right;width:100px;">Valor</th></tr>
+        ${r.videos.map((v,i)=>`<tr><td style="${td}color:${muted};">${i+1}</td><td style="${td}">${escapeHTML(v.title||'(sem título)')}</td><td style="${td}">${fmtDate(v.date)}</td><td style="${td}text-align:right;font-family:'IBM Plex Mono',monospace;">${fmtMoney(r.rate)}</td></tr>`).join('')}
+      </table>
+      <div style="display:flex;justify-content:flex-end;margin-top:12px;">
+        <div style="min-width:250px;display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:#0A1128;color:#fff;border-radius:6px;">
+          <span style="font-size:11px;letter-spacing:1px;text-transform:uppercase;font-weight:700;">${r.count} ${r.count===1?'vídeo':'vídeos'} × ${fmtMoney(r.rate)}</span>
+          <span style="font-size:16px;font-weight:700;font-family:'IBM Plex Mono',monospace;margin-left:14px;">${fmtMoney(p.value)}</span>
+        </div>
+      </div>
+      <div style="font-size:10.5px;color:${muted};margin-top:24px;border-top:1px solid ${line};padding-top:14px;">${escapeHTML(ag.name||'SMK Agency')}${ag.phone?' · '+escapeHTML(ag.phone):''}${ag.doc?' · CNPJ '+escapeHTML(ag.doc):''}</div>
+    </div>
+  </div>`;
+}
+function openPerVideoReport(p){
+  if(!p?.per_video_close) return;
+  const c = clientById(p.client_id) || {};
+  document.getElementById('itemModalTitle').textContent = '📄 Relatório de vídeos';
+  document.getElementById('itemModalBody').innerHTML = `
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">
+      <button class="btn small primary" id="pvPdfBtn">📄 Salvar PDF</button>
+      <button class="btn small" id="pvImgBtn">🖼️ Salvar imagem</button>
+    </div>
+    ${perVideoReportHTML(p)}
+    <div class="modal-foot"><button class="btn" data-close="itemModalOverlay">Fechar</button></div>`;
+  openModal('itemModalOverlay');
+  const base = `Videos ${c.name||''} - ${fmtDate(p.per_video_close.to).replace(/\//g,'-')}`;
+  document.getElementById('pvPdfBtn').addEventListener('click', function(){ exportPaper('pvPaper', base, 'pdf', this); });
+  document.getElementById('pvImgBtn').addEventListener('click', function(){ exportPaper('pvPaper', base, 'png', this); });
 }
 </script>
 </body>
