@@ -1951,6 +1951,31 @@ input,select,textarea{transition:border-color .2s ease,box-shadow .3s var(--ease
   .modal-overlay.open,.modal-overlay.open .modal,.modal-overlay.closing,.modal-overlay.closing .modal,#app.app-enter{animation:none!important;}
   ::view-transition-old(smk-content),::view-transition-new(smk-content){animation:none;}
 }
+
+/* capa holográfica: arco-íris que corre com o mouse + reflexo branco no ponto do cursor */
+.ccover .cholo{position:absolute;inset:0;z-index:1;pointer-events:none;opacity:0;mix-blend-mode:color-dodge;transition:opacity .35s ease;
+  background:
+    radial-gradient(130px circle at var(--mx,50%) var(--my,50%), rgba(255,255,255,.55), transparent 60%),
+    linear-gradient(115deg, transparent 8%, rgba(255,90,190,.55) 24%, rgba(255,226,100,.5) 36%, rgba(90,255,200,.5) 48%, rgba(100,165,255,.6) 60%, rgba(190,100,255,.55) 72%, transparent 90%);
+  background-size:100% 100%, 260% 100%;
+  background-position:0 0, calc(var(--px,.5) * 100%) 0;}
+.ccover .cholo::after{content:'';position:absolute;inset:0;opacity:.35;
+  background:repeating-linear-gradient(115deg, rgba(255,255,255,.0) 0 6px, rgba(255,255,255,.18) 6px 7px);
+  transform:translateX(calc((var(--px,.5) - .5) * -30px));}
+@media (hover:hover) and (pointer:fine){ .client-card:hover .ccover .cholo{opacity:.8;} }
+html[data-theme="light"] .ccover .cholo{mix-blend-mode:overlay;}
+html[data-theme="light"] .client-card:hover .ccover .cholo{opacity:.9;}
+.client-card.tilt{border-color:transparent;background:
+  linear-gradient(var(--surface),var(--surface)) padding-box,
+  linear-gradient(calc(115deg + var(--px,.5) * 90deg), rgba(255,90,190,.6), rgba(100,165,255,.75), rgba(90,255,200,.6), rgba(190,100,255,.6)) border-box;}
+@media (prefers-reduced-motion: reduce){ .ccover .cholo{display:none;} }
+
+/* anel de status nas fotos da equipe */
+.u-avatar.ring{box-shadow:0 0 0 1.5px var(--surface),0 0 0 3px var(--ring),0 0 10px -2px var(--ring);}
+.sidebar-user .profile-avatar.has-ring{box-shadow:0 0 0 2px var(--surface-2),0 0 0 3.5px var(--ring),0 0 16px -4px var(--ring);transition:box-shadow .4s ease;}
+.u-avatar.ring.r-late.r-big{animation:ringPulse 2.2s ease-in-out infinite;}
+@keyframes ringPulse{50%{box-shadow:0 0 0 1.5px var(--surface),0 0 0 3px var(--ring),0 0 14px 1px var(--ring);}}
+@media (prefers-reduced-motion: reduce){ .u-avatar.ring.r-late{animation:none;} }
 </style>
 </head>
 <body>
@@ -2241,7 +2266,8 @@ function kpiIconHTML(icon, color){
 function userAvatarHTML(u, size=18){
   if(!u) return '';
   const col = u.avatar_color || ROLE_COLOR[u.role] || '#8C93A3';
-  return `<span class="u-avatar" title="${escapeHTML(u.full_name)}" style="width:${size}px;height:${size}px;font-size:${Math.max(8,Math.round(size*0.4))}px;background:${col}26;color:${col};border-color:${col}55;">${initials(u.full_name)}</span>`;
+  const st = userRingStatus(u), ring = USER_RING[st];
+  return `<span class="u-avatar ring r-${st}${size>=26?' r-big':''}" title="${escapeHTML(u.full_name)} · ${ring.label}" style="--ring:${ring.c};width:${size}px;height:${size}px;font-size:${Math.max(8,Math.round(size*0.4))}px;background:${col}26;color:${col};border-color:${col}55;">${initials(u.full_name)}</span>`;
 }
 
 // data-count + data-fmt num elemento = número que "conta" de 0 até o valor quando a tela abre
@@ -5132,7 +5158,7 @@ function renderClientes(el){
     const statusBadge = {ativo:'green',prospect:'blue',pausado:'amber',encerrado:'gray'}[c.status];
     return `
     <div class="client-card" data-id="${c.id}">
-      <div class="ccover" style="background:${clientCoverBG(c)}"></div>
+      <div class="ccover" style="background:${clientCoverBG(c)}"><span class="cholo"></span></div>
       <div style="display:flex;justify-content:space-between;align-items:flex-start;">
         <div><div class="cname">${c.name}</div><div class="ccompany">${c.company_name||''}</div></div>
         <span style="display:flex;gap:5px;flex-shrink:0;white-space:nowrap;align-items:flex-start;">${c.freela?'<span class="badge amber" title="Trabalho único, sem mensalidade">⚡ freela</span>':''}${c.per_video && isDono()?`<span class="badge blue" title="Vídeos editados desde o último fechamento">🎬 ${perVideoOpen(c).length} · ${fmtMoney(perVideoOpen(c).length*(Number(c.per_video.rate)||0))}</span>`:''}<span class="badge ${statusBadge}">${c.status}</span></span>
@@ -10076,6 +10102,48 @@ function openPerVideoReport(p){
   document.getElementById('pvPdfBtn').addEventListener('click', function(){ exportPaper('pvPaper', base, 'pdf', this); });
   document.getElementById('pvImgBtn').addEventListener('click', function(){ exportPaper('pvPaper', base, 'png', this); });
 }
+
+/* ---------- 🟢 ANEL DE STATUS NAS FOTOS DA EQUIPE ----------
+   atrasada (vermelho) > gravando hoje (roxo) > tudo em dia (verde). Calculado uma vez por estado/dia. */
+const USER_RING = {
+  late:  {c:'#E0553D', label:'tem demanda atrasada'},
+  rec:   {c:'#A06BFF', label:'gravando hoje'},
+  ok:    {c:'#1FA97C', label:'tudo em dia'},
+};
+let _ringMemo = {tasks:null, com:null, day:null, map:null};
+function userRingStatus(u){
+  if(!u) return null;
+  const day = todayISO();
+  if(_ringMemo.tasks!==state.tasks || _ringMemo.com!==state.commitments || _ringMemo.day!==day || _ringMemo.tlen!==state.tasks.length){
+    const late = new Set(state.tasks.filter(isTaskLate).map(t=>t.assignee_id).filter(Boolean));
+    const rec = new Set((state.commitments||[]).filter(c=>c.date===day).flatMap(c=>c.user_ids||[]));
+    _ringMemo = {tasks:state.tasks, com:state.commitments, day, tlen:state.tasks.length, map:{late, rec}};
+  }
+  const m = _ringMemo.map;
+  return m.late.has(u.id) ? 'late' : m.rec.has(u.id) ? 'rec' : 'ok';
+}
+function refreshSidebarRing(){
+  const el = document.getElementById('sbAvatar'), u = currentUser();
+  if(!el || !u) return;
+  const st = USER_RING[userRingStatus(u)];
+  el.style.setProperty('--ring', st.c);
+  el.classList.add('has-ring');
+  el.closest('button')?.setAttribute('title', `Você: ${st.label}`);
+}
+(function hookRenderForRing(){
+  const base = render;
+  render = function(){ const r = base.apply(this, arguments); try{ refreshSidebarRing(); }catch(e){} return r; };
+})();
+
+/* ---------- ✨ CAPA HOLOGRÁFICA NOS CARDS DE CLIENTE ---------- */
+document.addEventListener('pointermove', e=>{
+  if(e.pointerType==='touch') return;
+  const card = e.target.closest?.('.client-card');
+  if(!card) return;
+  const r = card.getBoundingClientRect();
+  card.style.setProperty('--px', ((e.clientX-r.left)/r.width).toFixed(3));
+  card.style.setProperty('--py', ((e.clientY-r.top)/r.height).toFixed(3));
+}, {passive:true});
 </script>
 </body>
 </html>
