@@ -4894,6 +4894,16 @@ function quoteNumber(q){
   const sameYear = [...state.quotes].filter(x=>new Date(x.created_at).getFullYear()===y).sort((a,b)=>a.created_at-b.created_at);
   return `ORC-${y}-${String(sameYear.findIndex(x=>x.id===q.id)+1).padStart(4,'0')}`;
 }
+// assinatura de quem consta como responsável: casa pelo nome ("Nathalia Magalhães" acha a usuária "Nathalia");
+// sem responsável, usa quem criou. Nunca põe a assinatura de outra pessoa.
+function quoteSigner(q){
+  const n = x => normSearch(x||'').trim();
+  if(q.sender_name){
+    const sn = n(q.sender_name), first = sn.split(/\s+/)[0];
+    return state.users.find(u=>u.signature && n(u.full_name)===sn) || state.users.find(u=>u.signature && n(u.full_name).split(/\s+/)[0]===first) || null;
+  }
+  return state.users.find(u=>u.id===q.created_by && u.signature) || null;
+}
 function quoteSimpleHTML(q){
   const ag = state.settings.agency_info || {};
   const issued = new Date(q.created_at).toISOString().slice(0,10);
@@ -4959,7 +4969,7 @@ function quoteSimpleHTML(q){
       <div style="display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;border-top:1px solid ${line};padding-top:22px;margin-top:8px;">
         <div style="font-size:10.5px;color:${muted};max-width:280px;line-height:1.5;">Documento sem valor fiscal. Valores válidos até a data indicada.</div>
         <div style="text-align:center;min-width:200px;">
-          ${(()=>{ const signer = state.users.find(u=>u.full_name===q.sender_name && u.signature) || state.users.find(u=>u.id===q.created_by && u.signature);
+          ${(()=>{ const signer = quoteSigner(q);
             return signer ? `<img src="${signer.signature}" alt="" style="display:block;height:56px;max-width:220px;margin:0 auto -6px;object-fit:contain;">` : ''; })()}
           <div style="border-top:1px solid ${ink};padding-top:6px;font-size:11.5px;font-weight:600;">${escapeHTML(q.sender_name || ag.name || 'SMK Agency')}</div>
           <div style="font-size:10.5px;color:${muted};">${escapeHTML(ag.name||'SMK Agency')}</div>
